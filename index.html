@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editor de Etiquetas Avançado</title>
-    <!-- Carrega a biblioteca Interact.js -->
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-    <!-- Carrega os ícones do Material Design -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <!-- Bibliotecas para QR Code e Cód. Barras -->
     <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
     <style>
@@ -16,6 +13,7 @@
             /* --- Variáveis de Layout --- */
             --toolbar-height: 60px; /* Altura da barra de ferramentas principal */
             --secondary-toolbar-height: 50px; /* Altura das barras secundárias */
+            --left-toolbar-width: 55px; /* NOVO: Largura da barra de ferramentas esquerda */
             
             /* --- Variáveis de Tamanho da Etiqueta (controladas por JS) --- */
             --label-width: 100mm;
@@ -31,17 +29,113 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: #F0F2F5;
             margin: 0;
-            /* Espaço para TODAS as barras de ferramentas fixas */
-            padding-top: calc(var(--toolbar-height) + var(--secondary-toolbar-height)); 
+            /* MODIFICADO: Espaço agora é gerenciado pelo #main-content-wrapper */
+            /* padding-top: calc(var(--toolbar-height) + var(--secondary-toolbar-height)); */
             padding-bottom: 30px;
+            display: flex; /* NOVO: Ativa layout flex para barra lateral */
         }
+
+        /* --- NOVA Barra de Ferramentas Vertical (Esquerda) --- */
+        #left-toolbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: var(--left-toolbar-width); /* Largura da barra de ferramentas */
+            background-color: #4a4a4a; /* Cor escura (Photoshop-like) */
+            padding: 10px 5px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            z-index: 200;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.15);
+            overflow-y: auto; /* Permite rolagem se tiver muitos botões */
+        }
+        #left-toolbar .button-group {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 8px;
+        }
+        #left-toolbar button,
+        #left-toolbar select {
+            width: 100%;
+            height: 40px;
+            padding: 8px;
+            justify-content: center;
+            background-color: #5f5f5f;
+            border: 1px solid #777;
+            color: #f1f1f1;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9em;
+            transition: background-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+            white-space: nowrap;
+        }
+        #left-toolbar button .material-icons,
+        #left-toolbar select .material-icons {
+            color: #f1f1f1;
+            margin: 0; /* Remove gap interno */
+            font-size: 20px;
+        }
+        #left-toolbar .label {
+            display: none; /* Esconde o label "Adicionar:" */
+        }
+        #left-toolbar button:hover,
+        #left-toolbar select:hover {
+            background-color: #777;
+            border-color: #999;
+        }
+        /* Ajuste para select (seta) */
+        #left-toolbar select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%2D%2Dxmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%2D%2Dwidth%3D%22292.4%22%2D%2Dheight%3D%22292.4%22%3E%3Cpath%2D%2Dfill%3D%22%23f1f1f1%22%2D%2Dd%3D%22M287%2D%2D69.4a17.6%2D%2D17.6%2D%2D0%2D%2D0%2D%2D-13-5.4H18.4c-5%2D%2D0-9.3%2D%2D1.8-12.9%2D%2D5.4A17.6%2D%2D17.6%2D%2D0%2D%2D0%2D%2D0%2D%2D0%2D%2D82.2c0%2D%2D5%2D%2D1.8%2D%2D9.3%2D%2D5.4%2D%2D12.9l128%2D%2D127.9c3.6%2D%2D3.6%2D%2D7.8%2D%2D5.4%2D%2D12.8%2D%2D5.4s9.2-1.8%2D%2D12.8-5.4L287%2D%2D95c3.5-3.5%2D%2D5.4-7.8%2D%2D5.4-12.8%2D%2D0-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 8px 10px;
+            padding-right: 20px;
+            padding-left: 0; /* Centraliza ícone */
+        }
+        #left-toolbar select.has-icon {
+             padding-left: 8px; /* Espaço para ícone se houver */
+        }
+        /* Ajuste específico para o botão de remover */
+        #left-toolbar #btn-remover-item {
+            margin-top: auto; /* Empurra para o final da barra */
+            background-color: #a13a3a;
+            border-color: #c05050;
+        }
+        #left-toolbar #btn-remover-item:hover {
+            background-color: #c05050;
+        }
+
+        /* --- NOVO: Wrapper do Conteúdo Principal (Direita) --- */
+        #main-content-wrapper {
+            flex-grow: 1; /* Ocupa o resto do espaço */
+            margin-left: var(--left-toolbar-width); /* Espaço para a barra esquerda */
+            padding-top: calc(var(--toolbar-height) + var(--secondary-toolbar-height)); /* Espaço para as barras superiores */
+            width: calc(100% - var(--left-toolbar-width));
+            box-sizing: border-box;
+            position: relative; /* Para que o canvas de desenho se posicione corretamente */
+        }
+
 
         /* --- Barra de Ferramentas Fixa (Principal) --- */
         #toolbar {
             position: fixed;
             top: 0;
-            left: 0;
-            width: 100%;
+            /* MODIFICADO: left: 0; -> left: var(--left-toolbar-width); */
+            left: var(--left-toolbar-width);
+            /* MODIFICADO: width: 100%; -> width: calc(100% - var(--left-toolbar-width)); */
+            width: calc(100% - var(--left-toolbar-width));
             height: var(--toolbar-height);
             background-color: #FFFFFF;
             border-bottom: 1px solid #DADCE0;
@@ -59,8 +153,10 @@
         .secondary-toolbar {
             position: fixed;
             top: var(--toolbar-height); /* Posicionada abaixo da principal */
-            left: 0;
-            width: 100%;
+            /* MODIFICADO: left: 0; -> left: var(--left-toolbar-width); */
+            left: var(--left-toolbar-width);
+            /* MODIFICADO: width: 100%; -> width: calc(100% - var(--left-toolbar-width)); */
+            width: calc(100% - var(--left-toolbar-width));
             height: var(--secondary-toolbar-height);
             background-color: #f8f9fa;
             border-bottom: 1px solid #DADCE0;
@@ -102,7 +198,7 @@
             white-space: nowrap;
         }
 
-        /* Estilo comum para botões e selects */
+        /* Estilo comum para botões e selects (BARRAS SUPERIORES) */
         #toolbar button,
         #toolbar select,
         .secondary-toolbar button,
@@ -187,7 +283,7 @@
             padding-right: 30px;
         }
 
-        /* Efeitos de Hover e Active */
+        /* Efeitos de Hover e Active (BARRAS SUPERIORES) */
         #toolbar button:hover,
         #toolbar select:hover,
         .secondary-toolbar button:hover,
@@ -282,7 +378,8 @@
         #btn-concluir-desenho {
             position: fixed;
             top: calc(var(--toolbar-height) + var(--secondary-toolbar-height) + 20px);
-            left: 50%;
+            /* MODIFICADO: Posição central agora considera a barra esquerda */
+            left: calc( (100% - var(--left-toolbar-width)) / 2 + var(--left-toolbar-width) );
             transform: translateX(-50%);
             z-index: 101; /* Acima de tudo */
             background-color: #1a73e8;
@@ -530,19 +627,40 @@
         /* --- Estilos de Impressão --- */
         #print-style-dynamic { display: none; }
         
-        /* Bloco de impressão estático RESTAURADO */
+        /* ########## INÍCIO DA CORREÇÃO DE IMPRESSÃO ########## */
+        /* Bloco de impressão REESCRITO para funcionar com o novo layout */
         @media print {
             body {
-                background-color: #FFFFFF;
-                padding: 0;
-                margin: 0;
+                background-color: #FFFFFF !important;
+                padding: 0 !important;
+                margin: 0 !important;
                 width: var(--print-page-width) !important;
+                display: block !important; /* Remove o flex do print */
             }
 
-            #toolbar, .secondary-toolbar, .modal-overlay, #btn-concluir-desenho, .rotate-handle {
+            /* Esconde toda a UI (Barras, modais, alças, etc) */
+            #toolbar, 
+            .secondary-toolbar, 
+            .modal-overlay, 
+            #btn-concluir-desenho, 
+            .rotate-handle,
+            #left-toolbar { /* Esconde a nova barra da esquerda */
                 display: none !important;
             }
+            
+            /* * CORREÇÃO: 
+             * NÃO esconda o wrapper, apenas RESSETE o layout dele
+             * para que ele não tenha margens ou paddings da UI.
+             */
+            #main-content-wrapper {
+                 display: block !important;
+                 margin: 0 !important;
+                 padding: 0 !important;
+                 width: auto !important;
+                 position: static !important;
+            }
 
+            /* #pagina-de-impressao agora funciona, pois seu pai não está mais escondido */
             #pagina-de-impressao {
                 margin: 0 !important;
                 padding: 0 !important;
@@ -589,202 +707,195 @@
                 max-height: 100% !important;
             }
         }
+        /* ########## FIM DA CORREÇÃO DE IMPRESSÃO ########## */
+
 
     </style>
     
-    <!-- Estilo dinâmico para tela (ex: colunas) - MOVIDO PARA FORA DO STYLE PRINCIPAL -->
     <style id="screen-style-dynamic"></style>
     
 </head>
 <body>
 
-    <!-- Barra de Ferramentas Principal -->
-    <div id="toolbar">
-        <div class="toolbar-section">
+    <div id="left-toolbar">
+        <div class="button-group">
+            <button id="btn-add-texto" title="Adicionar caixa de texto">
+                <span class="material-icons">title</span>
+            </button>
+            <button id="btn-add-imagem" title="Adicionar imagem">
+                <span class="material-icons">image</span>
+            </button>
+            
+            <select id="select-add-shape" title="Adicionar forma" class="has-icon">
+                <option value="" disabled selected>Forma</option>
+                <option value="quadrado">Quadrado</option>
+                <option value="circulo">Círculo</option>
+                <option value="oval">Oval</option>
+                <option value="triangulo">Triângulo</option>
+                <option value="triangulo-inv">Triângulo Inv.</option>
+                <option value="losango">Losango</option>
+                <option value="estrela">Estrela</option>
+                <option value="coracao">Coração</option>
+                <option value="seta-dir">Seta (Dir)</option>
+                <option value="seta-esq">Seta (Esq)</option>
+            </select>
+            
+            <button id="btn-add-linha" title="Adicionar linha">
+                <span class="material-icons">horizontal_rule</span>
+            </button>
+            <button id="btn-add-simbolo" title="Adicionar símbolo">
+                <span class="material-icons">emoji_emotions</span>
+            </button>
+            <button id="btn-add-qrcode" title="Adicionar QR Code">
+                <span class="material-icons">qr_code_2</span>
+            </button>
+            <button id="btn-add-barcode" title="Adicionar Código de Barras">
+                <span class="material-icons">view_week</span>
+            </button>
+            <button id="btn-add-lapis" title="Desenhar (Lápis)">
+                <span class="material-icons">draw</span>
+            </button>
+            <button id="btn-remover-item" title="Remover item selecionado" style="color: #D93025;">
+                <span class="material-icons">delete</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="main-content-wrapper">
+
+        <div id="toolbar">
+            <div class="toolbar-section">
+                <div class="button-group">
+                    <button id="btn-add-etiqueta" title="Adicionar nova etiqueta à página">
+                        <span class="material-icons">add_to_queue</span> Nova Etiqueta
+                    </button>
+                    <button id="btn-duplicar-etiqueta" title="Copiar etiqueta selecionada">
+                        <span class="material-icons">content_copy</span> Copiar
+                    </button>
+                    <button id="btn-remover-etiqueta" title="Remover etiqueta selecionada" style="color: #D93025;">
+                        <span class="material-icons">delete_sweep</span>
+                    </button>
+                    <button id="btn-imprimir" title="Imprimir página">
+                        <span class="material-icons">print</span> Imprimir
+                    </button>
+                </div>
+                <div class="button-group">
+                    <button id="btn-zoom-out" title="Diminuir Zoom">
+                        <span class="material-icons">zoom_out</span>
+                    </button>
+                    <button id="btn-zoom-in" title="Aumentar Zoom">
+                        <span class="material-icons">zoom_in</span>
+                    </button>
+                    <button id="btn-zoom-reset" title="Restaurar Zoom">
+                        <span class="material-icons">zoom_in_map</span>
+                    </button>
+                </div>
+                <div class="button-group">
+                    <span class="label">Selecionar Etiqueta:</span>
+                    <select id="select-layout-preset" title="Selecionar tamanho e layout da etiqueta">
+                        <option value="100x50">100 x 50 mm (1 Col)</option>
+                        <option value="50x25">50 x 25 mm (1 Col)</option>
+                        <option value="50x25-dupla">50 x 25 mm (2 Col)</option>
+                        <option value="personalizado" selected>Personalizado</option>
+                    </select>
+                </div>
+                <div id="custom-layout-inputs" class="button-group" style="display: none;">
+                    <span class="label">Larg. (mm):</span>
+                    <input type="number" id="input-custom-width" value="100" class="toolbar-input-number">
+                    <span class="label">Alt. (mm):</span>
+                    <input type="number" id="input-custom-height" value="50" class="toolbar-input-number">
+                    <span class="label">Colunas:</span>
+                    <input type="number" id="input-custom-cols" value="1" min="1" max="10" class="toolbar-input-number" style="width: 45px;">
+                </div>
+            </div>
+            
+            <div class="toolbar-section" style="overflow-x: auto; max-width: 50%;"> 
+                </div>
+
+            <input type="file" id="input-imagem" accept="image/*" style="display: none;">
+        </div>
+        
+        <div id="text-toolbar-options" class="secondary-toolbar">
             <div class="button-group">
-                <button id="btn-add-etiqueta" title="Adicionar nova etiqueta à página">
-                    <span class="material-icons">add_to_queue</span> Nova Etiqueta
-                </button>
-                <button id="btn-duplicar-etiqueta" title="Copiar etiqueta selecionada">
-                    <span class="material-icons">content_copy</span> Copiar
-                </button>
-                <!-- NOVO BOTÃO DE REMOVER ETIQUETA -->
-                <button id="btn-remover-etiqueta" title="Remover etiqueta selecionada" style="color: #D93025;">
-                    <span class="material-icons">delete_sweep</span>
-                </button>
-                <button id="btn-imprimir" title="Imprimir página">
-                    <span class="material-icons">print</span> Imprimir
-                </button>
+                <select id="select-font-family" title="Tipo de Fonte">
+                    <option value="Arial, sans-serif">Arial</option>
+                    <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                    <option value="'Courier New', Courier, monospace">Courier New</option>
+                    <option value="Verdana, Geneva, sans-serif">Verdana</option>
+                    <option value="Georgia, serif">Georgia</option>
+                </select>
+                <input type="number" id="input-font-size" min="6" max="150" value="10" title="Tamanho da Fonte (px)">
+                <input type="color" id="input-font-color" class="color-input" value="#000000" title="Cor da Fonte">
             </div>
             <div class="button-group">
-                <button id="btn-zoom-out" title="Diminuir Zoom">
-                    <span class="material-icons">zoom_out</span>
-                </button>
-                <button id="btn-zoom-in" title="Aumentar Zoom">
-                    <span class="material-icons">zoom_in</span>
-                </button>
-                <button id="btn-zoom-reset" title="Restaurar Zoom">
-                    <span class="material-icons">zoom_in_map</span>
-                </button>
+                <button id="btn-text-bold" title="Negrito"><span class="material-icons">format_bold</span></button>
+                <button id="btn-text-italic" title="Itálico"><span class="material-icons">format_italic</span></button>
+                <button id="btn-text-underline" title="Sublinhado"><span class="material-icons">format_underlined</span></button>
+                <button id="btn-text-strike" title="Tachado"><span class="material-icons">strikethrough_s</span></button>
             </div>
             <div class="button-group">
-                <span class="label">Selecionar Etiqueta:</span>
-                <select id="select-layout-preset" title="Selecionar tamanho e layout da etiqueta">
-                    <option value="100x50">100 x 50 mm (1 Col)</option>
-                    <option value="50x25">50 x 25 mm (1 Col)</option>
-                    <option value="50x25-dupla">50 x 25 mm (2 Col)</option>
-                    <option value="personalizado" selected>Personalizado</option>
+                <select id="select-text-transform" title="Transformação do Texto">
+                    <option value="none">Normal</option>
+                    <option value="uppercase">MAIÚSCULAS</option>
+                    <option value="lowercase">minúsculas</option>
+                    <option value="capitalize">Capitalizadas</option>
                 </select>
             </div>
-            <div id="custom-layout-inputs" class="button-group" style="display: none;">
-                <span class="label">Larg. (mm):</span>
-                <input type="number" id="input-custom-width" value="100" class="toolbar-input-number">
-                <span class="label">Alt. (mm):</span>
-                <input type="number" id="input-custom-height" value="50" class="toolbar-input-number">
-                <span class="label">Colunas:</span>
-                <input type="number" id="input-custom-cols" value="1" min="1" max="10" class="toolbar-input-number" style="width: 45px;">
-            </div>
         </div>
-        <div class="toolbar-section" style="overflow-x: auto; max-width: 50%;"> <!-- Permite rolagem nesta seção -->
+        
+        <div id="style-toolbar-options" class="secondary-toolbar">
             <div class="button-group">
-                <span class="label">Adicionar:</span>
-                <button id="btn-add-texto" title="Adicionar caixa de texto">
-                    <span class="material-icons">title</span>
-                </button>
-                <button id="btn-add-imagem" title="Adicionar imagem">
-                    <span class="material-icons">image</span>
-                </button>
-                
-                <select id="select-add-shape" title="Adicionar forma">
-                    <option value="" disabled selected>Forma</option>
-                    <option value="quadrado">Quadrado</option>
-                    <option value="circulo">Círculo</option>
-                    <option value="oval">Oval</option>
-                    <option value="triangulo">Triângulo</option>
-                    <option value="triangulo-inv">Triângulo Inv.</option>
-                    <option value="losango">Losango</option>
-                    <option value="estrela">Estrela</option>
-                    <option value="coracao">Coração</option>
-                    <option value="seta-dir">Seta (Dir)</option>
-                    <option value="seta-esq">Seta (Esq)</option>
+                <span class="label">Cor:</span>
+                <input type="color" id="input-style-color" class="color-input" value="#000000" title="Cor da Linha/Forma">
+            </div>
+            <div class="button-group">
+                <span class="label">Espessura (px):</span>
+                <input type="number" id="input-style-thickness" min="1" max="50" value="2" title="Espessura da Linha/Borda">
+            </div>
+            <div class="button-group">
+                <span class="label">Estilo:</span>
+                <select id="select-style-type" title="Estilo da Linha/Borda">
+                    <option value="solid">Sólida</option>
+                    <option value="dashed">Tracejada</option>
+                    <option value="dotted">Pontilhada</option>
                 </select>
-                
-                <button id="btn-add-linha" title="Adicionar linha">
-                    <span class="material-icons">horizontal_rule</span>
-                </button>
-                <button id="btn-add-simbolo" title="Adicionar símbolo">
-                    <span class="material-icons">emoji_emotions</span>
-                </button>
-                <!-- Novos Botões QR e Barcode -->
-                <button id="btn-add-qrcode" title="Adicionar QR Code">
-                    <span class="material-icons">qr_code_2</span>
-                </button>
-                <button id="btn-add-barcode" title="Adicionar Código de Barras">
-                    <span class="material-icons">view_week</span>
-                </button>
-                <button id="btn-add-lapis" title="Desenhar (Lápis)">
-                    <span class="material-icons">draw</span>
-                </button>
-                <!-- Botão IA Removido -->
-
-                <button id="btn-remover-item" title="Remover item selecionado" style="color: #D93025;">
-                    <span class="material-icons">delete</span>
-                </button>
             </div>
         </div>
-        <!-- Input oculto para upload de imagem -->
-        <input type="file" id="input-imagem" accept="image/*" style="display: none;">
-    </div>
-    
-    <!-- Barra de Ferramentas de Formatação de Texto -->
-    <div id="text-toolbar-options" class="secondary-toolbar">
-        <div class="button-group">
-            <select id="select-font-family" title="Tipo de Fonte">
-                <option value="Arial, sans-serif">Arial</option>
-                <option value="'Times New Roman', Times, serif">Times New Roman</option>
-                <option value="'Courier New', Courier, monospace">Courier New</option>
-                <option value="Verdana, Geneva, sans-serif">Verdana</option>
-                <option value="Georgia, serif">Georgia</option>
-            </select>
-            <input type="number" id="input-font-size" min="6" max="150" value="10" title="Tamanho da Fonte (px)">
-            <input type="color" id="input-font-color" class="color-input" value="#000000" title="Cor da Fonte">
+        
+        <div id="drawing-toolbar-options" class="secondary-toolbar">
+             <div class="button-group">
+                <button id="btn-draw-tool-pencil" class="active" title="Lápis">
+                    <span class="material-icons">edit</span>
+                </button>
+                <button id="btn-draw-tool-eraser" title="Borracha">
+                    <span class="material-icons">cleaning_services</span>
+                </button>
+             </div>
+             <div class="button-group">
+                <span class="label">Cor:</span>
+                <input type="color" id="input-draw-color" class="color-input" value="#000000" title="Cor do Lápis">
+            </div>
+            <div class="button-group">
+                <span class="label">Espessura (px):</span>
+                <input type="number" id="input-draw-thickness" min="1" max="50" value="2" title="Espessura do Lápis/Borracha">
+            </div>
         </div>
-        <div class="button-group">
-            <button id="btn-text-bold" title="Negrito"><span class="material-icons">format_bold</span></button>
-            <button id="btn-text-italic" title="Itálico"><span class="material-icons">format_italic</span></button>
-            <button id="btn-text-underline" title="Sublinhado"><span class="material-icons">format_underlined</span></button>
-            <button id="btn-text-strike" title="Tachado"><span class="material-icons">strikethrough_s</span></button>
-        </div>
-        <div class="button-group">
-            <select id="select-text-transform" title="Transformação do Texto">
-                <option value="none">Normal</option>
-                <option value="uppercase">MAIÚSCULAS</option>
-                <option value="lowercase">minúsculas</option>
-                <option value="capitalize">Capitalizadas</option>
-            </select>
-        </div>
-    </div>
-    
-    <!-- Barra de Ferramentas de Estilo (Linhas e Formas) -->
-    <div id="style-toolbar-options" class="secondary-toolbar">
-        <div class="button-group">
-            <span class="label">Cor:</span>
-            <input type="color" id="input-style-color" class="color-input" value="#000000" title="Cor da Linha/Forma">
-        </div>
-        <div class="button-group">
-            <span class="label">Espessura (px):</span>
-            <input type="number" id="input-style-thickness" min="1" max="50" value="2" title="Espessura da Linha/Borda">
-        </div>
-        <div class="button-group">
-            <span class="label">Estilo:</span>
-            <select id="select-style-type" title="Estilo da Linha/Borda">
-                <option value="solid">Sólida</option>
-                <option value="dashed">Tracejada</option>
-                <option value="dotted">Pontilhada</option>
-            </select>
-        </div>
-    </div>
-    
-    <!-- Barra de Ferramentas de Desenho (Lápis/Borracha) -->
-    <div id="drawing-toolbar-options" class="secondary-toolbar">
-         <div class="button-group">
-            <button id="btn-draw-tool-pencil" class="active" title="Lápis">
-                <span class="material-icons">edit</span>
-            </button>
-            <button id="btn-draw-tool-eraser" title="Borracha">
-                <span class="material-icons">cleaning_services</span>
-            </button>
-         </div>
-         <div class="button-group">
-            <span class="label">Cor:</span>
-            <input type="color" id="input-draw-color" class="color-input" value="#000000" title="Cor do Lápis">
-        </div>
-        <div class="button-group">
-            <span class="label">Espessura (px):</span>
-            <input type="number" id="input-draw-thickness" min="1" max="50" value="2" title="Espessura do Lápis/Borracha">
-        </div>
-    </div>
 
 
-    <!-- Página de Impressão -->
-    <div id="pagina-de-impressao">
-        <div class="etiqueta-editavel active" data-label-id="label-1">
-            <!-- Itens arrastáveis serão adicionados aqui -->
+        <div id="pagina-de-impressao">
+            <div class="etiqueta-editavel active" data-label-id="label-1">
+                </div>
         </div>
-    </div>
     
-    <!-- Modal de Símbolos -->
-    <div id="modal-simbolos" class="modal-overlay">
+    </div> <div id="modal-simbolos" class="modal-overlay">
         <div class="modal-content">
             <h3>Escolha um Símbolo</h3>
             <div class="modal-grid" id="symbol-grid-container">
-                <!-- Símbolos serão gerados pelo JS -->
-            </div>
+                </div>
             <button id="modal-simbolos-close" class="modal-close">Fechar</button>
         </div>
     </div>
     
-    <!-- Modal de Input (QR/Barcode) -->
     <div id="modal-input" class="modal-overlay">
         <div class="modal-content modal-input-content">
             <h3 id="modal-input-title">Digite o valor</h3>
@@ -796,7 +907,6 @@
         </div>
     </div>
 
-    <!-- Modal para Contagem de Duplicação -->
     <div id="modal-duplicate-count" class="modal-overlay">
         <div class="modal-content modal-input-content">
             <h3 id="modal-duplicate-title">Quantas cópias deseja criar?</h3>
@@ -808,10 +918,7 @@
         </div>
     </div>
     
-    <!-- Estilo dinâmico para impressão -->
     <style id="print-style-dynamic"></style>
-    <!-- Estilo dinâmico para tela (ex: colunas) - JÁ ESTÁ FORA DO STYLE PRINCIPAL -->
-
     <script>
         
         // --- Referências DOM (Principais) ---
@@ -838,7 +945,7 @@
         const inputCustomHeight = document.getElementById('input-custom-height');
         const inputCustomCols = document.getElementById('input-custom-cols');
 
-        // --- Referências DOM (Novas Ferramentas) ---
+        // --- Referências DOM (Novas Ferramentas - Agora na Barra Esquerda) ---
         const selectAddShape = document.getElementById('select-add-shape');
         const btnAddLinha = document.getElementById('btn-add-linha');
         const btnAddSimbolo = document.getElementById('btn-add-simbolo');
@@ -1370,7 +1477,13 @@
                     if (event.target.classList.contains('item-texto') || event.target.classList.contains('item-simbolo')) {
                          event.target.focus();
                     }
-                    event.preventDefault(); 
+                    /* ########## CORREÇÃO DO BUG DE TEXTO ##########
+                       A linha abaixo (que existia no seu original) impedia
+                       o cursor de aparecer na caixa de texto. Eu a removi.
+                       
+                       event.preventDefault(); 
+                       
+                    ################################################# */
                 });
             
             // --- Interação da Alça de Rotação ---
@@ -1663,6 +1776,7 @@
                 }
             } else if (!event.target.closest('#toolbar') 
                        && !event.target.closest('.secondary-toolbar') 
+                       && !event.target.closest('#left-toolbar') // NOVO: Ignora cliques na barra esquerda
                        && !event.target.closest('.modal-overlay') 
                        && !isDrawing // Don't deselect if drawing
                        && !event.target.closest('.etiqueta-editavel')) { // Clicked outside labels too
