@@ -45,15 +45,15 @@
             left: 0;
             width: var(--vertical-toolbar-width);
             height: 100vh;
-            background-color: #f8f9fa; /* Um cinza claro e limpo */
-            border-right: 1px solid #DADCE0;
+            background-color: #1e293b; /* Tema escuro */
+            border-right: 1px solid #334155; /* Borda mais escura */
             padding: 10px 0;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
             align-items: center;
             z-index: 101;
-            box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
             gap: 15px; /* Espaço entre os grupos de ferramentas */
             overflow-y: auto;
         }
@@ -125,8 +125,6 @@
         }
 
         /* Estilo comum para botões e selects */
-        #toolbar button,
-        #toolbar select,
         #top-toolbar button,
         #top-toolbar select,
         .secondary-toolbar button,
@@ -150,16 +148,47 @@
         
         /* Estilo específico para botões da barra vertical (apenas ícone) */
         #toolbar button, #toolbar select {
+            background-color: transparent;
+            border: 1px solid transparent;
+            color: #e2e8f0; /* Cor do ícone clara */
             width: 40px;
             height: 40px;
             padding: 0;
             justify-content: center;
             font-size: 1.2em; /* Ícones maiores */
+            transition: background-color 0.2s, border-color 0.2s;
         }
         #toolbar select {
-             background-position: center; /* Centraliza o ícone de dropdown */
+             -webkit-appearance: none; -moz-appearance: none; appearance: none;
+             opacity: 0; /* Torna o select invisível */
+             width: 100%; height: 100%;
+             cursor: pointer;
+             background-image: none; /* Remove a seta de dropdown personalizada */
         }
 
+        /* Wrapper para o ícone do select */
+        .select-icon-wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: transparent;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .select-icon-wrapper:hover {
+            background-color: #334155;
+            border-color: #475569;
+        }
+        .select-icon-wrapper .material-icons {
+            position: absolute;
+            color: #e2e8f0;
+            font-size: 24px;
+            pointer-events: none; /* Permite que os cliques passem para o select */
+        }
 
         /* Inputs numéricos na barra principal */
         #top-toolbar input[type="number"].toolbar-input-number {
@@ -213,7 +242,7 @@
         .color-input::-moz-color-swatch { border: 1px solid #bdbdbd; border-radius: 2px; }
 
 
-        #toolbar select, .secondary-toolbar select {
+        #top-toolbar select, .secondary-toolbar select {
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
@@ -224,18 +253,32 @@
             padding-right: 30px;
         }
 
+        #toolbar select {
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%2D%2Dxmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%2D%2Dwidth%3D%22292.4%22%2D%2Dheight%3D%22292.4%22%3E%3Cpath%2D%2Dfill%3D%22%23e2e8f0%22%2D%2Dd%3D%22M287%2D%2D69.4a17.6%2D%2D17.6%2D%2D0%2D%2D0%2D%2D0-13-5.4H18.4c-5%2D%2D0-9.3%2D%2D1.8-12.9%2D%2D5.4A17.6%2D%2D17.6%2D%2D0%2D%2D0%2D%2D0%2D%2D0%2D%2D82.2c0%2D%2D5%2D%2D1.8%2D%2D9.3%2D%2D5.4%2D%2D12.9l128%2D%2D127.9c3.6%2D%2D3.6%2D%2D7.8%2D%2D5.4%2D%2D12.8%2D%2D5.4s9.2-1.8%2D%2D12.8-5.4L287%2D%2D95c3.5-3.5%2D%2D5.4-7.8%2D%2D5.4-12.8%2D%2D0-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+            background-size: 6px 8px;
+        }
+
         /* Efeitos de Hover e Active */
-        #toolbar button:hover,
-        #toolbar select:hover,
+        #top-toolbar button:hover,
+        #top-toolbar select:hover,
         .secondary-toolbar button:hover,
         .secondary-toolbar select:hover,
         .secondary-toolbar input:hover,
-        #toolbar input[type="number"].toolbar-input-number:hover {
+        #top-toolbar input[type="number"].toolbar-input-number:hover {
             background-color: #f1f3f4;
             border-color: #c6cacf;
         }
 
-        #toolbar button:active,
+        #toolbar button:hover, #toolbar select:hover {
+            background-color: #334155; /* Cor de hover mais escura */
+            border-color: #475569;
+        }
+
+        #toolbar button:active {
+            background-color: #475569; /* Cor de clique */
+        }
+
+        #top-toolbar button:active,
         .secondary-toolbar button:active {
             background-color: #e8eaed;
             box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
@@ -660,10 +703,12 @@
             <button id="btn-add-lapis" title="Desenhar (Lápis)">
                 <span class="material-icons">draw</span>
             </button>
-            <select id="select-add-shape" title="Adicionar forma">
-                <option value="" disabled selected>Forma</option>
-                <option value="quadrado">Quadrado</option>
-                <option value="circulo">Círculo</option>
+            <div class="select-icon-wrapper" title="Adicionar forma">
+                <span class="material-icons">crop_square</span>
+                <select id="select-add-shape">
+                    <option value="" disabled selected></option>
+                    <option value="quadrado">Quadrado</option>
+                    <option value="circulo">Círculo</option>
                 <option value="oval">Oval</option>
                 <option value="triangulo">Triângulo</option>
                 <option value="triangulo-inv">Triângulo Inv.</option>
