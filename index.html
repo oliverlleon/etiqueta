@@ -3,48 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor de Etiquetas Avançado</title>
-    <!-- Carrega a biblioteca Interact.js -->
+    <title>Editor de Etiquetas Profissional</title>
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-    <!-- Carrega os ícones do Material Design -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <!-- Bibliotecas para QR Code e Cód. Barras -->
     <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
     <style>
         :root {
-            /* --- Paleta de Cores e Layout --- */
-            --left-toolbar-width: 260px;
-            --top-properties-bar-height: 55px;
-            --bg-primary: #1e293b;        /* Fundo principal (barras) */
-            --bg-secondary: #334155;      /* Fundo secundário (inputs) */
-            --bg-light: #f1f5f9;          /* Fundo do canvas */
-            --surface-color: #ffffff;     /* Cor de superfícies (etiquetas) */
-            --primary-color: #38bdf8;      /* Cor de destaque */
+            --icon-bar-width: 60px;
+            --tool-panel-width: 240px;
+            --properties-bar-height: 55px;
+            --bg-primary: #1e293b;
+            --bg-secondary: #0f172a;
+            --bg-tertiary: #334155;
+            --bg-light: #f1f5f9;
+            --surface-color: #ffffff;
+            --primary-color: #38bdf8;
             --primary-color-hover: #0ea5e9;
-            --text-primary: #e2e8f0;      /* Texto em fundos escuros */
-            --text-secondary: #475569;    /* Texto em fundos claros */
-            --border-color: #475569;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-dark: #1e293b;
+            --border-color: #334155;
             --danger-color: #f43f5e;
-
-            /* --- Variáveis de Etiqueta (JS) --- */
-            --label-width: 100mm;
-            --label-height: 50mm;
-            --label-gap: 5mm; 
-            
-            /* --- Variáveis de Impressão (JS) --- */
-            --print-page-width: var(--label-width);
-            --print-page-height: var(--label-height);
         }
 
         body {
-            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: 'Poppins', sans-serif;
             margin: 0;
-            color: var(--text-secondary);
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            overflow: hidden;
         }
 
         .app-container {
@@ -52,790 +43,262 @@
             height: 100vh;
         }
 
-        /* --- Barra de Ferramentas Vertical Esquerda --- */
-        #left-toolbar {
-            width: var(--left-toolbar-width);
+        /* Barra de Ícones */
+        #icon-bar {
+            width: var(--icon-bar-width);
+            height: 100vh;
+            background-color: var(--bg-secondary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 10px;
+            gap: 10px;
+            z-index: 200;
+        }
+        .icon-button {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 8px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .icon-button:hover {
+            color: var(--text-primary);
+        }
+        .icon-button.active {
+            background-color: var(--bg-tertiary);
+            color: var(--primary-color);
+        }
+        .icon-button .material-icons { font-size: 28px; }
+
+        /* Painel de Ferramentas */
+        #tool-panel {
+            width: var(--tool-panel-width);
             height: 100vh;
             background-color: var(--bg-primary);
-            color: var(--text-primary);
             padding: 20px;
             box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
             overflow-y: auto;
-            position: fixed;
-            left: 0;
-            top: 0;
-            z-index: 100;
+            z-index: 199;
         }
-        
-        /* --- Conteúdo Principal (Barra Superior + Canvas) --- */
-        #main-content-wrapper {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            margin-left: var(--left-toolbar-width);
-            width: calc(100% - var(--left-toolbar-width));
-            height: 100vh; /* Garante que o wrapper ocupe a altura total */
-        }
-
-        /* --- Barra de Propriedades Superior --- */
-        #top-properties-bar {
-            height: var(--top-properties-bar-height);
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            border-bottom: 1px solid var(--border-color);
-            padding: 0 20px;
-            box-sizing: border-box;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            z-index: 99;
-            flex-shrink: 0; /* Impede que a barra encolha */
-            display: none; /* Oculta por padrão, JS controla a visibilidade */
-        }
-
-        /* --- Área de Canvas --- */
-        #canvas-area {
-            flex-grow: 1;
-            background-color: var(--bg-light);
-            overflow: auto;
-            padding: 20px;
-            position: relative; /* Para posicionar os controles de zoom */
-        }
-
-        .zoom-controls {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            gap: 5px;
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 5px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-
-        .toolbar-section {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 20px;
-        }
-        .toolbar-section:last-child {
-            border-bottom: none;
-        }
-        .toolbar-section .label {
-            font-size: 0.9em;
-            font-weight: 600;
+        .panel-content { display: none; }
+        .panel-content.active { display: block; }
+        .panel-section { margin-bottom: 25px; }
+        .panel-section label {
+            display: block;
+            margin-bottom: 10px;
             color: var(--primary-color);
-            align-self: flex-start;
-            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 0.9em;
         }
-
+        #tool-panel button, #tool-panel select, #tool-panel input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 6px;
+        }
         .button-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
         }
-
-        /* Estilo para botões, selects, etc. na barra lateral */
-        #left-toolbar button,
-        #left-toolbar select,
-        #left-toolbar input {
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 10px;
-            border-radius: 6px;
-            cursor: pointer;
+        .input-group {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-family: 'Poppins', sans-serif;
-            font-size: 0.9em;
-            transition: background-color 0.2s ease, border-color 0.2s ease;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        #left-toolbar button:hover,
-        #left-toolbar select:hover,
-        #left-toolbar input:hover {
-            background-color: #475569;
-            border-color: var(--primary-color);
-        }
-        
-        /* Inputs numéricos na barra principal */
-        #toolbar input[type="number"].toolbar-input-number {
-            width: 60px; /* Mais curto */
-            background-color: #f8f9fa;
-            border: 1px solid #DADCE0;
-            color: #3c4043;
-            padding: 8px 5px; /* Menos padding lateral */
-            border-radius: 4px;
-            font-size: 0.9em;
-            height: 36px;
-            box-sizing: border-box;
-            -moz-appearance: textfield; /* Remove setas no Firefox */
-        }
-        #toolbar input[type="number"].toolbar-input-number::-webkit-outer-spin-button,
-        #toolbar input[type="number"].toolbar-input-number::-webkit-inner-spin-button {
-            -webkit-appearance: none; /* Remove setas no Chrome/Safari */
-            margin: 0;
-        }
-
-
-        .context-toolbar {
-            display: none; /* JS controla isso */
-            align-items: center;
-            gap: 15px;
-        }
-
-        .button-group {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        #top-properties-bar .label {
-            color: var(--text-primary);
-            font-size: 0.9em;
-            margin-right: 5px;
-        }
-
-        #top-properties-bar button,
-        #top-properties-bar select,
-        #top-properties-bar input {
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-family: 'Poppins', sans-serif;
-            font-size: 0.85em;
-            height: 36px;
-            transition: background-color 0.2s ease, border-color 0.2s ease;
-        }
-        #top-properties-bar button:hover,
-        #top-properties-bar select:hover,
-        #top-properties-bar input:hover {
-            background-color: #475569;
-            border-color: var(--primary-color);
-        }
-
-        #top-properties-bar button.active {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color-hover);
-        }
-        #top-properties-bar #btn-remover-item {
-            margin-left: auto; /* Empurra o botão para a direita */
-            background-color: var(--danger-color);
-            border-color: var(--danger-color);
-        }
-        #top-properties-bar #btn-remover-item:hover {
-            background-color: #be123c; /* Um tom mais escuro de vermelho */
-            border-color: #be123c;
-        }
-        
-        /* Input de Cor */
-        .color-input {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            width: 36px;
-            height: 36px;
-            padding: 0;
-            border: 1px solid #DADCE0;
-            border-radius: 4px;
-            background-color: transparent;
-            cursor: pointer;
-            overflow: hidden;
-        }
-        .color-input::-webkit-color-swatch-wrapper { padding: 2px; border: none; }
-        .color-input::-webkit-color-swatch { border: 1px solid #bdbdbd; border-radius: 2px; }
-        .color-input::-moz-color-swatch { border: 1px solid #bdbdbd; border-radius: 2px; }
-
-
-        #left-toolbar select, #top-properties-bar select {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23e2e8f0%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3-1.8-12.9-5.4A17.6%2017.6%200%200%200%200%2082.2c0%205-1.8%209.3-5.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            background-size: 8px 10px;
-            padding-right: 30px;
-        }
-
-        /* --- Página de Impressão e Etiquetas --- */
-        #pagina-de-impressao {
-            max-width: var(--label-width);
-            margin: 30px auto;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            transition: max-width 0.3s ease-in-out;
-        }
-        #pagina-de-impressao:not(.layout-dupla) .etiqueta-editavel {
+            gap: 10px;
             margin-bottom: 10px;
         }
-        #pagina-de-impressao.layout-dupla {
-            max-width: var(--print-page-width);
-            justify-content: flex-start;
-            gap: 10px 0;
-        }
-        #pagina-de-impressao.layout-dupla .etiqueta-editavel {
-            margin-right: var(--label-gap);
-            margin-bottom: 0;
-        }
-        /* Esta regra será sobreposta por JS dinâmico */
-        #pagina-de-impressao.layout-dupla .etiqueta-editavel:nth-child(2n) {
-            margin-right: 0;
-        }
+        .input-group span { color: var(--text-secondary); }
 
-        .etiqueta-editavel {
-            width: var(--label-width);
-            height: var(--label-height);
-            background-color: #FFFFFF;
-            border: 1px solid #DADCE0;
-            position: relative; /* Necessário para posicionar itens internos E O CANVAS */
-            overflow: hidden;
-            cursor: default;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            transition: border-color 0.2s, box-shadow 0.2s, width 0.3s ease-in-out, height 0.3s ease-in-out;
-            page-break-inside: avoid;
-            page-break-after: auto;
-            flex-shrink: 0;
-            box-sizing: border-box;
-        }
-        .etiqueta-editavel.active {
-            border-color: #1a73e8;
-            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.3);
-        }
-        
-        /* Overlay de Desenho */
-        #draw-canvas-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 50; /* Acima dos itens, abaixo da UI */
-            cursor: crosshair;
-            /* O JS definirá width e height */
-        }
-        
-        /* Botão para concluir desenho */
-        #btn-concluir-desenho {
-            position: fixed;
-            top: calc(var(--toolbar-height) + var(--secondary-toolbar-height) + 20px);
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 101; /* Acima de tudo */
-            background-color: #1a73e8;
-            color: white;
-            padding: 10px 20px;
-            font-size: 1em;
-            border-radius: 20px;
-            border: none;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            cursor: pointer;
-        }
-
-
-        /* --- Itens Arrastáveis e Redimensionáveis --- */
-        .item-arrastavel {
-            position: absolute;
-            min-width: 20px;
-            min-height: 20px;
-            border: 1px dashed transparent;
-            box-sizing: border-box;
-            cursor: grab;
-            touch-action: none;
-            user-select: none;
-            /* Important: Ensures transform origin is center for rotation */
-            transform-origin: center center;
-        }
-        .item-arrastavel:hover { border-color: #1a73e8; }
-        .item-arrastavel.selecionado-para-remocao {
-            outline: 2px solid red;
-            z-index: 11;
-        }
-        .item-arrastavel.interactjs-dragging,
-        .item-arrastavel.interactjs-resizing {
-            border-color: #1a73e8;
-            border-style: solid;
-            opacity: 0.8;
-            z-index: 10;
-        }
-        
-        /* --- Alça de Rotação --- */
-        .rotate-handle {
-            position: absolute;
-            top: -25px; /* Posição acima do item */
-            left: 50%;
-            transform: translateX(-50%);
-            width: 18px;
-            height: 18px;
-            background-color: #fff;
-            border: 2px solid #1a73e8;
-            border-radius: 50%;
-            cursor: grab; /* Cursor de "agarrar" */
-            display: none; /* Oculto por padrão */
-            z-index: 12; /* Acima do item */
-            box-shadow: 0 0 5px rgba(0,0,0,0.2);
-        }
-        .item-arrastavel.selecionado-para-remocao .rotate-handle {
-            display: block; /* Mostra quando o item está selecionado */
-        }
-        .rotate-handle:active {
-            cursor: grabbing;
-            background-color: #e8eaed;
-        }
-
-        /* --- Tipos de Itens Específicos --- */
-        .item-texto {
-            border: 1px dashed #cccccc;
-            padding: 2px;
-            overflow: hidden;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            line-height: 1.2;
-            cursor: text;
-            user-select: text;
-        }
-        .item-texto:focus {
-             outline: 1px solid #1a73e8;
-             border-style: solid;
-             cursor: text;
-        }
-        
-        /* Símbolo é tratado como texto, mas com tamanho inicial */
-        .item-simbolo {
-            font-size: 28px; /* Tamanho inicial do símbolo */
-            line-height: 1;
-        }
-
-        .item-imagem img {
-            width: 100%;
-            height: 100%;
-            display: block;
-            object-fit: contain;
-        }
-        
-        /* Item Linha (Container) - CORREÇÃO */
-        .item-linha {
-            /* O container é transparente e apenas para interação */
-            border: 1px dashed transparent; /* Borda de interação padrão */
-            min-height: 20px; /* Área de toque mínima */
-            height: auto; /* Altura se ajusta ao padding */
+        /* Conteúdo Principal */
+        #main-content-wrapper {
+            flex: 1;
             display: flex;
-            align-items: center; /* Centraliza a linha visual */
-            padding: 5px 0; /* Padding vertical para facilitar o clique */
-            box-sizing: border-box;
-        }
-        /* A linha visual interna */
-        .linha-visual {
-            width: 100%;
-            /* JS controla altura, cor de fundo, borda, etc. */
-        }
-        /* Borda de redimensionamento da linha não deve ser sólida */
-        .item-linha.interactjs-resizing {
-            border-style: dashed;
-            border-color: #1a73e8;
+            flex-direction: column;
+            height: 100vh;
         }
 
-        
-        /* Item Forma (CSS) */
-        .item-forma {
-            background-color: #e0e0e0; /* Cor padrão */
-            border: 1px solid #bdbdbd;
-        }
-        .shape-circulo { border-radius: 50%; }
-        .shape-oval { border-radius: 50%; }
-        .shape-triangulo { clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
-        .shape-triangulo-inv { clip-path: polygon(50% 100%, 0% 0%, 100% 0%); }
-        .shape-losango { clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
-        .shape-estrela { clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
-        .shape-coracao { clip-path: polygon(50% 25%, 20% 0, 0 20%, 0 50%, 50% 90%, 100% 50%, 100% 20%, 80% 0); }
-        .shape-seta-dir { clip-path: polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%); }
-        .shape-seta-esq { clip-path: polygon(100% 20%, 40% 20%, 40% 0%, 0% 50%, 40% 100%, 40% 80%, 100% 80%); }
-        
-        /* QR Code e Cód. Barras */
-        .item-qrcode, .item-barcode {
-            padding: 5px;
-            background-color: white;
-        }
-        /* Garante que o conteúdo (svg/canvas) redimensione */
-        .item-qrcode > div,
-        .item-barcode > svg {
-            width: 100% !important;
-            height: 100% !important;
-            box-sizing: border-box;
-        }
-        .item-barcode > svg {
-            object-fit: fill;
-        }
-        .item-qrcode img, .item-qrcode canvas {
-             width: 100% !important;
-             height: 100% !important;
-             object-fit: contain;
-        }
-        
-
-        
-        /* --- Modais --- */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            display: none;
+        /* Barra de Propriedades */
+        #properties-bar {
+            height: var(--properties-bar-height);
+            background-color: var(--surface-color);
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
             align-items: center;
-            justify-content: center;
+            padding: 0 20px;
+            gap: 15px;
+            flex-shrink: 0;
+            display: none; /* JS controla */
         }
-        .modal-content {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            max-width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            font-family: inherit;
+        #properties-bar .context-toolbar { display: none; gap: 10px; }
+        #properties-bar input, #properties-bar select, #properties-bar button {
+            background-color: var(--bg-light);
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 8px;
         }
-        .modal-content h3 {
-            margin-top: 0;
-            text-align: center;
-            color: #333;
-        }
-        
-        /* Modal de Símbolos */
-        .modal-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-            gap: 10px;
-            max-width: 500px;
-        }
-        .modal-grid span {
-            font-size: 28px;
-            text-align: center;
-            cursor: pointer;
-            padding: 5px;
-            border-radius: 4px;
-            transition: background-color 0.2s;
-        }
-        .modal-grid span:hover {
-            background-color: #f1f3f4;
-        }
-        .modal-close {
-             background-color: #f1f3f4; color: #3c4043; border: 1px solid #dadce0;
-             padding: 10px 20px; border-radius: 5px; cursor: pointer;
-             font-size: 1em; transition: background-color 0.2s;
-             display: block;
-             margin: 20px auto 0;
-        }
-        .modal-close:hover { background-color: #e8eaed; }
-        
-        /* Modal de Input (QR/Barcode) & Duplicate Count */
-        .modal-input-content {
-             padding: 15px;
-             text-align: center;
-        }
-        .modal-input-content input[type="text"],
-        .modal-input-content input[type="number"] { /* Added number type */
-            width: 90%;
-            padding: 10px;
-            font-size: 1em;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            margin-bottom: 15px;
-            box-sizing: border-box; /* Include padding in width */
-        }
-        .modal-input-content .button-group {
-             justify-content: center;
-             gap: 10px;
-        }
-         .modal-input-content .button-group button {
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: background-color 0.2s;
-            border: none;
-         }
-         .modal-input-content .btn-submit {
-             background-color: #1a73e8; color: white;
-         }
-         .modal-input-content .btn-submit:hover { background-color: #185abc; }
-         .modal-input-content .btn-cancel {
-             background-color: #f1f3f4; color: #3c4043; border: 1px solid #dadce0;
-         }
-         .modal-input-content .btn-cancel:hover { background-color: #e8eaed; }
+        #btn-remover-item { margin-left: auto; background-color: var(--danger-color); color: white; border: none;}
 
-
-        /* --- Estilos de Impressão --- */
-        #print-style-dynamic { display: none; }
-        
-        /* Bloco de impressão estático RESTAURADO */
-        @media print {
-            body {
-                background-color: #FFFFFF;
-                padding: 0;
-                margin: 0;
-                width: var(--print-page-width) !important;
-            }
-
-            #left-toolbar, #top-properties-bar, .modal-overlay, .zoom-controls, .rotate-handle {
-                display: none !important;
-            }
-
-            .app-container, #main-content-wrapper {
-                display: block !important;
-                margin-left: 0 !important;
-                width: auto !important;
-                height: auto !important;
-            }
-
-            #canvas-area {
-                padding: 0 !important;
-                overflow: visible !important;
-            }
-
-            #pagina-de-impressao {
-                margin: 0 !important;
-                padding: 0 !important;
-                max-width: none !important;
-                gap: 0 !important;
-                display: flex !important;
-                flex-wrap: wrap !important;
-                justify-content: flex-start !important;
-                width: var(--print-page-width) !important;
-            }
-
-            /* Regras de layout de impressão (margem/quebra) são movidas para #print-style-dynamic */
-
-            .etiqueta-editavel {
-                border: none !important;
-                box-shadow: none !important;
-                /* margin-bottom: 0 !important; */ /* Controlado por JS */
-                display: inline-block !important; /* Chave para alinhamento */
-                vertical-align: top !important;
-                page-break-inside: avoid !important;
-            }
-
-            .item-arrastavel {
-                border-color: transparent !important;
-                outline: none !important;
-            }
-            
-            /* Garante que a linha (borda) seja impressa */
-            .item-linha .linha-visual {
-                background-color: transparent !important; /* Esconde o fundo */
-                border-top-color: var(--line-print-color, #000) !important; /* Usa a cor definida */
-                border-top-style: var(--line-print-style, solid) !important;
-                /* Cor de fundo sólida será impressa normally */
-                background-color: var(--line-print-style, solid) == 'solid' ? var(--line-print-color, #000) : transparent !important;
-            }
-            
-            /* Ajustes QR/Barcode para impressão */
-            .item-qrcode, .item-barcode {
-                padding: 0 !important;
-            }
-            .item-barcode > svg {
-                /* O JS do JsBarcode pode ser teimoso, mas tentamos */
-                max-width: 100% !important;
-                max-height: 100% !important;
-            }
+        /* Área de Trabalho */
+        #canvas-area {
+            flex-grow: 1;
+            position: relative;
+            overflow: auto;
+            padding: 30px;
         }
-
+        #pagina-de-impressao {
+            margin: 0 auto;
+        }
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+        }
     </style>
-    
-    <!-- Estilo dinâmico para tela (ex: colunas) - MOVIDO PARA FORA DO STYLE PRINCIPAL -->
-    <style id="screen-style-dynamic"></style>
-    
 </head>
-<body class="app-container">
+<body>
+    <div class="app-container">
+        <!-- Barra de Ícones Fina (Categorias) -->
+        <aside id="icon-bar">
+            <button class="icon-button active" data-panel="panel-file" title="Arquivo">
+                <span class="material-icons">folder</span>
+            </button>
+            <button class="icon-button" data-panel="panel-add" title="Adicionar Elementos">
+                <span class="material-icons">add_box</span>
+            </button>
+            <button class="icon-button" data-panel="panel-layout" title="Layout da Etiqueta">
+                <span class="material-icons">view_quilt</span>
+            </button>
+        </aside>
 
-    <!-- Nova Barra de Ferramentas Vertical Esquerda -->
-    <aside id="left-toolbar">
-        <!-- O conteúdo da #toolbar antiga será movido e reorganizado aqui -->
-        <div class="toolbar-section">
-            <button id="btn-add-etiqueta" title="Adicionar nova etiqueta à página">
-                <span class="material-icons">add_to_queue</span> Nova Etiqueta
-            </button>
-            <button id="btn-duplicar-etiqueta" title="Copiar etiqueta selecionada">
-                <span class="material-icons">content_copy</span> Copiar
-            </button>
-            <button id="btn-remover-etiqueta" title="Remover etiqueta selecionada" style="color: #D93025;">
-                <span class="material-icons">delete_sweep</span>
-            </button>
-            <button id="btn-imprimir" title="Imprimir página">
-                <span class="material-icons">print</span> Imprimir
-            </button>
-        </div>
-        <div class="toolbar-section">
-             <span class="label">Selecionar Etiqueta:</span>
-            <select id="select-layout-preset" title="Selecionar tamanho e layout da etiqueta">
-                <option value="100x50">100 x 50 mm (1 Col)</option>
-                <option value="50x25">50 x 25 mm (1 Col)</option>
-                <option value="50x25-dupla">50 x 25 mm (2 Col)</option>
-                <option value="personalizado" selected>Personalizado</option>
-            </select>
-            <div id="custom-layout-inputs" class="button-group" style="display: none;">
-                <span class="label">Larg. (mm):</span>
-                <input type="number" id="input-custom-width" value="100" class="toolbar-input-number">
-                <span class="label">Alt. (mm):</span>
-                <input type="number" id="input-custom-height" value="50" class="toolbar-input-number">
-                <span class="label">Colunas:</span>
-                <input type="number" id="input-custom-cols" value="1" min="1" max="10" class="toolbar-input-number" style="width: 45px;">
-            </div>
-        </div>
-        <div class="toolbar-section">
-            <span class="label">Adicionar:</span>
-            <button id="btn-add-texto" title="Adicionar caixa de texto">
-                <span class="material-icons">title</span>
-            </button>
-            <button id="btn-add-imagem" title="Adicionar imagem">
-                <span class="material-icons">image</span>
-            </button>
-            <select id="select-add-shape" title="Adicionar forma">
-                <option value="" disabled selected>Forma</option>
-                <option value="quadrado">Quadrado</option>
-                <option value="circulo">Círculo</option>
-                <option value="oval">Oval</option>
-                <option value="triangulo">Triângulo</option>
-                <option value="triangulo-inv">Triângulo Inv.</option>
-                <option value="losango">Losango</option>
-                <option value="estrela">Estrela</option>
-                <option value="coracao">Coração</option>
-                <option value="seta-dir">Seta (Dir)</option>
-                <option value="seta-esq">Seta (Esq)</option>
-            </select>
-            <button id="btn-add-linha" title="Adicionar linha">
-                <span class="material-icons">horizontal_rule</span>
-            </button>
-            <button id="btn-add-simbolo" title="Adicionar símbolo">
-                <span class="material-icons">emoji_emotions</span>
-            </button>
-            <button id="btn-add-qrcode" title="Adicionar QR Code">
-                <span class="material-icons">qr_code_2</span>
-            </button>
-            <button id="btn-add-barcode" title="Adicionar Código de Barras">
-                <span class="material-icons">view_week</span>
-            </button>
-            <button id="btn-add-lapis" title="Desenhar (Lápis)">
-                <span class="material-icons">draw</span>
-            </button>
-        </div>
-    </aside>
-
-    <!-- Wrapper para o Conteúdo Principal -->
-    <div id="main-content-wrapper">
-        <!-- Barra de Propriedades Superior (Contextual) -->
-        <header id="top-properties-bar">
-            <!-- As barras de ferramentas contextuais antigas vão aqui -->
-            <div id="text-toolbar-options" class="context-toolbar">
-                 <div class="button-group">
-                    <select id="select-font-family" title="Tipo de Fonte">
-                        <option value="Arial, sans-serif">Arial</option>
-                        <option value="'Times New Roman', Times, serif">Times New Roman</option>
-                        <option value="'Courier New', Courier, monospace">Courier New</option>
-                        <option value="Verdana, Geneva, sans-serif">Verdana</option>
-                        <option value="Georgia, serif">Georgia</option>
-                    </select>
-                    <input type="number" id="input-font-size" min="6" max="150" value="10" title="Tamanho da Fonte (px)">
-                    <input type="color" id="input-font-color" class="color-input" value="#000000" title="Cor da Fonte">
+        <!-- Painel de Ferramentas (Conteúdo das Categorias) -->
+        <aside id="tool-panel">
+            <!-- Painel de Arquivo -->
+            <div id="panel-file" class="panel-content active">
+                <div class="panel-section">
+                    <label>Ações</label>
+                    <button id="btn-add-etiqueta"><span class="material-icons">add_to_queue</span> Nova Etiqueta</button>
+                    <button id="btn-duplicar-etiqueta"><span class="material-icons">content_copy</span> Duplicar</button>
+                    <button id="btn-remover-etiqueta"><span class="material-icons">delete_sweep</span> Remover</button>
+                    <button id="btn-imprimir"><span class="material-icons">print</span> Imprimir</button>
                 </div>
-                <div class="button-group">
+            </div>
+            <!-- Painel de Adicionar Elementos -->
+            <div id="panel-add" class="panel-content">
+                <div class="panel-section">
+                    <label>Básico</label>
+                    <div class="button-grid">
+                        <button id="btn-add-texto"><span class="material-icons">title</span> Texto</button>
+                        <button id="btn-add-imagem"><span class="material-icons">image</span> Imagem</button>
+                    </div>
+                </div>
+                <div class="panel-section">
+                    <label>Formas e Linhas</label>
+                    <div class="button-grid">
+                        <select id="select-add-shape">
+                            <option value="" disabled selected>Forma</option>
+                            <option value="quadrado">Quadrado</option>
+                            <option value="circulo">Círculo</option>
+                            <option value="oval">Oval</option>
+                            <option value="triangulo">Triângulo</option>
+                        </select>
+                        <button id="btn-add-linha"><span class="material-icons">horizontal_rule</span> Linha</button>
+                    </div>
+                </div>
+                 <div class="panel-section">
+                    <label>Avançado</label>
+                    <div class="button-grid">
+                        <button id="btn-add-simbolo"><span class="material-icons">emoji_emotions</span> Símbolo</button>
+                        <button id="btn-add-qrcode"><span class="material-icons">qr_code_2</span> QR Code</button>
+                        <button id="btn-add-barcode"><span class="material-icons">view_week</span> Cód. Barras</button>
+                        <button id="btn-add-lapis"><span class="material-icons">draw</span> Desenhar</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Painel de Layout -->
+            <div id="panel-layout" class="panel-content">
+                <div class="panel-section">
+                    <label>Presets</label>
+                    <select id="select-layout-preset">
+                        <option value="100x50">100x50 mm (1 Col)</option>
+                        <option value="50x25">50x25 mm (1 Col)</option>
+                        <option value="50x25-dupla">50x25 mm (2 Col)</option>
+                        <option value="personalizado" selected>Personalizado</option>
+                    </select>
+                </div>
+                <div id="custom-layout-inputs" class="panel-section">
+                    <label>Personalizado (mm)</label>
+                    <div class="input-group">
+                        <span>Larg.</span>
+                        <input type="number" id="input-custom-width" value="100">
+                    </div>
+                    <div class="input-group">
+                        <span>Alt.</span>
+                        <input type="number" id="input-custom-height" value="50">
+                    </div>
+                    <div class="input-group">
+                        <span>Cols.</span>
+                        <input type="number" id="input-custom-cols" value="1" min="1" max="10">
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <div id="main-content-wrapper">
+            <!-- Barra de Propriedades Superior -->
+            <header id="properties-bar">
+                 <div id="text-toolbar-options" class="context-toolbar">
+                    <select id="select-font-family" title="Fonte"><option>Arial</option></select>
+                    <input type="number" id="input-font-size" value="10" title="Tamanho">
+                    <input type="color" id="input-font-color" value="#000000" title="Cor">
                     <button id="btn-text-bold" title="Negrito"><span class="material-icons">format_bold</span></button>
                     <button id="btn-text-italic" title="Itálico"><span class="material-icons">format_italic</span></button>
-                    <button id="btn-text-underline" title="Sublinhado"><span class="material-icons">format_underlined</span></button>
-                    <button id="btn-text-strike" title="Tachado"><span class="material-icons">strikethrough_s</span></button>
                 </div>
-                <div class="button-group">
-                    <select id="select-text-transform" title="Transformação do Texto">
-                        <option value="none">Normal</option>
-                        <option value="uppercase">MAIÚSCULAS</option>
-                        <option value="lowercase">minúsculas</option>
-                        <option value="capitalize">Capitalizadas</option>
-                    </select>
+                <div id="style-toolbar-options" class="context-toolbar">
+                    <input type="color" id="input-style-color" value="#000000" title="Cor">
+                    <input type="number" id="input-style-thickness" value="2" title="Espessura">
+                    <select id="select-style-type" title="Estilo"><option>Sólida</option></select>
                 </div>
-            </div>
-            <div id="style-toolbar-options" class="context-toolbar">
-                <div class="button-group">
-                    <span class="label">Cor:</span>
-                    <input type="color" id="input-style-color" class="color-input" value="#000000" title="Cor da Linha/Forma">
-                </div>
-                <div class="button-group">
-                    <span class="label">Espessura (px):</span>
-                    <input type="number" id="input-style-thickness" min="1" max="50" value="2" title="Espessura da Linha/Borda">
-                </div>
-                <div class="button-group">
-                    <span class="label">Estilo:</span>
-                    <select id="select-style-type" title="Estilo da Linha/Borda">
-                        <option value="solid">Sólida</option>
-                        <option value="dashed">Tracejada</option>
-                        <option value="dotted">Pontilhada</option>
-                    </select>
-                </div>
-            </div>
-            <div id="drawing-toolbar-options" class="context-toolbar">
-                <div class="button-group">
-                    <button id="btn-draw-tool-pencil" class="active" title="Lápis"><span class="material-icons">edit</span></button>
+                <div id="drawing-toolbar-options" class="context-toolbar">
+                    <button id="btn-draw-tool-pencil" title="Lápis"><span class="material-icons">edit</span></button>
                     <button id="btn-draw-tool-eraser" title="Borracha"><span class="material-icons">cleaning_services</span></button>
+                    <input type="color" id="input-draw-color" value="#000000" title="Cor">
+                    <input type="number" id="input-draw-thickness" value="2" title="Espessura">
                 </div>
-                <div class="button-group">
-                    <span class="label">Cor:</span>
-                    <input type="color" id="input-draw-color" class="color-input" value="#000000" title="Cor do Lápis">
-                </div>
-                <div class="button-group">
-                    <span class="label">Espessura (px):</span>
-                    <input type="number" id="input-draw-thickness" min="1" max="50" value="2" title="Espessura do Lápis/Borracha">
-                </div>
-            </div>
-             <!-- O botão de remover item também é contextual -->
-            <button id="btn-remover-item" title="Remover item selecionado" style="color: #D93025; display:none;">
-                <span class="material-icons">delete</span>
-            </button>
-        </header>
+                <button id="btn-remover-item" title="Remover item"><span class="material-icons">delete</span></button>
+            </header>
 
-        <!-- Área de Canvas -->
-        <main id="canvas-area">
-            <div class="zoom-controls">
-                <button id="btn-zoom-out" title="Diminuir Zoom"><span class="material-icons">zoom_out</span></button>
-                <button id="btn-zoom-in" title="Aumentar Zoom"><span class="material-icons">zoom_in</span></button>
-                <button id="btn-zoom-reset" title="Restaurar Zoom"><span class="material-icons">zoom_in_map</span></button>
-            </div>
-            <div id="pagina-de-impressao">
-                <div class="etiqueta-editavel active" data-label-id="label-1">
-                    <!-- Itens arrastáveis serão adicionados aqui -->
+            <!-- Área de Trabalho (Canvas) -->
+            <main id="canvas-area">
+                <div id="pagina-de-impressao">
+                    <div class="etiqueta-editavel active"></div>
                 </div>
-            </div>
-        </main>
+                <div class="zoom-controls">
+                    <button id="btn-zoom-out"><span class="material-icons">zoom_out</span></button>
+                    <button id="btn-zoom-in"><span class="material-icons">zoom_in</span></button>
+                    <button id="btn-zoom-reset"><span class="material-icons">zoom_in_map</span></button>
+                </div>
+            </main>
+        </div>
     </div>
 
-    <!-- Input de Imagem Oculto -->
+    <!-- Modais e outros elementos ocultos -->
     <input type="file" id="input-imagem" accept="image/*" style="display: none;">
     
-    <!-- Modal de Símbolos -->
     <div id="modal-simbolos" class="modal-overlay">
         <div class="modal-content">
             <h3>Escolha um Símbolo</h3>
-            <div class="modal-grid" id="symbol-grid-container">
-                <!-- Símbolos serão gerados pelo JS -->
-            </div>
+            <div class="modal-grid" id="symbol-grid-container"></div>
             <button id="modal-simbolos-close" class="modal-close">Fechar</button>
         </div>
     </div>
     
-    <!-- Modal de Input (QR/Barcode) -->
     <div id="modal-input" class="modal-overlay">
         <div class="modal-content modal-input-content">
             <h3 id="modal-input-title">Digite o valor</h3>
@@ -847,11 +310,10 @@
         </div>
     </div>
 
-    <!-- Modal para Contagem de Duplicação -->
     <div id="modal-duplicate-count" class="modal-overlay">
         <div class="modal-content modal-input-content">
-            <h3 id="modal-duplicate-title">Quantas cópias deseja criar?</h3>
-            <input type="number" id="modal-duplicate-field" value="1" min="1" max="100">
+            <h3 id="modal-duplicate-title">Quantas cópias?</h3>
+            <input type="number" id="modal-duplicate-field" value="1" min="1">
             <div class="button-group">
                 <button id="modal-duplicate-submit" class="btn-submit">Criar</button>
                 <button id="modal-duplicate-close" class="btn-cancel">Cancelar</button>
@@ -859,1231 +321,183 @@
         </div>
     </div>
     
-    <!-- Estilo dinâmico para impressão -->
     <style id="print-style-dynamic"></style>
-    <!-- Estilo dinâmico para tela (ex: colunas) - JÁ ESTÁ FORA DO STYLE PRINCIPAL -->
+    <style id="screen-style-dynamic"></style>
 
     <script>
-        
-        // --- Referências DOM (Principais) ---
-        const topPropertiesBar = document.getElementById('top-properties-bar');
-        const paginaDeImpressao = document.getElementById('pagina-de-impressao');
-        const toolbar = document.getElementById('left-toolbar');
-        const btnAddEtiqueta = document.getElementById('btn-add-etiqueta');
-        const btnImprimir = document.getElementById('btn-imprimir');
-        const btnAddTexto = document.getElementById('btn-add-texto');
-        const btnAddImagem = document.getElementById('btn-add-imagem');
-        const btnRemoverItem = document.getElementById('btn-remover-item');
-        const inputImagem = document.getElementById('input-imagem');
-        const printStyleDynamic = document.getElementById('print-style-dynamic');
-        const screenStyleDynamic = document.getElementById('screen-style-dynamic');
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Lógica de Troca de Painel ---
+            const iconButtons = document.querySelectorAll('.icon-button');
+            const panelContents = document.querySelectorAll('.panel-content');
 
-        // --- Referências DOM (Layout e Duplicar) ---
-        const selectLayoutPreset = document.getElementById('select-layout-preset');
-        const customLayoutInputs = document.getElementById('custom-layout-inputs');
-        const btnDuplicarEtiqueta = document.getElementById('btn-duplicar-etiqueta');
-        const btnRemoverEtiqueta = document.getElementById('btn-remover-etiqueta'); // NOVO
-        const btnZoomIn = document.getElementById('btn-zoom-in');
-        const btnZoomOut = document.getElementById('btn-zoom-out');
-        const btnZoomReset = document.getElementById('btn-zoom-reset');
-        const inputCustomWidth = document.getElementById('input-custom-width');
-        const inputCustomHeight = document.getElementById('input-custom-height');
-        const inputCustomCols = document.getElementById('input-custom-cols');
+            iconButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Desativa todos
+                    iconButtons.forEach(btn => btn.classList.remove('active'));
+                    panelContents.forEach(panel => panel.classList.remove('active'));
 
-        // --- Referências DOM (Novas Ferramentas) ---
-        const selectAddShape = document.getElementById('select-add-shape');
-        const btnAddLinha = document.getElementById('btn-add-linha');
-        const btnAddSimbolo = document.getElementById('btn-add-simbolo');
-        const btnAddLapis = document.getElementById('btn-add-lapis');
-        const btnAddQRCode = document.getElementById('btn-add-qrcode');
-        const btnAddBarcode = document.getElementById('btn-add-barcode');
-
-        // --- Referências DOM (Modais) ---
-        const modalSimbolos = document.getElementById('modal-simbolos');
-        const symbolGridContainer = document.getElementById('symbol-grid-container');
-        const modalSimbolosClose = document.getElementById('modal-simbolos-close');
-        const modalInput = document.getElementById('modal-input');
-        const modalInputTitle = document.getElementById('modal-input-title');
-        const modalInputField = document.getElementById('modal-input-field');
-        const modalInputSubmit = document.getElementById('modal-input-submit');
-        const modalInputClose = document.getElementById('modal-input-close');
-        
-        // Modal de Duplicação
-        const modalDuplicateCount = document.getElementById('modal-duplicate-count');
-        const modalDuplicateField = document.getElementById('modal-duplicate-field');
-        const modalDuplicateSubmit = document.getElementById('modal-duplicate-submit');
-        const modalDuplicateClose = document.getElementById('modal-duplicate-close');
-
-
-        // --- Referências DOM (Barras Secundárias) ---
-        const textToolbarOptions = document.getElementById('text-toolbar-options');
-        const selectFontFamily = document.getElementById('select-font-family');
-        const inputFontSize = document.getElementById('input-font-size');
-        const inputFontColor = document.getElementById('input-font-color');
-        const btnTextBold = document.getElementById('btn-text-bold');
-        const btnTextItalic = document.getElementById('btn-text-italic');
-        const btnTextUnderline = document.getElementById('btn-text-underline');
-        const btnTextStrike = document.getElementById('btn-text-strike');
-        const selectTextTransform = document.getElementById('select-text-transform');
-        
-        const styleToolbarOptions = document.getElementById('style-toolbar-options');
-        const inputStyleColor = document.getElementById('input-style-color');
-        const inputStyleThickness = document.getElementById('input-style-thickness');
-        const selectStyleType = document.getElementById('select-style-type');
-        
-        const drawingToolbarOptions = document.getElementById('drawing-toolbar-options');
-        const btnDrawToolPencil = document.getElementById('btn-draw-tool-pencil');
-        const btnDrawToolEraser = document.getElementById('btn-draw-tool-eraser');
-        const inputDrawColor = document.getElementById('input-draw-color');
-        const inputDrawThickness = document.getElementById('input-draw-thickness');
-
-        // --- Variáveis de Estado ---
-        let etiquetaAtiva = document.querySelector('.etiqueta-editavel.active');
-        let itemSelecionado = null;
-        let labelCounter = 1;
-        let itemCounter = 0;
-        let tamanhoAtualEtiqueta = { width: '100mm', height: '50mm' };
-        let layoutAtual = 'simples';
-        let modalInputCallback = null; // Callback para o modal de input genérico
-        let zoomLevel = 1.0;
-        
-        // --- Estado de Desenho (Lápis) ---
-        let isDrawing = false;
-        let drawCanvas = null;
-        let drawCtx = null;
-        let btnConcluirDesenho = null;
-        // Variáveis para armazenar os listeners de desenho (para remoção correta)
-        let drawListeners = { start: null, end: null, draw: null };
-
-
-        // --- Funções Auxiliares (Definir Ativa, IDs, Seleção) ---
-
-        function definirEtiquetaAtiva(etiqueta) {
-            if (isDrawing) pararModoDesenho(false); // Cancela desenho ao trocar
-            if (etiquetaAtiva) {
-                etiquetaAtiva.classList.remove('active');
-            }
-            etiquetaAtiva = etiqueta;
-            if (etiquetaAtiva) {
-                etiquetaAtiva.classList.add('active');
-            }
-            desselecionarItem();
-        }
-
-        function gerarItemId() { return `item-${++itemCounter}`; }
-        function gerarLabelId() { return `label-${++labelCounter}`; }
-
-        function selecionarItem(itemElement) {
-            desselecionarItem();
-            itemSelecionado = itemElement;
-            
-            if (itemSelecionado) {
-                topPropertiesBar.style.display = 'flex';
-                itemSelecionado.classList.add('selecionado-para-remocao'); 
-                btnRemoverItem.style.display = 'inline-flex';
-
-                if (itemSelecionado.classList.contains('item-texto') || itemSelecionado.classList.contains('item-simbolo')) {
-                    textToolbarOptions.style.display = 'flex';
-                    updateTextToolState();
-                } else if (itemSelecionado.classList.contains('item-linha') || itemSelecionado.classList.contains('item-forma')) {
-                    styleToolbarOptions.style.display = 'flex';
-                    updateStyleToolState();
-                }
-            }
-        }
-
-        function desselecionarItem() {
-            if (itemSelecionado) {
-                itemSelecionado.classList.remove('selecionado-para-remocao');
-            }
-            itemSelecionado = null;
-            topPropertiesBar.style.display = 'none';
-            btnRemoverItem.style.display = 'none';
-            textToolbarOptions.style.display = 'none';
-            styleToolbarOptions.style.display = 'none';
-            drawingToolbarOptions.style.display = 'none';
-        }
-        
-        function rgbToHex(rgb) {
-            if (!rgb || !rgb.startsWith('rgb')) return rgb;
-            let match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
-            if (!match) return '#000000';
-            function hex(c) { return ('0' + parseInt(c).toString(16)).slice(-2); }
-            return '#' + hex(match[1]) + hex(match[2]) + hex(match[3]);
-        }
-
-
-        // --- Funções de Gerenciamento de Layout e Tamanho ---
-        function aplicarLayout(width_mm, height_mm, colunas) {
-            const width = `${width_mm}mm`;
-            const height = `${height_mm}mm`;
-            
-            layoutAtual = (colunas > 1) ? 'multipla' : 'simples';
-            tamanhoAtualEtiqueta = { width, height };
-            
-            const rootStyle = document.documentElement.style;
-            rootStyle.setProperty('--label-width', width);
-            rootStyle.setProperty('--label-height', height);
-
-            // Calcular largura da página de impressão
-            let printWidth;
-            if (colunas === 1) {
-                printWidth = width;
-                paginaDeImpressao.classList.remove('layout-dupla'); // Usa 'layout-dupla' para lógica de gap
-            } else {
-                printWidth = `calc(${colunas} * ${width} + (${colunas - 1}) * var(--label-gap))`;
-                paginaDeImpressao.classList.add('layout-dupla'); 
-            }
-            
-            rootStyle.setProperty('--print-page-width', printWidth);
-            rootStyle.setProperty('--print-page-height', height);
-            paginaDeImpressao.style.maxWidth = printWidth;
-
-            // Atualiza o estilo de impressão dinâmico
-            printStyleDynamic.innerHTML = `
-                @media print { 
-                    @page { 
-                        size: ${printWidth} ${height}; 
-                        margin: 0; 
-                    }
-                    
-                    /* Lógica de margem e quebra de página */
-                    .etiqueta-editavel {
-                        margin-right: var(--label-gap) !important;
-                    }
-                    /* Remove margem do último item da linha */
-                    .etiqueta-editavel:nth-child(${colunas}n) {
-                        margin-right: 0 !important;
-                    }
-                    /* Força quebra APÓS a linha, mas não no último item */
-                    .etiqueta-editavel:nth-child(${colunas}n):not(:last-child) {
-                         page-break-after: always !important;
-                    }
-                    /* Evita quebras desnecessárias no final */
-                    .etiqueta-editavel:last-child,
-                    .etiqueta-editavel:nth-child(${colunas}n):last-child {
-                        page-break-after: avoid !important;
-                    }
-                }
-            `;
-            
-            // Atualiza estilo de tela dinâmico (para gaps corretos)
-            if (colunas > 1) {
-                 screenStyleDynamic.innerHTML = `
-                    #pagina-de-impressao.layout-dupla .etiqueta-editavel:nth-child(${colunas}n) {
-                         margin-right: 0;
-                    }
-                 `;
-            } else {
-                 screenStyleDynamic.innerHTML = ''; // Limpa se for coluna única
-            }
-
-            // Atualiza o select de preset para "personalizado" se os valores não baterem
-            if ( (width_mm == 100 && height_mm == 50 && colunas == 1) ) {
-                selectLayoutPreset.value = '100x50';
-            } else if ( (width_mm == 50 && height_mm == 25 && colunas == 1) ) {
-                selectLayoutPreset.value = '50x25';
-            } else if ( (width_mm == 50 && height_mm == 25 && colunas == 2) ) {
-                selectLayoutPreset.value = '50x25-dupla';
-            } else {
-                selectLayoutPreset.value = 'personalizado';
-            }
-        }
-        
-        function definirLayoutETamanho(layoutValue) {
-            let width_mm, height_mm, colunas;
-
-            if (layoutValue === 'personalizado') {
-                customLayoutInputs.style.display = 'flex';
-                handleCustomLayoutChange(); // Aplica os valores atuais
-                return;
-            }
-
-            customLayoutInputs.style.display = 'none';
-            
-            if (layoutValue === '100x50') {
-                width_mm = 100; height_mm = 50; colunas = 1;
-            } else if (layoutValue === '50x25') {
-                width_mm = 50; height_mm = 25; colunas = 1;
-            } else if (layoutValue === '50x25-dupla') {
-                width_mm = 50; height_mm = 25; colunas = 2;
-            } else {
-                // Se for "personalizado" ou outro, não faz nada,
-                // deixa o usuário digitar.
-                return; 
-            }
-
-            // Atualiza os inputs
-            inputCustomWidth.value = width_mm;
-            inputCustomHeight.value = height_mm;
-            inputCustomCols.value = colunas;
-
-            // Aplica o layout
-            aplicarLayout(width_mm, height_mm, colunas);
-        }
-
-
-        // --- Funções de Adição de Itens ---
-
-        // Adiciona uma nova etiqueta
-        function adicionarEtiqueta() {
-            if (isDrawing) pararModoDesenho(false);
-            const novaEtiqueta = document.createElement('div');
-            novaEtiqueta.classList.add('etiqueta-editavel');
-            novaEtiqueta.dataset.labelId = gerarLabelId();
-            paginaDeImpressao.appendChild(novaEtiqueta);
-            definirEtiquetaAtiva(novaEtiqueta);
-        }
-
-        // Função para duplicar a etiqueta ativa múltiplas vezes
-        function duplicarEtiqueta(count = 1) { // Aceita contagem
-            if (isDrawing) pararModoDesenho(false);
-            if (!etiquetaAtiva) {
-                alertPersonalizado("Por favor, selecione a etiqueta que deseja duplicar.");
-                return;
-            }
-
-            let lastClone = etiquetaAtiva; // Referência para inserir após
-
-            for (let i = 0; i < count; i++) {
-                const clone = etiquetaAtiva.cloneNode(true);
-                clone.classList.remove('active');
-                clone.dataset.labelId = gerarLabelId();
-                
-                // Insere após a etiqueta ativa ou o último clone criado
-                lastClone.insertAdjacentElement('afterend', clone);
-
-                // IMPORTANTE: Reinicializa a interação para todos os itens clonados
-                clone.querySelectorAll('.item-arrastavel').forEach(item => {
-                    inicializarInteracao(item);
+                    // Ativa o clicado
+                    button.classList.add('active');
+                    const panelId = button.getAttribute('data-panel');
+                    document.getElementById(panelId).classList.add('active');
                 });
-                
-                lastClone = clone; // Atualiza a referência para a próxima inserção
-            }
-
-            // Define o último clone criado como ativo
-            definirEtiquetaAtiva(lastClone);
-        }
-
-
-        // Adiciona um item genérico (configura posição, tamanho e interação)
-        function adicionarItem(etiqueta, tipo, conteudo = null) {
-            if (!etiqueta) {
-                alertPersonalizado("Selecione uma etiqueta primeiro!");
-                return null;
-            }
-            if (isDrawing) pararModoDesenho(false); // Sai do modo desenho
-
-            const item = document.createElement('div');
-            item.classList.add('item-arrastavel', `item-${tipo}`);
-            item.id = gerarItemId();
-            
-            // Posição e Tamanho Iniciais
-            const etiquetaRect = etiqueta.getBoundingClientRect();
-            const etiquetaWidth = etiquetaRect.width || parseFloat(tamanhoAtualEtiqueta.width) || 100;
-            const etiquetaHeight = etiquetaRect.height || parseFloat(tamanhoAtualEtiqueta.height) || 50;
-
-            const startX = Math.min(10, etiquetaWidth * 0.1);
-            const startY = Math.min(10, etiquetaHeight * 0.1);
-            let startWidth = Math.max(80, etiquetaWidth * 0.25);
-            let startHeight = Math.max(50, etiquetaHeight * 0.25);
-
-            item.style.left = `${startX}px`; // Apenas para posicionamento inicial do DOM
-            item.style.top = `${startY}px`; // JS usará transform
-            item.dataset.x = startX;
-            item.dataset.y = startY;
-            item.dataset.angle = 0; // Adiciona dado de ângulo
-            item.style.transform = `translate(${startX}px, ${startY}px) rotate(0deg)`; // Adiciona rotação
-
-            // Adiciona alça de rotação
-            const rotateHandle = document.createElement('div');
-            rotateHandle.className = 'rotate-handle';
-            item.appendChild(rotateHandle);
-
-            // Configuração por tipo
-            if (tipo === 'texto' || tipo === 'simbolo') {
-                item.contentEditable = 'true';
-                item.textContent = conteudo || 'Edite aqui';
-                item.style.height = 'auto';
-                item.style.minHeight = '20px';
-                item.style.width = `${startWidth}px`;
-                item.style.fontSize = tipo === 'simbolo' ? '28px' : '10px';
-                item.style.fontFamily = 'Arial, sans-serif';
-                item.style.color = '#000000';
-                if(tipo === 'simbolo') item.classList.add('item-simbolo');
-            } else if (tipo === 'imagem' && conteudo) {
-                const img = document.createElement('img');
-                img.src = conteudo;
-                img.draggable = false;
-                item.appendChild(img);
-                item.style.width = `${startWidth}px`;
-                item.style.height = `${startHeight}px`;
-            } else if (tipo === 'forma') {
-                item.classList.add('shape-' + (conteudo || 'quadrado'));
-                item.style.width = `${startWidth}px`;
-                item.style.height = `${startHeight}px`;
-                item.style.backgroundColor = '#d3d3d3'; // Padrão
-            } else if (tipo === 'linha') {
-                startWidth = Math.max(100, etiquetaWidth * 0.4);
-                startHeight = 2; // Espessura inicial
-                item.style.width = `${startWidth}px`;
-                item.style.height = 'auto'; // Container da linha
-                item.style.minHeight = '20px'; // Área de toque
-                
-                const linhaVisual = document.createElement('div');
-                linhaVisual.className = 'linha-visual';
-                linhaVisual.style.height = `${startHeight}px`;
-                linhaVisual.style.backgroundColor = '#000000';
-                item.appendChild(linhaVisual);
-            } else if (tipo === 'qrcode') {
-                startWidth = Math.max(80, etiquetaWidth * 0.2); // QR Codes são quadrados
-                startHeight = startWidth;
-                item.style.width = `${startWidth}px`;
-                item.style.height = `${startHeight}px`;
-                // O conteúdo (div) será adicionado por addQRCode
-            } else if (tipo === 'barcode') {
-                startHeight = Math.max(40, etiquetaHeight * 0.15); // Barcodes são largos
-                item.style.width = `${startWidth}px`;
-                item.style.height = `${startHeight}px`;
-                 // O conteúdo (svg) será adicionado por addBarcode
-            }
-
-            etiqueta.appendChild(item);
-            inicializarInteracao(item);
-
-            // Listeners de seleção
-            item.addEventListener('click', (event) => {
-                event.stopPropagation();
-                selecionarItem(item);
             });
-             if (tipo === 'texto' || tipo === 'simbolo') {
-                 item.addEventListener('focus', (event) => {
-                    event.stopPropagation();
-                    selecionarItem(item);
-                 });
-             }
+
+            // --- Referências DOM (Adaptadas para a nova estrutura) ---
+            const propertiesBar = document.getElementById('properties-bar');
+            const paginaDeImpressao = document.getElementById('pagina-de-impressao');
             
-            // Seleciona o item recém-criado (exceto para QR/Barcode que são criados por funções específicas)
-            if (tipo !== 'qrcode' && tipo !== 'barcode') {
+            // Recupere todos os botões e inputs aqui para não poluir o código global
+            const btnAddEtiqueta = document.getElementById('btn-add-etiqueta');
+            const btnDuplicarEtiqueta = document.getElementById('btn-duplicar-etiqueta');
+            const btnRemoverEtiqueta = document.getElementById('btn-remover-etiqueta');
+            const btnImprimir = document.getElementById('btn-imprimir');
+            const btnAddTexto = document.getElementById('btn-add-texto');
+            const btnAddImagem = document.getElementById('btn-add-imagem');
+            const inputImagem = document.getElementById('input-imagem');
+            const btnRemoverItem = document.getElementById('btn-remover-item');
+
+            const textToolbarOptions = document.getElementById('text-toolbar-options');
+            const styleToolbarOptions = document.getElementById('style-toolbar-options');
+            const drawingToolbarOptions = document.getElementById('drawing-toolbar-options');
+
+            // --- Variáveis de Estado ---
+            let etiquetaAtiva = document.querySelector('.etiqueta-editavel');
+            let itemSelecionado = null;
+            let labelCounter = 1;
+            let itemCounter = 0;
+
+            // --- Funções Principais (adaptadas minimamente se necessário) ---
+            
+            function gerarItemId() { return `item-${++itemCounter}`; }
+            function gerarLabelId() { return `label-${++labelCounter}`; }
+
+            function selecionarItem(itemElement) {
+                desselecionarItem();
+                itemSelecionado = itemElement;
+                if (itemSelecionado) {
+                    propertiesBar.style.display = 'flex';
+                    itemSelecionado.classList.add('selecionado-para-remocao');
+                    btnRemoverItem.style.display = 'block';
+
+                    if (itemSelecionado.classList.contains('item-texto')) {
+                        textToolbarOptions.style.display = 'flex';
+                    } else if (itemSelecionado.classList.contains('item-forma')) {
+                        styleToolbarOptions.style.display = 'flex';
+                    }
+                }
+            }
+
+            function desselecionarItem() {
+                if (itemSelecionado) {
+                    itemSelecionado.classList.remove('selecionado-para-remocao');
+                }
+                itemSelecionado = null;
+                propertiesBar.style.display = 'none';
+                textToolbarOptions.style.display = 'none';
+                styleToolbarOptions.style.display = 'none';
+                drawingToolbarOptions.style.display = 'none';
+                btnRemoverItem.style.display = 'none';
+            }
+            
+            function adicionarItem(etiqueta, tipo, conteudo = null) {
+                if (!etiqueta) return;
+
+                const item = document.createElement('div');
+                item.classList.add('item-arrastavel', `item-${tipo}`);
+                item.id = gerarItemId();
+                
+                // Posição e tamanho iniciais
+                item.style.left = '10px';
+                item.style.top = '10px';
+                item.dataset.x = 10;
+                item.dataset.y = 10;
+
+                if (tipo === 'texto') {
+                    item.contentEditable = 'true';
+                    item.textContent = 'Edite aqui';
+                    item.style.width = '100px';
+                    item.style.height = 'auto';
+                } else if (tipo === 'imagem' && conteudo) {
+                    const img = document.createElement('img');
+                    img.src = conteudo;
+                    item.appendChild(img);
+                    item.style.width = '120px';
+                    item.style.height = '80px';
+                }
+                
+                etiqueta.appendChild(item);
+                inicializarInteracao(item);
                 selecionarItem(item);
-                if (tipo === 'texto') item.focus();
             }
 
-            return item;
-        }
-        
-        // --- Funções Específicas: QR Code e Barcode ---
-        
-        function addQRCode(data) {
-            if (!etiquetaAtiva) return;
-            const item = adicionarItem(etiquetaAtiva, 'qrcode');
-            if (!item) return;
-            
-            const qrContainer = document.createElement('div');
-            qrContainer.id = `qr-container-${item.id}`;
-            item.appendChild(qrContainer);
-            
-            try {
-                new QRCode(qrContainer, {
-                    text: data,
-                    width: 128, // Tamanho inicial, vai redimensionar
-                    height: 128,
-                    correctLevel : QRCode.CorrectLevel.H
-                });
-                // Ensure generated elements fit
-                const qrElement = qrContainer.querySelector('canvas') || qrContainer.querySelector('img');
-                if (qrElement) {
-                    qrElement.style.width = '100%';
-                    qrElement.style.height = '100%';
-                    qrElement.style.objectFit = 'contain';
-                }
-            } catch(e) {
-                console.error("Erro ao gerar QR Code:", e);
-                alertPersonalizado("Erro ao gerar QR Code. Verifique os dados.");
-                item.remove();
-            }
-            selecionarItem(item);
-        }
-        
-        function addBarcode(data) {
-             if (!etiquetaAtiva) return;
-             const item = adicionarItem(etiquetaAtiva, 'barcode');
-             if (!item) return;
-             
-             const barcodeSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-             barcodeSvg.id = `barcode-${item.id}`;
-             item.appendChild(barcodeSvg);
-             
-             try {
-                JsBarcode(barcodeSvg, data, {
-                    format: "CODE128",
-                    displayValue: true, // Show text below barcode
-                    fontSize: 14,
-                    width: 2, // Bar width
-                    height: 40, // Bar height
-                    margin: 5 // Margin around barcode
-                });
-                // Ensure SVG fits container
-                barcodeSvg.style.width = '100%';
-                barcodeSvg.style.height = '100%';
-                barcodeSvg.style.objectFit = 'fill'; // Stretch to fill
-             } catch (e) {
-                 console.error("Erro ao gerar Código de Barras:", e);
-                 alertPersonalizado("Valor inválido para Código de Barras (CODE128).");
-                 item.remove();
-             }
-             selecionarItem(item);
-        }
+            function inicializarInteracao(elemento) {
+                let position = { x: parseFloat(elemento.dataset.x) || 0, y: parseFloat(elemento.dataset.y) || 0 };
 
-        // --- Lógica de Interação (Arrastar, Redimensionar E ROTACIONAR) ---
+                elemento.style.transform = `translate(${position.x}px, ${position.y}px)`;
 
-        function inicializarInteracao(elemento) {
-            let position = { x: parseFloat(elemento.dataset.x) || 0, y: parseFloat(elemento.dataset.y) || 0 };
-            let angle = parseFloat(elemento.dataset.angle) || 0;
-
-            // Aplica transformação inicial
-            elemento.style.transform = `translate(${position.x}px, ${position.y}px) rotate(${angle}deg)`;
-
-            interact(elemento)
-                .draggable({
-                    listeners: {
-                        start(event) {
-                            selecionarItem(event.target);
-                            event.target.style.cursor = 'grabbing';
+                interact(elemento)
+                    .draggable({
+                        listeners: {
+                            move(event) {
+                                position.x += event.dx;
+                                position.y += event.dy;
+                                event.target.style.transform = `translate(${position.x}px, ${position.y}px)`;
+                            },
+                            end(event) {
+                                event.target.dataset.x = position.x;
+                                event.target.dataset.y = position.y;
+                            }
                         },
-                        move(event) {
-                            position.x += event.dx;
-                            position.y += event.dy;
-                            // Update transform string preserving rotation
-                            event.target.style.transform = `translate(${position.x}px, ${position.y}px) rotate(${angle}deg)`;
-                        },
-                        end(event) {
-                            event.target.dataset.x = position.x;
-                            event.target.dataset.y = position.y;
-                            event.target.style.cursor = 'grab';
+                        modifiers: [interact.modifiers.restrictRect({ restriction: 'parent' })],
+                    })
+                    .resizable({
+                        edges: { top: true, left: true, bottom: true, right: true },
+                        listeners: {
+                            move(event) {
+                                position.x += event.deltaRect.left;
+                                position.y += event.deltaRect.top;
+                                Object.assign(event.target.style, {
+                                    width: `${event.rect.width}px`,
+                                    height: `${event.rect.height}px`,
+                                    transform: `translate(${position.x}px, ${position.y}px)`
+                                });
+                                event.target.dataset.x = position.x;
+                                event.target.dataset.y = position.y;
+                            }
                         }
-                    },
-                    modifiers: [
-                        interact.modifiers.restrictRect({ restriction: 'parent', endOnly: false })
-                    ],
-                    inertia: false
-                })
-                .resizable({
-                    edges: { 
-                        top: !elemento.classList.contains('item-linha'), // Linha NÃO redimensiona na vertical
-                        left: true, 
-                        bottom: !elemento.classList.contains('item-linha'), // Linha NÃO redimensiona na vertical
-                        right: true 
-                    },
-                    listeners: {
-                        start(event) {
-                            selecionarItem(event.target);
-                        },
-                        move: function (event) {
-                            // Update position based on resize delta, considering current angle
-                            const dx = event.deltaRect.left;
-                            const dy = event.deltaRect.top;
-                            
-                            // Adjust position based on rotation to keep top-left corner anchored during resize
-                            const rad = angle * Math.PI / 180;
-                            const cos = Math.cos(rad);
-                            const sin = Math.sin(rad);
-                            
-                            // Transform the delta position according to the element's rotation
-                            const rotatedDx = dx * cos - dy * sin;
-                            const rotatedDy = dx * sin + dy * cos;
-
-                            position.x += rotatedDx;
-                            position.y += rotatedDy;
-
-                            Object.assign(event.target.style, {
-                                width: `${event.rect.width}px`,
-                                height: `${event.rect.height}px`,
-                                // Update transform string with new position and existing rotation
-                                transform: `translate(${position.x}px, ${position.y}px) rotate(${angle}deg)`
-                            });
-
-                            // Update dataset position
-                            event.target.dataset.x = position.x;
-                            event.target.dataset.y = position.y;
-                        }
-                    },
-                    modifiers: [
-                        interact.modifiers.restrictRect({ restriction: 'parent' }),
-                        interact.modifiers.restrictSize({ min: { width: 20, height: 1 } }) // Min height 1 for lines
-                    ],
-                })
-                .on('tap', function (event) {
-                    selecionarItem(event.target);
-                    if (event.target.classList.contains('item-texto') || event.target.classList.contains('item-simbolo')) {
-                         event.target.focus();
-                    }
-                    event.preventDefault(); 
-                });
-            
-            // --- Interação da Alça de Rotação ---
-            const rotateHandle = elemento.querySelector('.rotate-handle');
-            if (rotateHandle) {
-                interact(rotateHandle).draggable({
-                    onstart: function(event) {
-                        event.target.style.cursor = 'grabbing';
-                        const rect = elemento.getBoundingClientRect();
-                        // Calculate the element's center point
-                        const centerX = window.scrollX + rect.left + rect.width / 2;
-                        const centerY = window.scrollY + rect.top + rect.height / 2;
-                        // Store the center point in the interaction object
-                        event.interaction.center = { x: centerX, y: centerY };
-                    },
-                    onmove: function (event) {
-                        const { center } = event.interaction;
-                        // Calculate angle difference from center to pointer
-                        const angleRad = Math.atan2(event.pageY - center.y, event.pageX - center.x);
-                        const angleDeg = angleRad * (180 / Math.PI);
-
-                        // Calculate delta angle based on previous event
-                        // Note: interact.js doesn't easily provide previous angle,
-                        // so we calculate absolute angle and apply it.
-                        // Add 90 degrees offset because atan2 calculates from the positive x-axis
-                        angle = angleDeg + 90; 
-
-                        // Update the element's transform style with the new angle
-                        elemento.style.transform = `translate(${position.x}px, ${position.y}px) rotate(${angle}deg)`;
-                    },
-                    onend: function (event) {
-                        event.target.style.cursor = 'grab';
-                        // Save the final angle in the dataset
-                        elemento.dataset.angle = angle; 
-                    }
-                });
+                    })
+                    .on('tap', (event) => {
+                        selecionarItem(event.target);
+                    });
             }
-        }
-        
-        // --- Funções da Barra de Ferramentas de Texto ---
 
-        function updateTextToolState() {
-            if (!itemSelecionado) return;
-            const style = window.getComputedStyle(itemSelecionado);
-            let fontFamily = style.fontFamily.split(',')[0].replace(/['"]/g, '').trim();
-            let foundFont = Array.from(selectFontFamily.options).find(opt => opt.value.toLowerCase().includes(fontFamily.toLowerCase()));
-            selectFontFamily.value = foundFont ? foundFont.value : 'Arial, sans-serif';
-            inputFontSize.value = parseInt(style.fontSize) || 10;
-            inputFontColor.value = rgbToHex(style.color);
-            selectTextTransform.value = style.textTransform || 'none';
-            btnTextBold.classList.toggle('active', style.fontWeight === 'bold' || parseInt(style.fontWeight) >= 700);
-            btnTextItalic.classList.toggle('active', style.fontStyle === 'italic');
-            const textDecor = style.textDecorationLine || '';
-            btnTextUnderline.classList.toggle('active', textDecor.includes('underline'));
-            btnTextStrike.classList.toggle('active', textDecor.includes('line-through'));
-        }
-        
-        function toggleTextDecoration(style, button) {
-            if (!itemSelecionado) return;
-            let currentDecor = itemSelecionado.style.textDecorationLine || '';
-            const hasStyle = currentDecor.includes(style);
-            let newDecor = currentDecor.split(' ').filter(s => s.trim() !== '' && s !== style);
-            if (!hasStyle) newDecor.push(style);
-            itemSelecionado.style.textDecorationLine = newDecor.join(' ');
-            button.classList.toggle('active', !hasStyle);
-            if (itemSelecionado.style.textDecorationLine) {
-                 itemSelecionado.style.textDecorationColor = 'inherit';
-                 itemSelecionado.style.textDecorationStyle = 'solid';
-            } else {
-                 itemSelecionado.style.textDecoration = 'none';
-            }
-        }
-        
-        // --- Funções da Barra de Ferramentas de Estilo (Linha/Forma) ---
-
-        function updateStyleToolState() {
-            if (!itemSelecionado) return;
-            
-            if (itemSelecionado.classList.contains('item-linha')) {
-                const linhaVisual = itemSelecionado.querySelector('.linha-visual');
-                if (!linhaVisual) return;
-                const style = window.getComputedStyle(linhaVisual);
-                
-                const color = style.backgroundColor === 'transparent' || style.backgroundColor === 'rgba(0, 0, 0, 0)' ? style.borderTopColor : style.backgroundColor;
-                inputStyleColor.value = rgbToHex(color);
-                
-                const thickness = (style.height === 'auto' || style.height === '' || style.height === '0px') ? parseInt(style.borderTopWidth) : parseInt(style.height);
-                inputStyleThickness.value = thickness || 1;
-                
-                selectStyleType.value = (style.borderTopStyle === 'none' || style.borderTopStyle === '') ? 'solid' : style.borderTopStyle;
-                
-                inputStyleThickness.disabled = false;
-                selectStyleType.disabled = false;
-            } else if (itemSelecionado.classList.contains('item-forma')) {
-                const style = window.getComputedStyle(itemSelecionado);
-                inputStyleColor.value = rgbToHex(style.backgroundColor); // Cor de preenchimento
-                inputStyleThickness.value = parseInt(style.borderTopWidth) || 1;
-                selectStyleType.value = style.borderTopStyle || 'solid';
-                inputStyleThickness.disabled = false;
-                selectStyleType.disabled = false;
-            }
-        }
-        
-        function applyLineStyle(styleType) {
-             if (!itemSelecionado) return;
-             const color = inputStyleColor.value;
-             const thickness = inputStyleThickness.value + 'px';
-             
-             if (itemSelecionado.classList.contains('item-linha')) {
-                const linhaVisual = itemSelecionado.querySelector('.linha-visual');
-                if (!linhaVisual) return;
-
-                if (styleType === 'solid') {
-                    linhaVisual.style.borderTop = 'none'; // Remove border if solid
-                    linhaVisual.style.backgroundColor = color;
-                    linhaVisual.style.height = thickness;
-                } else {
-                    linhaVisual.style.backgroundColor = 'transparent'; // Transparent background for dashed/dotted
-                    linhaVisual.style.borderTop = `${thickness} ${styleType} ${color}`;
-                    linhaVisual.style.height = '0px'; // Border provides the height
+            // --- Event Listeners ---
+            btnAddTexto.addEventListener('click', () => adicionarItem(etiquetaAtiva, 'texto'));
+            btnAddImagem.addEventListener('click', () => inputImagem.click());
+            inputImagem.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => adicionarItem(etiquetaAtiva, 'imagem', e.target.result);
+                    reader.readAsDataURL(file);
                 }
-                // Store style properties for printing
-                itemSelecionado.style.setProperty('--line-print-color', color);
-                itemSelecionado.style.setProperty('--line-print-style', styleType);
-             } else if (itemSelecionado.classList.contains('item-forma')) {
-                 itemSelecionado.style.backgroundColor = color;
-                 itemSelecionado.style.border = `${thickness} ${styleType} ${color}`;
-             }
-        }
-
-
-        // --- Funções de Zoom ---
-        function updateZoom() {
-            paginaDeImpressao.style.transform = `scale(${zoomLevel})`;
-        }
-
-        // --- Event Listeners da Toolbar (Principal) ---
-
-        btnAddEtiqueta.addEventListener('click', adicionarEtiqueta);
-        
-        btnZoomIn.addEventListener('click', () => {
-            zoomLevel = Math.min(3.0, zoomLevel + 0.1); // Max zoom 3x
-            updateZoom();
-        });
-
-        btnZoomOut.addEventListener('click', () => {
-            zoomLevel = Math.max(0.2, zoomLevel - 0.1); // Min zoom 0.2x
-            updateZoom();
-        });
-
-        btnZoomReset.addEventListener('click', () => {
-            zoomLevel = 1.0;
-            updateZoom();
-        });
-
-        // Modified listener for Duplicar
-        btnDuplicarEtiqueta.addEventListener('click', () => {
-             if (isDrawing) pararModoDesenho(false);
-             if (!etiquetaAtiva) {
-                 alertPersonalizado("Por favor, selecione a etiqueta que deseja duplicar.");
-                 return;
-             }
-             showDuplicateCountModal(); // Show the new modal
-        });
-        
-        // NOVO LISTENER para Remover Etiqueta
-        btnRemoverEtiqueta.addEventListener('click', () => {
-             if (isDrawing) pararModoDesenho(false);
-             if (!etiquetaAtiva) {
-                 alertPersonalizado("Por favor, selecione uma etiqueta para remover.");
-                 return;
-             }
-             
-             // Não permite remover a última etiqueta
-             if (paginaDeImpressao.querySelectorAll('.etiqueta-editavel').length <= 1) {
-                 alertPersonalizado("Não é possível remover a última etiqueta.");
-                 return;
-             }
-             
-             confirmPersonalizado("Tem certeza que deseja remover esta etiqueta e todo o seu conteúdo?", () => {
-                 const proximaEtiqueta = etiquetaAtiva.nextElementSibling || etiquetaAtiva.previousElementSibling;
-                 etiquetaAtiva.remove();
-                 definirEtiquetaAtiva(proximaEtiqueta); // Ativa a próxima ou anterior
-             });
-        });
-
-        
-        btnImprimir.addEventListener('click', () => {
-            desselecionarItem();
-            if (isDrawing) pararModoDesenho(false);
-            setTimeout(() => { window.print(); }, 50);
-        });
-
-        btnAddTexto.addEventListener('click', () => {
-            const itemTexto = adicionarItem(etiquetaAtiva, 'texto');
-            if(itemTexto) itemTexto.focus();
-        });
-
-        btnAddImagem.addEventListener('click', () => {
-            if (!etiquetaAtiva) { alertPersonalizado("Selecione uma etiqueta primeiro!"); return; }
-            if (isDrawing) pararModoDesenho(false);
-            inputImagem.click();
-        });
-
-        btnRemoverItem.addEventListener('click', () => {
-            if (itemSelecionado) {
-                 confirmPersonalizado("Tem certeza que deseja remover este item?", () => {
+            });
+            btnRemoverItem.addEventListener('click', () => {
+                if (itemSelecionado) {
                     itemSelecionado.remove();
                     desselecionarItem();
-                 });
-            }
-        });
-
-        inputImagem.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file && etiquetaAtiva) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    adicionarItem(etiquetaAtiva, 'imagem', e.target.result);
                 }
-                reader.readAsDataURL(file);
-            }
-            event.target.value = null;
-        });
-
-        // --- Listeners das Novas Ferramentas ---
-        
-        selectAddShape.addEventListener('change', () => {
-             const shapeType = selectAddShape.value;
-             if (shapeType && etiquetaAtiva) {
-                 adicionarItem(etiquetaAtiva, 'forma', shapeType);
-                 selectAddShape.selectedIndex = 0; // Reset dropdown
-             } else if (!etiquetaAtiva) {
-                 alertPersonalizado("Selecione uma etiqueta primeiro!");
-                 selectAddShape.selectedIndex = 0;
-             }
-        });
-        
-        btnAddLinha.addEventListener('click', () => {
-            adicionarItem(etiquetaAtiva, 'linha');
-        });
-        
-        btnAddSimbolo.addEventListener('click', () => {
-             if (isDrawing) pararModoDesenho(false);
-             modalSimbolos.style.display = 'flex';
-        });
-
-        modalSimbolosClose.addEventListener('click', () => {
-             modalSimbolos.style.display = 'none';
-        });
-        
-        // Listeners QR e Barcode
-        btnAddQRCode.addEventListener('click', () => {
-            if (isDrawing) pararModoDesenho(false);
-            if (!etiquetaAtiva) { alertPersonalizado("Selecione uma etiqueta primeiro!"); return; }
-            showInputModal("Digite o texto para o QR Code:", (data) => {
-                if (data) addQRCode(data);
             });
-        });
-        
-        btnAddBarcode.addEventListener('click', () => {
-             if (isDrawing) pararModoDesenho(false);
-             if (!etiquetaAtiva) { alertPersonalizado("Selecione uma etiqueta primeiro!"); return; }
-             showInputModal("Digite o valor para o Cód. Barras:", (data) => {
-                if (data) addBarcode(data);
-            });
-        });
-
-        // Adicionar Lápis (Modo Desenho)
-        btnAddLapis.addEventListener('click', () => {
-            if (isDrawing) {
-                pararModoDesenho(false); // Cancela o modo desenho se já estiver ativo
-            } else if (etiquetaAtiva) {
-                iniciarModoDesenho();
-            } else {
-                alertPersonalizado("Selecione uma etiqueta primeiro!");
-            }
-        });
-
-
-        // --- Event Listener para Seleção de Etiqueta ---
-        paginaDeImpressao.addEventListener('click', (event) => {
-            const etiquetaClicada = event.target.closest('.etiqueta-editavel'); 
             
-            if (etiquetaClicada && !isDrawing) { // Don't select labels while drawing
-                definirEtiquetaAtiva(etiquetaClicada);
-                // If click was directly on the label (not an item), deselect item
-                if (!event.target.closest('.item-arrastavel') && event.target === etiquetaClicada) {
+            // Desselecionar ao clicar no canvas
+            document.getElementById('canvas-area').addEventListener('click', (e) => {
+                if (e.target.id === 'canvas-area' || e.target.id === 'pagina-de-impressao') {
                     desselecionarItem();
                 }
-            } else if (!event.target.closest('#toolbar') 
-                       && !event.target.closest('.secondary-toolbar') 
-                       && !event.target.closest('.modal-overlay') 
-                       && !isDrawing // Don't deselect if drawing
-                       && !event.target.closest('.etiqueta-editavel')) { // Clicked outside labels too
-                desselecionarItem();
-            }
-        });
-
-        // --- Listener para Mudança de Tamanho/Layout ---
-        selectLayoutPreset.addEventListener('change', (event) => {
-            if (isDrawing) pararModoDesenho(false);
-            definirLayoutETamanho(event.target.value);
-        });
-        
-        // Listeners para inputs de layout personalizado
-        function handleCustomLayoutChange() {
-            if (isDrawing) pararModoDesenho(false); // Exit drawing if layout changes
-            const w = parseFloat(inputCustomWidth.value);
-            const h = parseFloat(inputCustomHeight.value);
-            const c = parseInt(inputCustomCols.value, 10);
-            if (w > 0 && h > 0 && c > 0) {
-                aplicarLayout(w, h, c);
-            } else {
-                // Não alerta em cada 'input', espera 'change' ou botão
-            }
-        }
-        // Mudar para 'change' para evitar alertas em tempo real
-        inputCustomWidth.addEventListener('change', handleCustomLayoutChange);
-        inputCustomHeight.addEventListener('change', handleCustomLayoutChange);
-        inputCustomCols.addEventListener('change', handleCustomLayoutChange);
-        
-        
-        // --- Event Listeners da Barra de Texto ---
-        selectFontFamily.addEventListener('change', () => { if (itemSelecionado) itemSelecionado.style.fontFamily = selectFontFamily.value; });
-        inputFontSize.addEventListener('input', () => { if (itemSelecionado) itemSelecionado.style.fontSize = inputFontSize.value + 'px'; });
-        inputFontColor.addEventListener('input', () => { if (itemSelecionado) itemSelecionado.style.color = inputFontColor.value; });
-        selectTextTransform.addEventListener('change', () => { if (itemSelecionado) itemSelecionado.style.textTransform = selectTextTransform.value; });
-        btnTextBold.addEventListener('click', () => {
-            if (itemSelecionado) {
-                const style = window.getComputedStyle(itemSelecionado);
-                const isBold = style.fontWeight === 'bold' || parseInt(style.fontWeight) >= 700;
-                itemSelecionado.style.fontWeight = isBold ? 'normal' : 'bold';
-                btnTextBold.classList.toggle('active', !isBold);
-            }
-        });
-        btnTextItalic.addEventListener('click', () => {
-            if (itemSelecionado) {
-                const style = window.getComputedStyle(itemSelecionado);
-                const isItalic = style.fontStyle === 'italic';
-                itemSelecionado.style.fontStyle = isItalic ? 'normal' : 'italic';
-                btnTextItalic.classList.toggle('active', !isItalic);
-            }
-        });
-        btnTextUnderline.addEventListener('click', () => { toggleTextDecoration('underline', btnTextUnderline); });
-        btnTextStrike.addEventListener('click', () => { toggleTextDecoration('line-through', btnTextStrike); });
-        
-        
-        // --- Event Listeners da Barra de Estilo (Linha/Forma) ---
-        inputStyleColor.addEventListener('input', () => {
-             if (!itemSelecionado) return;
-             const color = inputStyleColor.value;
-             if (itemSelecionado.classList.contains('item-linha')) {
-                 applyLineStyle(selectStyleType.value); // Use current style type
-             } else if (itemSelecionado.classList.contains('item-forma')) {
-                 itemSelecionado.style.backgroundColor = color;
-                 itemSelecionado.style.borderColor = color; // Mudar borda junto
-             }
-        });
-        inputStyleThickness.addEventListener('input', () => {
-             if (!itemSelecionado) return;
-             const thickness = inputStyleThickness.value + 'px';
-             if (itemSelecionado.classList.contains('item-linha')) {
-                 applyLineStyle(selectStyleType.value); // Reaplica com nova espessura
-             } else if (itemSelecionado.classList.contains('item-forma')) {
-                 itemSelecionado.style.borderWidth = thickness;
-             }
-        });
-        selectStyleType.addEventListener('change', () => {
-             if (!itemSelecionado) return;
-             const styleType = selectStyleType.value;
-             if (itemSelecionado.classList.contains('item-linha')) {
-                 applyLineStyle(styleType); // Reaplica com novo estilo
-             } else if (itemSelecionado.classList.contains('item-forma')) {
-                 itemSelecionado.style.borderStyle = styleType;
-             }
-        });
-        
-        
-        // --- Lógica do Modal de Símbolos ---
-        function popularModalSimbolos() {
-            const simbolos = [
-                '★', '☆', '♡', '❤', '♪', '♫', '✔', '✖', '✅', '❌', '⚠', '⚡', '⚙',
-                '❄', '🔥', '💧', '☀️', '☁️', '☂️', '▶', '◀', '⬆', '⬇', '♻', '™', '®', '©',
-                '😀', '😂', '😍', '👍', '👎', '🎉', '🎁', '📞', '✉', '⏰', '🔒', '🔑', '💡',
-                '💰', '💲', '🏷️', '📦', '🛒', '🌍', '🏠', '🏢', '🏭', '📌', '📅', '📊', '📈', '📉'
-            ]; // Added more symbols
-            symbolGridContainer.innerHTML = '';
-            simbolos.forEach(simbolo => {
-                const span = document.createElement('span');
-                span.textContent = simbolo;
-                span.onclick = () => {
-                    adicionarItem(etiquetaAtiva, 'simbolo', simbolo);
-                    modalSimbolos.style.display = 'none';
-                };
-                symbolGridContainer.appendChild(span);
             });
-        }
-        
-        // --- Lógica do Modal de Input (QR/Barcode) ---
-        function showInputModal(title, callback) {
-            modalInputTitle.textContent = title;
-            modalInputCallback = callback;
-            modalInput.style.display = 'flex';
-            modalInputField.value = '';
-            modalInputField.type = 'text'; // Ensure it's text type
-            modalInputField.focus();
-        }
-        modalInputSubmit.addEventListener('click', () => {
-            if (modalInputCallback) {
-                modalInputCallback(modalInputField.value);
-            }
-            modalInput.style.display = 'none';
-            modalInputCallback = null;
+
         });
-        modalInputClose.addEventListener('click', () => {
-            modalInput.style.display = 'none';
-            modalInputCallback = null;
-        });
-
-        // --- Lógica do Modal de Contagem de Duplicação ---
-        function showDuplicateCountModal() {
-            modalDuplicateField.value = '1'; // Reset to 1
-            modalDuplicateCount.style.display = 'flex';
-            modalDuplicateField.focus();
-            modalDuplicateField.select(); // Select the text
-        }
-        modalDuplicateSubmit.addEventListener('click', () => {
-            const count = parseInt(modalDuplicateField.value, 10);
-            if (count > 0 && count <= 100) { // Add a reasonable limit
-                duplicarEtiqueta(count);
-                modalDuplicateCount.style.display = 'none';
-            } else {
-                alertPersonalizado("Por favor, insira um número entre 1 e 100.");
-            }
-        });
-        modalDuplicateClose.addEventListener('click', () => {
-            modalDuplicateCount.style.display = 'none';
-        });
-
-        
-        // --- Lógica de Desenho (Lápis e Borracha) ---
-        
-        function iniciarModoDesenho() {
-            if (!etiquetaAtiva) return;
-            
-            isDrawing = true;
-            // btnAddLapis.classList.add('active'); // O botão de lápis agora está na barra lateral
-            desselecionarItem();
-            topPropertiesBar.style.display = 'flex';
-            drawingToolbarOptions.style.display = 'flex';
-            
-            btnDrawToolPencil.classList.add('active');
-            btnDrawToolEraser.classList.remove('active');
-            
-            drawCanvas = document.createElement('canvas');
-            drawCanvas.id = 'draw-canvas-overlay';
-            drawCanvas.width = etiquetaAtiva.offsetWidth; 
-            drawCanvas.height = etiquetaAtiva.offsetHeight;
-            etiquetaAtiva.appendChild(drawCanvas);
-            
-            drawCtx = drawCanvas.getContext('2d');
-            drawCtx.strokeStyle = inputDrawColor.value;
-            drawCtx.lineWidth = inputDrawThickness.value;
-            drawCtx.lineCap = 'round';
-            drawCtx.lineJoin = 'round';
-            drawCtx.globalCompositeOperation = 'source-over';
-            
-            let painting = false;
-
-            function getMousePos(evt) {
-                 const rect = drawCanvas.getBoundingClientRect();
-                 const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
-                 const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
-                 const scaleX = drawCanvas.width / rect.width;
-                 const scaleY = drawCanvas.height / rect.height;
-                 return {
-                    x: (clientX - rect.left) * scaleX,
-                    y: (clientY - rect.top) * scaleY
-                 };
-            }
-
-            drawListeners.start = function(e) {
-                e.preventDefault();
-                painting = true;
-                const pos = getMousePos(e);
-                drawCtx.beginPath();
-                drawCtx.moveTo(pos.x, pos.y);
-            }
-
-            drawListeners.end = function() {
-                if (!painting) return;
-                painting = false;
-                drawCtx.beginPath();
-            }
-
-            drawListeners.draw = function(e) {
-                e.preventDefault();
-                if (!painting) return;
-                const pos = getMousePos(e);
-                drawCtx.lineTo(pos.x, pos.y);
-                drawCtx.stroke();
-                drawCtx.beginPath();
-                drawCtx.moveTo(pos.x, pos.y);
-            }
-
-            drawCanvas.addEventListener('mousedown', drawListeners.start);
-            drawCanvas.addEventListener('mouseup', drawListeners.end);
-            drawCanvas.addEventListener('mouseleave', drawListeners.end);
-            drawCanvas.addEventListener('mousemove', drawListeners.draw);
-            
-            drawCanvas.addEventListener('touchstart', drawListeners.start, { passive: false });
-            drawCanvas.addEventListener('touchend', drawListeners.end);
-            drawCanvas.addEventListener('touchcancel', drawListeners.end);
-            drawCanvas.addEventListener('touchmove', drawListeners.draw, { passive: false });
-            
-            if (!btnConcluirDesenho) {
-                btnConcluirDesenho = document.createElement('button');
-                btnConcluirDesenho.id = 'btn-concluir-desenho';
-                btnConcluirDesenho.textContent = 'Concluir Desenho';
-                btnConcluirDesenho.onclick = () => pararModoDesenho(true);
-                topPropertiesBar.appendChild(btnConcluirDesenho); // Adiciona na barra superior
-            }
-        }
-        
-        // Function to stop drawing mode (CORRIGIDO)
-        function pararModoDesenho(salvar = true) {
-             if (!isDrawing) return; // Exit if not drawing
-             
-             if (salvar && drawCanvas) {
-                // Check if canvas is not blank before saving
-                if (!isCanvasBlank(drawCanvas)) {
-                    const dataURL = drawCanvas.toDataURL('image/png'); // Get drawing as PNG
-                    adicionarItem(etiquetaAtiva, 'imagem', dataURL); // Add as a new image item
-                }
-             }
-             
-             // Cleanup
-             isDrawing = false;
-             btnAddLapis.classList.remove('active'); // Deactivate pencil button
-             drawingToolbarOptions.style.display = 'none'; // Hide drawing tools
-             if(drawCanvas) {
-                // Remove listeners que foram salvos
-                drawCanvas.removeEventListener('mousedown', drawListeners.start);
-                drawCanvas.removeEventListener('mouseup', drawListeners.end);
-                drawCanvas.removeEventListener('mouseleave', drawListeners.end);
-                drawCanvas.removeEventListener('mousemove', drawListeners.draw);
-                drawCanvas.removeEventListener('touchstart', drawListeners.start);
-                drawCanvas.removeEventListener('touchend', drawListeners.end);
-                drawCanvas.removeEventListener('touchcancel', drawListeners.end);
-                drawCanvas.removeEventListener('touchmove', drawListeners.draw);
-                drawCanvas.remove(); // Remove canvas from DOM
-             }
-             if(btnConcluirDesenho) {
-                btnConcluirDesenho.remove(); // Remove "Concluir" button
-                btnConcluirDesenho = null; // Reset variable
-             }
-             drawCanvas = null; // Reset variable
-             drawCtx = null; // Reset variable
-             drawListeners = { start: null, end: null, draw: null }; // Limpa listeners
-        }
-
-        // Helper function to check if canvas is blank (all transparent pixels)
-        function isCanvasBlank(canvas) {
-            if (!canvas) return true;
-            const context = canvas.getContext('2d');
-            try {
-                const pixelBuffer = new Uint32Array(
-                    context.getImageData(0, 0, canvas.width, canvas.height).data.buffer
-                );
-                // Check if any pixel has non-zero alpha
-                return !pixelBuffer.some(color => (color & 0xff000000) !== 0);
-            } catch (e) {
-                console.error("Error checking canvas blank state:", e);
-                return false; // Assume not blank if error occurs (e.g., tainted canvas)
-            }
-        }
-
-        // Listeners for Drawing Toolbar
-        inputDrawColor.addEventListener('input', () => { if(drawCtx) drawCtx.strokeStyle = inputDrawColor.value; });
-        inputDrawThickness.addEventListener('input', () => { if(drawCtx) drawCtx.lineWidth = inputDrawThickness.value; });
-        
-        btnDrawToolPencil.addEventListener('click', () => {
-            if(drawCtx) drawCtx.globalCompositeOperation = 'source-over'; // Set draw mode
-            btnDrawToolPencil.classList.add('active');
-            btnDrawToolEraser.classList.remove('active');
-        });
-        
-        btnDrawToolEraser.addEventListener('click', () => {
-            if(drawCtx) drawCtx.globalCompositeOperation = 'destination-out'; // Set erase mode
-            btnDrawToolPencil.classList.remove('active');
-            btnDrawToolEraser.classList.add('active');
-        });
-
-
-        // --- Funções de Alerta/Confirmação Personalizadas ---
-        function alertPersonalizado(message) {
-             confirmPersonalizado(message, null, true);
-        }
-        function confirmPersonalizado(message, onConfirm, isAlert = false) {
-            document.querySelector('.modal-overlay-confirm')?.remove(); // Remove previous confirm modals
-            const overlay = document.createElement('div');
-            overlay.className = 'modal-overlay modal-overlay-confirm'; // Specific class for confirmation
-            overlay.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: flex; align-items: center; justify-content: center;`;
-            const modal = document.createElement('div');
-            modal.style.cssText = `background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 400px; text-align: center; font-family: inherit;`;
-            const msgElement = document.createElement('p');
-            msgElement.textContent = message;
-            msgElement.style.cssText = 'margin: 0 0 20px; font-size: 1.1em; color: #333;';
-            const buttonContainer = document.createElement('div');
-            buttonContainer.style.cssText = 'display: flex; justify-content: center; gap: 15px;';
-            const btnOK = document.createElement('button');
-            btnOK.textContent = isAlert ? 'OK' : 'Confirmar';
-            btnOK.style.cssText = `background-color: #1a73e8; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; font-weight: 500; transition: background-color 0.2s;`;
-            btnOK.onmouseover = () => btnOK.style.backgroundColor = '#185abc';
-            btnOK.onmouseout = () => btnOK.style.backgroundColor = '#1a73e8';
-            btnOK.onclick = () => {
-                if (onConfirm) onConfirm();
-                overlay.remove();
-            };
-            buttonContainer.appendChild(btnOK);
-            if (!isAlert) { // Only add Cancel button if it's not just an alert
-                const btnCancel = document.createElement('button');
-                btnCancel.textContent = 'Cancelar';
-                btnCancel.style.cssText = `background-color: #f1f3f4; color: #3c4043; border: 1px solid #dadce0; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; transition: background-color 0.2s;`;
-                btnCancel.onmouseover = () => btnCancel.style.backgroundColor = '#e8eaed';
-                btnCancel.onmouseout = () => btnCancel.style.backgroundColor = '#f1f3f4';
-                btnCancel.onclick = () => overlay.remove();
-                buttonContainer.appendChild(btnCancel);
-            }
-            modal.appendChild(msgElement);
-            modal.appendChild(buttonContainer);
-            overlay.appendChild(modal);
-            document.body.appendChild(overlay);
-        }
-
-
-        // --- Inicialização ---
-        definirLayoutETamanho(selectLayoutPreset.value); // Apply initial layout based on dropdown
-        document.querySelectorAll('.item-arrastavel').forEach(inicializarInteracao); // Initialize existing items (if any)
-        btnRemoverItem.style.display = 'none'; // Hide remove button initially
-        popularModalSimbolos(); // Populate the symbol modal
-        selectAddShape.selectedIndex = 0; // Ensure "Forma" placeholder is selected
-
-        // --- Listener para Deletar com Teclado (NOVO) ---
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Delete' || e.key === 'Backspace') {
-                // Evita deletar se estiver digitando em um input ou texto
-                const target = e.target;
-                const isEditing = target.tagName === 'INPUT' || 
-                                  target.tagName === 'SELECT' || 
-                                  target.isContentEditable;
-
-                if (itemSelecionado && !isEditing) {
-                    e.preventDefault(); // Impede o navegador de voltar (Backspace)
-                    
-                    // Reutiliza a função de confirmação
-                    confirmPersonalizado("Tem certeza que deseja remover este item?", () => {
-                        itemSelecionado.remove();
-                        desselecionarItem();
-                    });
-                }
-            }
-        });
-
     </script>
 </body>
 </html>
