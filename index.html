@@ -605,8 +605,8 @@
                 <button id="btn-add-etiqueta" title="Adicionar nova etiqueta à página">
                     <span class="material-icons">add_to_queue</span> Nova Etiqueta
                 </button>
-                <button id="btn-duplicar-etiqueta" title="Duplicar etiqueta selecionada">
-                    <span class="material-icons">content_copy</span> Duplicar
+                <button id="btn-duplicar-etiqueta" title="Copiar etiqueta selecionada">
+                    <span class="material-icons">content_copy</span> Copiar
                 </button>
                 <!-- NOVO BOTÃO DE REMOVER ETIQUETA -->
                 <button id="btn-remover-etiqueta" title="Remover etiqueta selecionada" style="color: #D93025;">
@@ -617,13 +617,26 @@
                 </button>
             </div>
             <div class="button-group">
-                <span class="label">Predefinições:</span>
+                <button id="btn-zoom-out" title="Diminuir Zoom">
+                    <span class="material-icons">zoom_out</span>
+                </button>
+                <button id="btn-zoom-in" title="Aumentar Zoom">
+                    <span class="material-icons">zoom_in</span>
+                </button>
+                <button id="btn-zoom-reset" title="Restaurar Zoom">
+                    <span class="material-icons">zoom_in_map</span>
+                </button>
+            </div>
+            <div class="button-group">
+                <span class="label">Selecionar Etiqueta:</span>
                 <select id="select-layout-preset" title="Selecionar tamanho e layout da etiqueta">
-                    <option value="100x50" selected>100 x 50 mm (1 Col)</option>
+                    <option value="100x50">100 x 50 mm (1 Col)</option>
                     <option value="50x25">50 x 25 mm (1 Col)</option>
                     <option value="50x25-dupla">50 x 25 mm (2 Col)</option>
-                    <option value="personalizado" disabled>--- Personalizado ---</option>
+                    <option value="personalizado" selected>Personalizado</option>
                 </select>
+            </div>
+            <div id="custom-layout-inputs" class="button-group" style="display: none;">
                 <span class="label">Larg. (mm):</span>
                 <input type="number" id="input-custom-width" value="100" class="toolbar-input-number">
                 <span class="label">Alt. (mm):</span>
@@ -815,8 +828,12 @@
 
         // --- Referências DOM (Layout e Duplicar) ---
         const selectLayoutPreset = document.getElementById('select-layout-preset');
+        const customLayoutInputs = document.getElementById('custom-layout-inputs');
         const btnDuplicarEtiqueta = document.getElementById('btn-duplicar-etiqueta');
         const btnRemoverEtiqueta = document.getElementById('btn-remover-etiqueta'); // NOVO
+        const btnZoomIn = document.getElementById('btn-zoom-in');
+        const btnZoomOut = document.getElementById('btn-zoom-out');
+        const btnZoomReset = document.getElementById('btn-zoom-reset');
         const inputCustomWidth = document.getElementById('input-custom-width');
         const inputCustomHeight = document.getElementById('input-custom-height');
         const inputCustomCols = document.getElementById('input-custom-cols');
@@ -876,6 +893,7 @@
         let tamanhoAtualEtiqueta = { width: '100mm', height: '50mm' };
         let layoutAtual = 'simples';
         let modalInputCallback = null; // Callback para o modal de input genérico
+        let zoomLevel = 1.0;
         
         // --- Estado de Desenho (Lápis) ---
         let isDrawing = false;
@@ -984,7 +1002,6 @@
                     /* Lógica de margem e quebra de página */
                     .etiqueta-editavel {
                         margin-right: var(--label-gap) !important;
-                        margin-bottom: 5mm !important; /* Espaço entre linhas */
                     }
                     /* Remove margem do último item da linha */
                     .etiqueta-editavel:nth-child(${colunas}n) {
@@ -1027,6 +1044,14 @@
         
         function definirLayoutETamanho(layoutValue) {
             let width_mm, height_mm, colunas;
+
+            if (layoutValue === 'personalizado') {
+                customLayoutInputs.style.display = 'flex';
+                handleCustomLayoutChange(); // Aplica os valores atuais
+                return;
+            }
+
+            customLayoutInputs.style.display = 'none';
             
             if (layoutValue === '100x50') {
                 width_mm = 100; height_mm = 50; colunas = 1;
@@ -1477,10 +1502,30 @@
         }
 
 
+        // --- Funções de Zoom ---
+        function updateZoom() {
+            paginaDeImpressao.style.transform = `scale(${zoomLevel})`;
+        }
+
         // --- Event Listeners da Toolbar (Principal) ---
 
         btnAddEtiqueta.addEventListener('click', adicionarEtiqueta);
         
+        btnZoomIn.addEventListener('click', () => {
+            zoomLevel = Math.min(3.0, zoomLevel + 0.1); // Max zoom 3x
+            updateZoom();
+        });
+
+        btnZoomOut.addEventListener('click', () => {
+            zoomLevel = Math.max(0.2, zoomLevel - 0.1); // Min zoom 0.2x
+            updateZoom();
+        });
+
+        btnZoomReset.addEventListener('click', () => {
+            zoomLevel = 1.0;
+            updateZoom();
+        });
+
         // Modified listener for Duplicar
         btnDuplicarEtiqueta.addEventListener('click', () => {
              if (isDrawing) pararModoDesenho(false);
