@@ -8,14 +8,30 @@
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     <!-- Carrega os ícones do Material Design -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <!-- Bibliotecas para QR Code e Cód. Barras -->
     <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
     <style>
         :root {
+            /* --- Paleta de Cores Moderna --- */
+            --bg-primary: #1e293b;        /* Fundo principal (ex: barra de ferramentas) */
+            --bg-secondary: #334155;      /* Fundo secundário (ex: inputs, botões) */
+            --bg-light: #f1f5f9;          /* Fundo do corpo da página */
+            --surface-color: #ffffff;     /* Cor de superfícies (etiquetas, modais) */
+            --primary-color: #38bdf8;      /* Cor de destaque principal (azul claro) */
+            --primary-color-hover: #0ea5e9;/* Hover da cor de destaque */
+            --text-primary: #e2e8f0;      /* Texto sobre fundos escuros */
+            --text-secondary: #475569;    /* Texto sobre fundos claros */
+            --border-color: #475569;      /* Cor da borda */
+            --danger-color: #f43f5e;       /* Cor para ações destrutivas (ex: remover) */
+
             /* --- Variáveis de Layout --- */
-            --toolbar-height: 60px; /* Altura da barra de ferramentas principal */
-            --secondary-toolbar-height: 50px; /* Altura das barras secundárias */
+            --toolbar-height: 60px;
+            --secondary-toolbar-height: 50px;
             
             /* --- Variáveis de Tamanho da Etiqueta (controladas por JS) --- */
             --label-width: 100mm;
@@ -28,12 +44,13 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #F0F2F5;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-secondary);
             margin: 0;
-            /* Espaço para TODAS as barras de ferramentas fixas */
             padding-top: calc(var(--toolbar-height) + var(--secondary-toolbar-height)); 
             padding-bottom: 30px;
+            transition: background-color 0.3s ease;
         }
 
         /* --- Barra de Ferramentas Fixa (Principal) --- */
@@ -43,35 +60,37 @@
             left: 0;
             width: 100%;
             height: var(--toolbar-height);
-            background-color: #FFFFFF;
-            border-bottom: 1px solid #DADCE0;
-            padding: 0 10px; /* Reduzido o padding */
+            background-color: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 15px;
             box-sizing: border-box;
             display: flex;
             justify-content: space-between;
             align-items: center;
             z-index: 100;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
             overflow: hidden;
+            transition: background-color 0.3s ease;
         }
         
         /* --- Barras de Ferramentas Secundárias (Contexto) --- */
         .secondary-toolbar {
             position: fixed;
-            top: var(--toolbar-height); /* Posicionada abaixo da principal */
+            top: var(--toolbar-height);
             left: 0;
             width: 100%;
             height: var(--secondary-toolbar-height);
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #DADCE0;
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
             padding: 0 20px;
             box-sizing: border-box;
-            display: none; /* Oculta por padrão */
+            display: none;
             justify-content: flex-start;
             align-items: center;
             z-index: 99;
             gap: 15px;
-            overflow-x: auto; /* Permite rolagem se não couber */
+            overflow-x: auto;
+            transition: background-color 0.3s ease;
         }
         
         /* Mostra a barra quando o JS define display: flex */
@@ -97,9 +116,10 @@
 
         #toolbar .label, .secondary-toolbar .label {
             font-size: 0.9em;
-            color: #5f6368;
+            color: var(--text-primary);
             margin-right: 5px;
             white-space: nowrap;
+            font-weight: 500;
         }
 
         /* Estilo comum para botões e selects */
@@ -108,34 +128,40 @@
         .secondary-toolbar button,
         .secondary-toolbar select,
         .secondary-toolbar input[type="number"] {
-            background-color: #f8f9fa;
-            border: 1px solid #DADCE0;
-            color: #3c4043;
-            padding: 8px 10px; /* Padding ajustado */
-            border-radius: 4px;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px; /* Bordas mais arredondadas */
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            font-size: 0.9em;
-            transition: background-color 0.2s, box-shadow 0.2s;
-            height: 36px;
+            gap: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.85em;
+            font-weight: 500;
+            transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+            height: 38px;
             box-sizing: border-box;
             white-space: nowrap;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
         
         /* Inputs numéricos na barra principal */
         #toolbar input[type="number"].toolbar-input-number {
-            width: 60px; /* Mais curto */
-            background-color: #f8f9fa;
-            border: 1px solid #DADCE0;
-            color: #3c4043;
-            padding: 8px 5px; /* Menos padding lateral */
-            border-radius: 4px;
-            font-size: 0.9em;
-            height: 36px;
+            width: 65px;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 5px;
+            border-radius: 6px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.85em;
+            font-weight: 500;
+            height: 38px;
             box-sizing: border-box;
-            -moz-appearance: textfield; /* Remove setas no Firefox */
+            text-align: center;
+            -moz-appearance: textfield;
         }
         #toolbar input[type="number"].toolbar-input-number::-webkit-outer-spin-button,
         #toolbar input[type="number"].toolbar-input-number::-webkit-inner-spin-button {
@@ -146,9 +172,9 @@
 
         /* Botões de ícone (Negrito, Itálico, etc.) */
         .secondary-toolbar button {
-             padding: 8px;
-             min-width: 36px;
-             justify-content: center;
+            padding: 8px;
+            min-width: 38px;
+            justify-content: center;
         }
         
         /* Input de número */
@@ -162,14 +188,15 @@
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             padding: 0;
-            border: 1px solid #DADCE0;
-            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
             background-color: transparent;
             cursor: pointer;
             overflow: hidden;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
         .color-input::-webkit-color-swatch-wrapper { padding: 2px; border: none; }
         .color-input::-webkit-color-swatch { border: 1px solid #bdbdbd; border-radius: 2px; }
@@ -193,33 +220,49 @@
         .secondary-toolbar button:hover,
         .secondary-toolbar select:hover,
         .secondary-toolbar input:hover,
-        #toolbar input[type="number"].toolbar-input-number:hover {
-            background-color: #f1f3f4;
-            border-color: #c6cacf;
+        #toolbar input[type="number"].toolbar-input-number:hover,
+        .color-input:hover {
+            background-color: #475569; /* Um pouco mais claro que --bg-secondary */
+            border-color: var(--primary-color-hover);
         }
 
         #toolbar button:active,
         .secondary-toolbar button:active {
-            background-color: #e8eaed;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+            background-color: #475569;
+            transform: scale(0.98); /* Efeito de pressionar */
+            box-shadow: none;
+        }
+
+        /* Botão de Perigo (Remover) */
+        #toolbar button.btn-danger {
+            color: var(--danger-color);
+        }
+        #toolbar button.btn-danger:hover {
+            background-color: var(--danger-color);
+            border-color: var(--danger-color);
+            color: var(--surface-color);
+        }
+        #toolbar button.btn-danger:hover .material-icons {
+            color: var(--surface-color);
         }
         
         /* Estilo para botão de texto ATIVO (Negrito, Itálico, etc.) */
         .secondary-toolbar button.active {
-             background-color: #e8eaed;
-             box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
-             border-color: #1a73e8;
+            background-color: var(--primary-color);
+            border-color: var(--primary-color-hover);
+            box-shadow: none;
         }
         .secondary-toolbar button.active .material-icons {
-            color: #1a73e8;
+            color: var(--surface-color); /* Branco para contraste */
         }
 
 
         #toolbar .material-icons,
         .secondary-toolbar .material-icons {
-            font-size: 18px;
-            color: #5f6368;
+            font-size: 20px; /* Ligeiramente maior para melhor visibilidade */
+            color: var(--text-primary);
             vertical-align: middle;
+            transition: color 0.2s ease;
         }
 
         /* --- Página de Impressão e Etiquetas --- */
@@ -251,21 +294,22 @@
         .etiqueta-editavel {
             width: var(--label-width);
             height: var(--label-height);
-            background-color: #FFFFFF;
-            border: 1px solid #DADCE0;
-            position: relative; /* Necessário para posicionar itens internos E O CANVAS */
+            background-color: var(--surface-color);
+            border: 1px solid #cbd5e1; /* Light gray border */
+            border-radius: 4px; /* Slightly rounded corners */
+            position: relative;
             overflow: hidden;
             cursor: default;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            transition: border-color 0.2s, box-shadow 0.2s, width 0.3s ease-in-out, height 0.3s ease-in-out;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.05);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, width 0.3s ease-in-out, height 0.3s ease-in-out;
             page-break-inside: avoid;
             page-break-after: auto;
             flex-shrink: 0;
             box-sizing: border-box;
         }
         .etiqueta-editavel.active {
-            border-color: #1a73e8;
-            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.3);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.4); /* Glowing effect */
         }
         
         /* Overlay de Desenho */
@@ -306,12 +350,14 @@
             cursor: grab;
             touch-action: none;
             user-select: none;
-            /* Important: Ensures transform origin is center for rotation */
             transform-origin: center center;
+            transition: border-color 0.2s ease;
         }
-        .item-arrastavel:hover { border-color: #1a73e8; }
+        .item-arrastavel:hover {
+            border-color: var(--primary-color-hover);
+        }
         .item-arrastavel.selecionado-para-remocao {
-            outline: 2px solid red;
+            outline: 2px solid var(--danger-color);
             z-index: 11;
         }
         .item-arrastavel.interactjs-dragging,
@@ -325,18 +371,22 @@
         /* --- Alça de Rotação --- */
         .rotate-handle {
             position: absolute;
-            top: -25px; /* Posição acima do item */
+            top: -28px;
             left: 50%;
             transform: translateX(-50%);
-            width: 18px;
-            height: 18px;
-            background-color: #fff;
-            border: 2px solid #1a73e8;
+            width: 22px;
+            height: 22px;
+            background-color: var(--surface-color);
+            border: 2px solid var(--primary-color);
             border-radius: 50%;
-            cursor: grab; /* Cursor de "agarrar" */
-            display: none; /* Oculto por padrão */
-            z-index: 12; /* Acima do item */
-            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+            cursor: grab;
+            display: none;
+            z-index: 12;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+        .rotate-handle:hover {
+            transform: translateX(-50%) scale(1.1);
         }
         .item-arrastavel.selecionado-para-remocao .rotate-handle {
             display: block; /* Mostra quando o item está selecionado */
@@ -441,21 +491,31 @@
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.6);
             z-index: 1000;
             display: none;
             align-items: center;
             justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.visible {
+            opacity: 1;
         }
         .modal-content {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            background: var(--surface-color);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
             max-width: 90%;
-            max-height: 80vh;
+            max-height: 85vh;
             overflow-y: auto;
             font-family: inherit;
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.visible .modal-content {
+            transform: scale(1);
         }
         .modal-content h3 {
             margin-top: 0;
@@ -609,7 +669,7 @@
                     <span class="material-icons">content_copy</span> Copiar
                 </button>
                 <!-- NOVO BOTÃO DE REMOVER ETIQUETA -->
-                <button id="btn-remover-etiqueta" title="Remover etiqueta selecionada" style="color: #D93025;">
+                <button id="btn-remover-etiqueta" title="Remover etiqueta selecionada" class="btn-danger">
                     <span class="material-icons">delete_sweep</span>
                 </button>
                 <button id="btn-imprimir" title="Imprimir página">
@@ -687,7 +747,7 @@
                 </button>
                 <!-- Botão IA Removido -->
 
-                <button id="btn-remover-item" title="Remover item selecionado" style="color: #D93025;">
+                <button id="btn-remover-item" title="Remover item selecionado" class="btn-danger">
                     <span class="material-icons">delete</span>
                 </button>
             </div>
@@ -1150,6 +1210,8 @@
             // Adiciona alça de rotação
             const rotateHandle = document.createElement('div');
             rotateHandle.className = 'rotate-handle';
+            // SVG do ícone de rotação
+            rotateHandle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim()}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block; margin: 2px;"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>`;
             item.appendChild(rotateHandle);
 
             // Configuração por tipo
@@ -1614,12 +1676,14 @@
         });
         
         btnAddSimbolo.addEventListener('click', () => {
-             if (isDrawing) pararModoDesenho(false);
-             modalSimbolos.style.display = 'flex';
+            if (isDrawing) pararModoDesenho(false);
+            modalSimbolos.style.display = 'flex';
+            setTimeout(() => modalSimbolos.classList.add('visible'), 10);
         });
-        
+
         modalSimbolosClose.addEventListener('click', () => {
-             modalSimbolos.style.display = 'none';
+            modalSimbolos.classList.remove('visible');
+            setTimeout(() => modalSimbolos.style.display = 'none', 300); // Aguarda a transição
         });
         
         // Listeners QR e Barcode
@@ -1775,40 +1839,51 @@
             modalInputTitle.textContent = title;
             modalInputCallback = callback;
             modalInput.style.display = 'flex';
+            setTimeout(() => modalInput.classList.add('visible'), 10);
             modalInputField.value = '';
             modalInputField.type = 'text'; // Ensure it's text type
             modalInputField.focus();
+        }
+        function closeInputModal() {
+            modalInput.classList.remove('visible');
+            setTimeout(() => {
+                modalInput.style.display = 'none';
+                modalInputCallback = null;
+            }, 300);
         }
         modalInputSubmit.addEventListener('click', () => {
             if (modalInputCallback) {
                 modalInputCallback(modalInputField.value);
             }
-            modalInput.style.display = 'none';
-            modalInputCallback = null;
+            closeInputModal();
         });
         modalInputClose.addEventListener('click', () => {
-            modalInput.style.display = 'none';
-            modalInputCallback = null;
+            closeInputModal();
         });
 
         // --- Lógica do Modal de Contagem de Duplicação ---
         function showDuplicateCountModal() {
             modalDuplicateField.value = '1'; // Reset to 1
             modalDuplicateCount.style.display = 'flex';
+            setTimeout(() => modalDuplicateCount.classList.add('visible'), 10);
             modalDuplicateField.focus();
             modalDuplicateField.select(); // Select the text
+        }
+        function closeDuplicateCountModal() {
+            modalDuplicateCount.classList.remove('visible');
+            setTimeout(() => modalDuplicateCount.style.display = 'none', 300);
         }
         modalDuplicateSubmit.addEventListener('click', () => {
             const count = parseInt(modalDuplicateField.value, 10);
             if (count > 0 && count <= 100) { // Add a reasonable limit
                 duplicarEtiqueta(count);
-                modalDuplicateCount.style.display = 'none';
+                closeDuplicateCountModal();
             } else {
                 alertPersonalizado("Por favor, insira um número entre 1 e 100.");
             }
         });
         modalDuplicateClose.addEventListener('click', () => {
-            modalDuplicateCount.style.display = 'none';
+            closeDuplicateCountModal();
         });
 
         
