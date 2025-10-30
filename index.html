@@ -14,8 +14,9 @@
     <style>
         :root {
             /* --- Variáveis de Layout --- */
-            --toolbar-height: 60px; /* Altura da barra de ferramentas principal */
-            --secondary-toolbar-height: 50px; /* Altura das barras secundárias */
+            --vertical-toolbar-width: 55px; /* Largura da nova barra vertical */
+            --top-toolbar-height: 50px; /* Altura da nova barra superior */
+            --secondary-toolbar-height: 45px; /* Altura das barras secundárias */
             
             /* --- Variáveis de Tamanho da Etiqueta (controladas por JS) --- */
             --label-width: 100mm;
@@ -31,36 +32,57 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: #F0F2F5;
             margin: 0;
-            /* Espaço para TODAS as barras de ferramentas fixas */
-            padding-top: calc(var(--toolbar-height) + var(--secondary-toolbar-height)); 
+            /* Espaço para a barra superior E a barra lateral */
+            padding-top: var(--top-toolbar-height);
+            padding-left: var(--vertical-toolbar-width);
             padding-bottom: 30px;
         }
 
-        /* --- Barra de Ferramentas Fixa (Principal) --- */
+        /* --- Barra de Ferramentas Vertical (Estilo Photoshop) --- */
         #toolbar {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: var(--toolbar-height);
-            background-color: #FFFFFF;
-            border-bottom: 1px solid #DADCE0;
-            padding: 0 10px; /* Reduzido o padding */
+            width: var(--vertical-toolbar-width);
+            height: 100vh;
+            background-color: #f8f9fa; /* Um cinza claro e limpo */
+            border-right: 1px solid #DADCE0;
+            padding: 10px 0;
             box-sizing: border-box;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            align-items: center;
+            z-index: 101;
+            box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+            gap: 15px; /* Espaço entre os grupos de ferramentas */
+            overflow-y: auto;
+        }
+
+        /* --- Barra de Ferramentas Superior (Opções) --- */
+        #top-toolbar {
+            position: fixed;
+            top: 0;
+            left: var(--vertical-toolbar-width); /* Começa depois da barra vertical */
+            width: calc(100% - var(--vertical-toolbar-width));
+            height: var(--top-toolbar-height);
+            background-color: #FFFFFF;
+            border-bottom: 1px solid #DADCE0;
+            padding: 0 15px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: flex-start;
             align-items: center;
             z-index: 100;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
+            gap: 20px;
         }
         
         /* --- Barras de Ferramentas Secundárias (Contexto) --- */
         .secondary-toolbar {
             position: fixed;
-            top: var(--toolbar-height); /* Posicionada abaixo da principal */
-            left: 0;
-            width: 100%;
+            top: var(--top-toolbar-height); /* Abaixo da nova barra superior */
+            left: var(--vertical-toolbar-width); /* Ao lado da nova barra vertical */
+            width: calc(100% - var(--vertical-toolbar-width));
             height: var(--secondary-toolbar-height);
             background-color: #f8f9fa;
             border-bottom: 1px solid #DADCE0;
@@ -95,7 +117,7 @@
         }
 
 
-        #toolbar .label, .secondary-toolbar .label {
+        #top-toolbar .label, .secondary-toolbar .label {
             font-size: 0.9em;
             color: #5f6368;
             margin-right: 5px;
@@ -105,6 +127,8 @@
         /* Estilo comum para botões e selects */
         #toolbar button,
         #toolbar select,
+        #top-toolbar button,
+        #top-toolbar select,
         .secondary-toolbar button,
         .secondary-toolbar select,
         .secondary-toolbar input[type="number"] {
@@ -124,8 +148,21 @@
             white-space: nowrap;
         }
         
+        /* Estilo específico para botões da barra vertical (apenas ícone) */
+        #toolbar button, #toolbar select {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            justify-content: center;
+            font-size: 1.2em; /* Ícones maiores */
+        }
+        #toolbar select {
+             background-position: center; /* Centraliza o ícone de dropdown */
+        }
+
+
         /* Inputs numéricos na barra principal */
-        #toolbar input[type="number"].toolbar-input-number {
+        #top-toolbar input[type="number"].toolbar-input-number {
             width: 60px; /* Mais curto */
             background-color: #f8f9fa;
             border: 1px solid #DADCE0;
@@ -137,8 +174,8 @@
             box-sizing: border-box;
             -moz-appearance: textfield; /* Remove setas no Firefox */
         }
-        #toolbar input[type="number"].toolbar-input-number::-webkit-outer-spin-button,
-        #toolbar input[type="number"].toolbar-input-number::-webkit-inner-spin-button {
+        #top-toolbar input[type="number"].toolbar-input-number::-webkit-outer-spin-button,
+        #top-toolbar input[type="number"].toolbar-input-number::-webkit-inner-spin-button {
             -webkit-appearance: none; /* Remove setas no Chrome/Safari */
             margin: 0;
         }
@@ -230,6 +267,7 @@
             flex-wrap: wrap;
             justify-content: center;
             transition: max-width 0.3s ease-in-out;
+            transform-origin: top center; /* Centraliza o zoom */
         }
         #pagina-de-impressao:not(.layout-dupla) .etiqueta-editavel {
             margin-bottom: 10px;
@@ -598,24 +636,70 @@
 </head>
 <body>
 
-    <!-- Barra de Ferramentas Principal -->
+    <!-- Barra de Ferramentas Vertical (Ferramentas de Adição) -->
     <div id="toolbar">
-        <div class="toolbar-section">
+        <div class="button-group" style="flex-direction: column; gap: 10px;">
+            <button id="btn-add-texto" title="Adicionar caixa de texto">
+                <span class="material-icons">title</span>
+            </button>
+            <button id="btn-add-imagem" title="Adicionar imagem">
+                <span class="material-icons">image</span>
+            </button>
+            <button id="btn-add-linha" title="Adicionar linha">
+                <span class="material-icons">horizontal_rule</span>
+            </button>
+            <button id="btn-add-simbolo" title="Adicionar símbolo">
+                <span class="material-icons">emoji_emotions</span>
+            </button>
+            <button id="btn-add-qrcode" title="Adicionar QR Code">
+                <span class="material-icons">qr_code_2</span>
+            </button>
+            <button id="btn-add-barcode" title="Adicionar Código de Barras">
+                <span class="material-icons">view_week</span>
+            </button>
+            <button id="btn-add-lapis" title="Desenhar (Lápis)">
+                <span class="material-icons">draw</span>
+            </button>
+            <select id="select-add-shape" title="Adicionar forma">
+                <option value="" disabled selected>Forma</option>
+                <option value="quadrado">Quadrado</option>
+                <option value="circulo">Círculo</option>
+                <option value="oval">Oval</option>
+                <option value="triangulo">Triângulo</option>
+                <option value="triangulo-inv">Triângulo Inv.</option>
+                <option value="losango">Losango</option>
+                <option value="estrela">Estrela</option>
+                <option value="coracao">Coração</option>
+                <option value="seta-dir">Seta (Dir)</option>
+                <option value="seta-esq">Seta (Esq)</option>
+            </select>
+             <button id="btn-remover-item" title="Remover item selecionado" style="color: #D93025; margin-top: 20px;">
+                <span class="material-icons">delete</span>
+            </button>
+        </div>
+         <!-- Input oculto para upload de imagem -->
+        <input type="file" id="input-imagem" accept="image/*" style="display: none;">
+    </div>
+
+    <!-- Barra de Ferramentas Superior (Opções e Controles) -->
+    <div id="top-toolbar">
+         <div class="toolbar-section">
             <div class="button-group">
                 <button id="btn-add-etiqueta" title="Adicionar nova etiqueta à página">
-                    <span class="material-icons">add_to_queue</span> Nova Etiqueta
+                    <span class="material-icons">add_to_queue</span>
                 </button>
                 <button id="btn-duplicar-etiqueta" title="Copiar etiqueta selecionada">
-                    <span class="material-icons">content_copy</span> Copiar
+                    <span class="material-icons">content_copy</span>
                 </button>
-                <!-- NOVO BOTÃO DE REMOVER ETIQUETA -->
                 <button id="btn-remover-etiqueta" title="Remover etiqueta selecionada" style="color: #D93025;">
                     <span class="material-icons">delete_sweep</span>
                 </button>
                 <button id="btn-imprimir" title="Imprimir página">
-                    <span class="material-icons">print</span> Imprimir
+                    <span class="material-icons">print</span>
                 </button>
             </div>
+        </div>
+        <div class="toolbar-section">
             <div class="button-group">
                 <button id="btn-zoom-out" title="Diminuir Zoom">
                     <span class="material-icons">zoom_out</span>
@@ -627,73 +711,26 @@
                     <span class="material-icons">zoom_in_map</span>
                 </button>
             </div>
-            <div class="button-group">
-                <span class="label">Selecionar Etiqueta:</span>
+        </div>
+        <div class="toolbar-section">
+             <div class="button-group">
+                <span class="label">Layout:</span>
                 <select id="select-layout-preset" title="Selecionar tamanho e layout da etiqueta">
-                    <option value="100x50">100 x 50 mm (1 Col)</option>
-                    <option value="50x25">50 x 25 mm (1 Col)</option>
-                    <option value="50x25-dupla">50 x 25 mm (2 Col)</option>
+                    <option value="100x50">100x50mm (1 Col)</option>
+                    <option value="50x25">50x25mm (1 Col)</option>
+                    <option value="50x25-dupla">50x25mm (2 Col)</option>
                     <option value="personalizado" selected>Personalizado</option>
                 </select>
             </div>
             <div id="custom-layout-inputs" class="button-group" style="display: none;">
-                <span class="label">Larg. (mm):</span>
+                <span class="label">Larg:</span>
                 <input type="number" id="input-custom-width" value="100" class="toolbar-input-number">
-                <span class="label">Alt. (mm):</span>
+                <span class="label">Alt:</span>
                 <input type="number" id="input-custom-height" value="50" class="toolbar-input-number">
-                <span class="label">Colunas:</span>
+                <span class="label">Cols:</span>
                 <input type="number" id="input-custom-cols" value="1" min="1" max="10" class="toolbar-input-number" style="width: 45px;">
             </div>
         </div>
-        <div class="toolbar-section" style="overflow-x: auto; max-width: 50%;"> <!-- Permite rolagem nesta seção -->
-            <div class="button-group">
-                <span class="label">Adicionar:</span>
-                <button id="btn-add-texto" title="Adicionar caixa de texto">
-                    <span class="material-icons">title</span>
-                </button>
-                <button id="btn-add-imagem" title="Adicionar imagem">
-                    <span class="material-icons">image</span>
-                </button>
-                
-                <select id="select-add-shape" title="Adicionar forma">
-                    <option value="" disabled selected>Forma</option>
-                    <option value="quadrado">Quadrado</option>
-                    <option value="circulo">Círculo</option>
-                    <option value="oval">Oval</option>
-                    <option value="triangulo">Triângulo</option>
-                    <option value="triangulo-inv">Triângulo Inv.</option>
-                    <option value="losango">Losango</option>
-                    <option value="estrela">Estrela</option>
-                    <option value="coracao">Coração</option>
-                    <option value="seta-dir">Seta (Dir)</option>
-                    <option value="seta-esq">Seta (Esq)</option>
-                </select>
-                
-                <button id="btn-add-linha" title="Adicionar linha">
-                    <span class="material-icons">horizontal_rule</span>
-                </button>
-                <button id="btn-add-simbolo" title="Adicionar símbolo">
-                    <span class="material-icons">emoji_emotions</span>
-                </button>
-                <!-- Novos Botões QR e Barcode -->
-                <button id="btn-add-qrcode" title="Adicionar QR Code">
-                    <span class="material-icons">qr_code_2</span>
-                </button>
-                <button id="btn-add-barcode" title="Adicionar Código de Barras">
-                    <span class="material-icons">view_week</span>
-                </button>
-                <button id="btn-add-lapis" title="Desenhar (Lápis)">
-                    <span class="material-icons">draw</span>
-                </button>
-                <!-- Botão IA Removido -->
-
-                <button id="btn-remover-item" title="Remover item selecionado" style="color: #D93025;">
-                    <span class="material-icons">delete</span>
-                </button>
-            </div>
-        </div>
-        <!-- Input oculto para upload de imagem -->
-        <input type="file" id="input-imagem" accept="image/*" style="display: none;">
     </div>
     
     <!-- Barra de Ferramentas de Formatação de Texto -->
