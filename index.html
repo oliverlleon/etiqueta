@@ -431,18 +431,18 @@
         /* --- Alça de Rotação --- */
         .rotate-handle {
             position: absolute;
-            top: -25px; /* Posição acima do item */
+            top: -20px; /* Posição ajustada */
             left: 50%;
             transform: translateX(-50%);
-            width: 18px;
-            height: 18px;
+            width: 14px; /* Tamanho reduzido */
+            height: 14px; /* Tamanho reduzido */
             background-color: #fff;
-            border: 2px solid #1a73e8;
+            border: 1px solid #1a73e8; /* Borda mais fina */
             border-radius: 50%;
-            cursor: grab; /* Cursor de "agarrar" */
-            display: none; /* Oculto por padrão */
-            z-index: 12; /* Acima do item */
-            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+            cursor: grab;
+            display: none;
+            z-index: 12;
+            box-shadow: 0 0 4px rgba(0,0,0,0.2);
         }
         .item-arrastavel.selecionado-para-remocao .rotate-handle {
             display: block; /* Mostra quando o item está selecionado */
@@ -1839,14 +1839,22 @@
 
                             // Special recreation for QR/Barcode
                             if (itemData.tipo === 'qrcode') {
-                                new QRCode(item, { text: itemData.conteudo, width: 128, height: 128, correctLevel: QRCode.CorrectLevel.H });
-                                const qrEl = item.querySelector('canvas') || item.querySelector('img');
-                                if(qrEl) { qrEl.style.cssText = 'width: 100%; height: 100%; object-fit: contain;'; }
+                                const qrContainer = document.createElement('div');
+                                item.appendChild(qrContainer);
+                                new QRCode(qrContainer, { text: itemData.conteudo, width: 128, height: 128, correctLevel: QRCode.CorrectLevel.H });
+                                const qrEl = qrContainer.querySelector('canvas') || qrContainer.querySelector('img');
+                                if (qrEl) {
+                                    qrEl.style.width = '100%';
+                                    qrEl.style.height = '100%';
+                                    qrEl.style.objectFit = 'contain';
+                                }
                             } else if (itemData.tipo === 'barcode') {
                                 const barcodeSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
                                 item.appendChild(barcodeSvg);
                                 JsBarcode(barcodeSvg, itemData.conteudo, { format: "CODE128", displayValue: true, fontSize: 14, width: 2, height: 40, margin: 5 });
-                                barcodeSvg.style.cssText = 'width: 100%; height: 100%; object-fit: fill;';
+                                barcodeSvg.style.width = '100%';
+                                barcodeSvg.style.height = '100%';
+                                barcodeSvg.style.objectFit = 'fill';
                             }
                         });
 
