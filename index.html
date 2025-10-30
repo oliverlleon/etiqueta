@@ -328,8 +328,7 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            transition: max-width 0.3s ease-in-out, margin-left 0.3s ease-in-out;
-            margin-left: calc(var(--vertical-toolbar-width) + 30px);
+            transition: max-width 0.3s ease-in-out;
         }
         #pagina-de-impressao:not(.layout-dupla) .etiqueta-editavel {
             margin-bottom: 10px;
@@ -639,7 +638,7 @@
                 width: var(--print-page-width) !important;
             }
 
-            #toolbar, .secondary-toolbar, .modal-overlay, #btn-concluir-desenho, .rotate-handle {
+            #toolbar, #top-toolbar, .secondary-toolbar, .modal-overlay, #btn-concluir-desenho, .rotate-handle {
                 display: none !important;
             }
 
