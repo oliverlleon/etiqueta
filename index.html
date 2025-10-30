@@ -100,12 +100,12 @@
 
         #left-toolbar .select-wrapper .select-icon {
             position: absolute;
-            left: 7px;
+            left: 16px; /* Centralizado na área de padding de 32px */
             top: 50%;
-            transform: translateY(-50%);
+            transform: translate(-50%, -50%);
             color: #f1f1f1;
             font-size: 20px;
-            pointer-events: none; /* Allows click-through to the select */
+            pointer-events: none; /* Permite clicar através do ícone */
         }
 
         #left-toolbar select {
@@ -431,18 +431,17 @@
         /* --- Alça de Rotação --- */
         .rotate-handle {
             position: absolute;
-            top: -20px; /* Posição ajustada */
+            top: -22px; /* Aumenta a área de hover um pouco */
             left: 50%;
             transform: translateX(-50%);
-            width: 14px; /* Tamanho reduzido */
-            height: 14px; /* Tamanho reduzido */
-            background-color: #fff;
-            border: 1px solid #1a73e8; /* Borda mais fina */
+            width: 24px;  /* Área de hover maior */
+            height: 24px; /* Área de hover maior */
+            background-color: transparent; /* Invisível */
+            border: none; /* Invisível */
             border-radius: 50%;
-            cursor: grab;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%231a73e8" d="M16.89,6.28l-2.97-2.98v1.41C11.33,4.8,8.9,5.55,7.1,7.34C4.65,9.79,4.25,13.23,5.6,16.03l-1.33,1.33 C2.67,14.65,3.06,10.7,5.6,8.14c2.14-2.14,4.99-3.03,7.79-2.85V6.7l2.96-2.96l0.01,0.01 M19.74,7.26l1.33-1.33 C22.67,8.65,22.3,12.7,19.74,15.26c-2.14,2.14-4.99,3.03-7.79,2.85V16.7l-2.96,2.96l-0.01-0.01l2.97,2.98V21.2 c2.59,0.09,5.02-0.66,6.82-2.46c2.55-2.55,2.95-6,1.6-8.78L19.74,7.26z"/></svg>') 12 12, auto;
             display: none;
             z-index: 12;
-            box-shadow: 0 0 4px rgba(0,0,0,0.2);
         }
         .item-arrastavel.selecionado-para-remocao .rotate-handle {
             display: block; /* Mostra quando o item está selecionado */
@@ -2348,23 +2347,41 @@
         // --- Listener para Deletar com Teclado (NOVO) ---
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Delete' || e.key === 'Backspace') {
-                // Evita deletar se estiver digitando em um input ou texto
                 const target = e.target;
                 const isEditing = target.tagName === 'INPUT' || 
                                   target.tagName === 'SELECT' || 
                                   target.isContentEditable;
 
-                if (itemSelecionado && !isEditing) {
-                    e.preventDefault(); // Impede o navegador de voltar (Backspace)
-                    
-                    // Reutiliza a função de confirmação
+                if (isEditing) return; // Não faz nada se estiver editando
+
+                e.preventDefault(); // Impede o navegador de voltar (Backspace)
+
+                if (itemSelecionado) {
+                    // Se um item está selecionado, remove o item
                     confirmPersonalizado("Tem certeza que deseja remover este item?", () => {
                         itemSelecionado.remove();
                         desselecionarItem();
                     });
+                } else if (etiquetaAtiva) {
+                    // Se nenhum item, mas uma etiqueta está ativa, remove a etiqueta
+                    btnRemoverEtiqueta.click(); // Reutiliza a lógica do botão
                 }
             }
         });
+
+        // --- Listener para Zoom com Scroll (NOVO) ---
+        document.addEventListener('wheel', (e) => {
+            if (e.altKey) {
+                e.preventDefault(); // Impede a rolagem da página
+                if (e.deltaY < 0) {
+                    // Scroll para cima, aumenta o zoom
+                    btnZoomIn.click();
+                } else {
+                    // Scroll para baixo, diminui o zoom
+                    btnZoomOut.click();
+                }
+            }
+        }, { passive: false }); // Necessário para que preventDefault funcione
 
     </script>
 </body>
