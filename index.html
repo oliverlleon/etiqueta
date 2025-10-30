@@ -17,151 +17,170 @@
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
     <style>
         :root {
-            /* --- Paleta de Cores Moderna --- */
-            --bg-primary: #1e293b;        /* Fundo principal (ex: barra de ferramentas) */
-            --bg-secondary: #334155;      /* Fundo secundário (ex: inputs, botões) */
-            --bg-light: #f1f5f9;          /* Fundo do corpo da página */
-            --surface-color: #ffffff;     /* Cor de superfícies (etiquetas, modais) */
-            --primary-color: #38bdf8;      /* Cor de destaque principal (azul claro) */
-            --primary-color-hover: #0ea5e9;/* Hover da cor de destaque */
-            --text-primary: #e2e8f0;      /* Texto sobre fundos escuros */
-            --text-secondary: #475569;    /* Texto sobre fundos claros */
-            --border-color: #475569;      /* Cor da borda */
-            --danger-color: #f43f5e;       /* Cor para ações destrutivas (ex: remover) */
+            /* --- Paleta de Cores e Layout --- */
+            --left-toolbar-width: 260px;
+            --top-properties-bar-height: 55px;
+            --bg-primary: #1e293b;        /* Fundo principal (barras) */
+            --bg-secondary: #334155;      /* Fundo secundário (inputs) */
+            --bg-light: #f1f5f9;          /* Fundo do canvas */
+            --surface-color: #ffffff;     /* Cor de superfícies (etiquetas) */
+            --primary-color: #38bdf8;      /* Cor de destaque */
+            --primary-color-hover: #0ea5e9;
+            --text-primary: #e2e8f0;      /* Texto em fundos escuros */
+            --text-secondary: #475569;    /* Texto em fundos claros */
+            --border-color: #475569;
+            --danger-color: #f43f5e;
 
-            /* --- Variáveis de Layout --- */
-            --toolbar-height: 60px;
-            --secondary-toolbar-height: 50px;
-            
-            /* --- Variáveis de Tamanho da Etiqueta (controladas por JS) --- */
+            /* --- Variáveis de Etiqueta (JS) --- */
             --label-width: 100mm;
             --label-height: 50mm;
             --label-gap: 5mm; 
             
-            /* --- Variáveis de Impressão (controladas por JS) --- */
+            /* --- Variáveis de Impressão (JS) --- */
             --print-page-width: var(--label-width);
             --print-page-height: var(--label-height);
         }
 
         body {
             font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg-light);
-            color: var(--text-secondary);
             margin: 0;
-            padding-top: calc(var(--toolbar-height) + var(--secondary-toolbar-height)); 
-            padding-bottom: 30px;
-            transition: background-color 0.3s ease;
+            color: var(--text-secondary);
         }
 
-        /* --- Barra de Ferramentas Fixa (Principal) --- */
-        #toolbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: var(--toolbar-height);
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* --- Barra de Ferramentas Vertical Esquerda --- */
+        #left-toolbar {
+            width: var(--left-toolbar-width);
+            height: 100vh;
             background-color: var(--bg-primary);
-            border-bottom: 1px solid var(--border-color);
-            padding: 0 15px;
+            color: var(--text-primary);
+            padding: 20px;
             box-sizing: border-box;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+            position: fixed;
+            left: 0;
+            top: 0;
             z-index: 100;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            transition: background-color 0.3s ease;
         }
         
-        /* --- Barras de Ferramentas Secundárias (Contexto) --- */
-        .secondary-toolbar {
-            position: fixed;
-            top: var(--toolbar-height);
-            left: 0;
-            width: 100%;
-            height: var(--secondary-toolbar-height);
-            background-color: var(--bg-secondary);
+        /* --- Conteúdo Principal (Barra Superior + Canvas) --- */
+        #main-content-wrapper {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            margin-left: var(--left-toolbar-width);
+            width: calc(100% - var(--left-toolbar-width));
+            height: 100vh; /* Garante que o wrapper ocupe a altura total */
+        }
+
+        /* --- Barra de Propriedades Superior --- */
+        #top-properties-bar {
+            height: var(--top-properties-bar-height);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
             border-bottom: 1px solid var(--border-color);
             padding: 0 20px;
             box-sizing: border-box;
-            display: none;
-            justify-content: flex-start;
+            display: flex;
             align-items: center;
-            z-index: 99;
             gap: 15px;
-            overflow-x: auto;
-            transition: background-color 0.3s ease;
+            z-index: 99;
+            flex-shrink: 0; /* Impede que a barra encolha */
+            display: none; /* Oculta por padrão, JS controla a visibilidade */
         }
-        
-        /* Mostra a barra quando o JS define display: flex */
-        #text-toolbar-options[style*="display: flex"],
-        #style-toolbar-options[style*="display: flex"],
-        #drawing-toolbar-options[style*="display: flex"] {
-            display: flex !important;
+
+        /* --- Área de Canvas --- */
+        #canvas-area {
+            flex-grow: 1;
+            background-color: var(--bg-light);
+            overflow: auto;
+            padding: 20px;
+            position: relative; /* Para posicionar os controles de zoom */
+        }
+
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 5px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
 
         .toolbar-section {
             display: flex;
-            align-items: center;
-            gap: 10px; /* Reduzido o gap */
+            flex-direction: column;
+            gap: 10px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
         }
-
-        .button-group {
-            display: flex;
-            align-items: center;
-            gap: 5px; /* Reduzido o gap */
+        .toolbar-section:last-child {
+            border-bottom: none;
         }
-
-
-        #toolbar .label, .secondary-toolbar .label {
+        .toolbar-section .label {
             font-size: 0.9em;
-            color: var(--text-primary);
-            margin-right: 5px;
-            white-space: nowrap;
-            font-weight: 500;
+            font-weight: 600;
+            color: var(--primary-color);
+            align-self: flex-start;
+            margin-bottom: 5px;
         }
 
-        /* Estilo comum para botões e selects */
-        #toolbar button,
-        #toolbar select,
-        .secondary-toolbar button,
-        .secondary-toolbar select,
-        .secondary-toolbar input[type="number"] {
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        /* Estilo para botões, selects, etc. na barra lateral */
+        #left-toolbar button,
+        #left-toolbar select,
+        #left-toolbar input {
             background-color: var(--bg-secondary);
             border: 1px solid var(--border-color);
             color: var(--text-primary);
-            padding: 8px 12px;
-            border-radius: 6px; /* Bordas mais arredondadas */
+            padding: 10px;
+            border-radius: 6px;
             cursor: pointer;
-            display: inline-flex;
+            display: flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
             font-family: 'Poppins', sans-serif;
-            font-size: 0.85em;
-            font-weight: 500;
-            transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
-            height: 38px;
+            font-size: 0.9em;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            width: 100%;
             box-sizing: border-box;
-            white-space: nowrap;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        #left-toolbar button:hover,
+        #left-toolbar select:hover,
+        #left-toolbar input:hover {
+            background-color: #475569;
+            border-color: var(--primary-color);
         }
         
         /* Inputs numéricos na barra principal */
         #toolbar input[type="number"].toolbar-input-number {
-            width: 65px;
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 8px 5px;
-            border-radius: 6px;
-            font-family: 'Poppins', sans-serif;
-            font-size: 0.85em;
-            font-weight: 500;
-            height: 38px;
+            width: 60px; /* Mais curto */
+            background-color: #f8f9fa;
+            border: 1px solid #DADCE0;
+            color: #3c4043;
+            padding: 8px 5px; /* Menos padding lateral */
+            border-radius: 4px;
+            font-size: 0.9em;
+            height: 36px;
             box-sizing: border-box;
-            text-align: center;
-            -moz-appearance: textfield;
+            -moz-appearance: textfield; /* Remove setas no Firefox */
         }
         #toolbar input[type="number"].toolbar-input-number::-webkit-outer-spin-button,
         #toolbar input[type="number"].toolbar-input-number::-webkit-inner-spin-button {
@@ -170,17 +189,60 @@
         }
 
 
-        /* Botões de ícone (Negrito, Itálico, etc.) */
-        .secondary-toolbar button {
-            padding: 8px;
-            min-width: 38px;
-            justify-content: center;
+        .context-toolbar {
+            display: none; /* JS controla isso */
+            align-items: center;
+            gap: 15px;
+        }
+
+        .button-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         
-        /* Input de número */
-        .secondary-toolbar input[type="number"] {
-            width: 70px;
-            padding-right: 5px;
+        #top-properties-bar .label {
+            color: var(--text-primary);
+            font-size: 0.9em;
+            margin-right: 5px;
+        }
+
+        #top-properties-bar button,
+        #top-properties-bar select,
+        #top-properties-bar input {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.85em;
+            height: 36px;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+        #top-properties-bar button:hover,
+        #top-properties-bar select:hover,
+        #top-properties-bar input:hover {
+            background-color: #475569;
+            border-color: var(--primary-color);
+        }
+
+        #top-properties-bar button.active {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color-hover);
+        }
+        #top-properties-bar #btn-remover-item {
+            margin-left: auto; /* Empurra o botão para a direita */
+            background-color: var(--danger-color);
+            border-color: var(--danger-color);
+        }
+        #top-properties-bar #btn-remover-item:hover {
+            background-color: #be123c; /* Um tom mais escuro de vermelho */
+            border-color: #be123c;
         }
         
         /* Input de Cor */
@@ -188,81 +250,29 @@
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
-            width: 38px;
-            height: 38px;
+            width: 36px;
+            height: 36px;
             padding: 0;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
+            border: 1px solid #DADCE0;
+            border-radius: 4px;
             background-color: transparent;
             cursor: pointer;
             overflow: hidden;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
         .color-input::-webkit-color-swatch-wrapper { padding: 2px; border: none; }
         .color-input::-webkit-color-swatch { border: 1px solid #bdbdbd; border-radius: 2px; }
         .color-input::-moz-color-swatch { border: 1px solid #bdbdbd; border-radius: 2px; }
 
 
-        #toolbar select, .secondary-toolbar select {
+        #left-toolbar select, #top-properties-bar select {
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
-            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%2D%2Dxmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%2D%2Dwidth%3D%22292.4%22%2D%2Dheight%3D%22292.4%22%3E%3Cpath%2D%2Dfill%3D%22%235f6368%22%2D%2Dd%3D%22M287%2D%2D69.4a17.6%2D%2D17.6%2D%2D0%2D%2D0%2D%2D0-13-5.4H18.4c-5%2D%2D0-9.3%2D%2D1.8-12.9%2D%2D5.4A17.6%2D%2D17.6%2D%2D0%2D%2D0%2D%2D0%2D%2D0%2D%2D82.2c0%2D%2D5%2D%2D1.8%2D%2D9.3%2D%2D5.4%2D%2D12.9l128%2D%2D127.9c3.6%2D%2D3.6%2D%2D7.8%2D%2D5.4%2D%2D12.8%2D%2D5.4s9.2-1.8%2D%2D12.8-5.4L287%2D%2D95c3.5-3.5%2D%2D5.4-7.8%2D%2D5.4-12.8%2D%2D0-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23e2e8f0%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3-1.8-12.9-5.4A17.6%2017.6%200%200%200%200%2082.2c0%205-1.8%209.3-5.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
             background-repeat: no-repeat;
             background-position: right 10px center;
             background-size: 8px 10px;
             padding-right: 30px;
-        }
-
-        /* Efeitos de Hover e Active */
-        #toolbar button:hover,
-        #toolbar select:hover,
-        .secondary-toolbar button:hover,
-        .secondary-toolbar select:hover,
-        .secondary-toolbar input:hover,
-        #toolbar input[type="number"].toolbar-input-number:hover,
-        .color-input:hover {
-            background-color: #475569; /* Um pouco mais claro que --bg-secondary */
-            border-color: var(--primary-color-hover);
-        }
-
-        #toolbar button:active,
-        .secondary-toolbar button:active {
-            background-color: #475569;
-            transform: scale(0.98); /* Efeito de pressionar */
-            box-shadow: none;
-        }
-
-        /* Botão de Perigo (Remover) */
-        #toolbar button.btn-danger {
-            color: var(--danger-color);
-        }
-        #toolbar button.btn-danger:hover {
-            background-color: var(--danger-color);
-            border-color: var(--danger-color);
-            color: var(--surface-color);
-        }
-        #toolbar button.btn-danger:hover .material-icons {
-            color: var(--surface-color);
-        }
-        
-        /* Estilo para botão de texto ATIVO (Negrito, Itálico, etc.) */
-        .secondary-toolbar button.active {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color-hover);
-            box-shadow: none;
-        }
-        .secondary-toolbar button.active .material-icons {
-            color: var(--surface-color); /* Branco para contraste */
-        }
-
-
-        #toolbar .material-icons,
-        .secondary-toolbar .material-icons {
-            font-size: 20px; /* Ligeiramente maior para melhor visibilidade */
-            color: var(--text-primary);
-            vertical-align: middle;
-            transition: color 0.2s ease;
         }
 
         /* --- Página de Impressão e Etiquetas --- */
@@ -294,22 +304,21 @@
         .etiqueta-editavel {
             width: var(--label-width);
             height: var(--label-height);
-            background-color: var(--surface-color);
-            border: 1px solid #cbd5e1; /* Light gray border */
-            border-radius: 4px; /* Slightly rounded corners */
-            position: relative;
+            background-color: #FFFFFF;
+            border: 1px solid #DADCE0;
+            position: relative; /* Necessário para posicionar itens internos E O CANVAS */
             overflow: hidden;
             cursor: default;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.05);
-            transition: border-color 0.3s ease, box-shadow 0.3s ease, width 0.3s ease-in-out, height 0.3s ease-in-out;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: border-color 0.2s, box-shadow 0.2s, width 0.3s ease-in-out, height 0.3s ease-in-out;
             page-break-inside: avoid;
             page-break-after: auto;
             flex-shrink: 0;
             box-sizing: border-box;
         }
         .etiqueta-editavel.active {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.4); /* Glowing effect */
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.3);
         }
         
         /* Overlay de Desenho */
@@ -350,14 +359,12 @@
             cursor: grab;
             touch-action: none;
             user-select: none;
+            /* Important: Ensures transform origin is center for rotation */
             transform-origin: center center;
-            transition: border-color 0.2s ease;
         }
-        .item-arrastavel:hover {
-            border-color: var(--primary-color-hover);
-        }
+        .item-arrastavel:hover { border-color: #1a73e8; }
         .item-arrastavel.selecionado-para-remocao {
-            outline: 2px solid var(--danger-color);
+            outline: 2px solid red;
             z-index: 11;
         }
         .item-arrastavel.interactjs-dragging,
@@ -371,22 +378,18 @@
         /* --- Alça de Rotação --- */
         .rotate-handle {
             position: absolute;
-            top: -28px;
+            top: -25px; /* Posição acima do item */
             left: 50%;
             transform: translateX(-50%);
-            width: 22px;
-            height: 22px;
-            background-color: var(--surface-color);
-            border: 2px solid var(--primary-color);
+            width: 18px;
+            height: 18px;
+            background-color: #fff;
+            border: 2px solid #1a73e8;
             border-radius: 50%;
-            cursor: grab;
-            display: none;
-            z-index: 12;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: transform 0.2s ease;
-        }
-        .rotate-handle:hover {
-            transform: translateX(-50%) scale(1.1);
+            cursor: grab; /* Cursor de "agarrar" */
+            display: none; /* Oculto por padrão */
+            z-index: 12; /* Acima do item */
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
         }
         .item-arrastavel.selecionado-para-remocao .rotate-handle {
             display: block; /* Mostra quando o item está selecionado */
@@ -491,31 +494,21 @@
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0,0,0,0.5);
             z-index: 1000;
             display: none;
             align-items: center;
             justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .modal-overlay.visible {
-            opacity: 1;
         }
         .modal-content {
-            background: var(--surface-color);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             max-width: 90%;
-            max-height: 85vh;
+            max-height: 80vh;
             overflow-y: auto;
             font-family: inherit;
-            transform: scale(0.95);
-            transition: transform 0.3s ease;
-        }
-        .modal-overlay.visible .modal-content {
-            transform: scale(1);
         }
         .modal-content h3 {
             margin-top: 0;
@@ -599,8 +592,20 @@
                 width: var(--print-page-width) !important;
             }
 
-            #toolbar, .secondary-toolbar, .modal-overlay, #btn-concluir-desenho, .rotate-handle {
+            #left-toolbar, #top-properties-bar, .modal-overlay, .zoom-controls, .rotate-handle {
                 display: none !important;
+            }
+
+            .app-container, #main-content-wrapper {
+                display: block !important;
+                margin-left: 0 !important;
+                width: auto !important;
+                height: auto !important;
+            }
+
+            #canvas-area {
+                padding: 0 !important;
+                overflow: visible !important;
             }
 
             #pagina-de-impressao {
@@ -656,46 +661,33 @@
     <style id="screen-style-dynamic"></style>
     
 </head>
-<body>
+<body class="app-container">
 
-    <!-- Barra de Ferramentas Principal -->
-    <div id="toolbar">
+    <!-- Nova Barra de Ferramentas Vertical Esquerda -->
+    <aside id="left-toolbar">
+        <!-- O conteúdo da #toolbar antiga será movido e reorganizado aqui -->
         <div class="toolbar-section">
-            <div class="button-group">
-                <button id="btn-add-etiqueta" title="Adicionar nova etiqueta à página">
-                    <span class="material-icons">add_to_queue</span> Nova Etiqueta
-                </button>
-                <button id="btn-duplicar-etiqueta" title="Copiar etiqueta selecionada">
-                    <span class="material-icons">content_copy</span> Copiar
-                </button>
-                <!-- NOVO BOTÃO DE REMOVER ETIQUETA -->
-                <button id="btn-remover-etiqueta" title="Remover etiqueta selecionada" class="btn-danger">
-                    <span class="material-icons">delete_sweep</span>
-                </button>
-                <button id="btn-imprimir" title="Imprimir página">
-                    <span class="material-icons">print</span> Imprimir
-                </button>
-            </div>
-            <div class="button-group">
-                <button id="btn-zoom-out" title="Diminuir Zoom">
-                    <span class="material-icons">zoom_out</span>
-                </button>
-                <button id="btn-zoom-in" title="Aumentar Zoom">
-                    <span class="material-icons">zoom_in</span>
-                </button>
-                <button id="btn-zoom-reset" title="Restaurar Zoom">
-                    <span class="material-icons">zoom_in_map</span>
-                </button>
-            </div>
-            <div class="button-group">
-                <span class="label">Selecionar Etiqueta:</span>
-                <select id="select-layout-preset" title="Selecionar tamanho e layout da etiqueta">
-                    <option value="100x50">100 x 50 mm (1 Col)</option>
-                    <option value="50x25">50 x 25 mm (1 Col)</option>
-                    <option value="50x25-dupla">50 x 25 mm (2 Col)</option>
-                    <option value="personalizado" selected>Personalizado</option>
-                </select>
-            </div>
+            <button id="btn-add-etiqueta" title="Adicionar nova etiqueta à página">
+                <span class="material-icons">add_to_queue</span> Nova Etiqueta
+            </button>
+            <button id="btn-duplicar-etiqueta" title="Copiar etiqueta selecionada">
+                <span class="material-icons">content_copy</span> Copiar
+            </button>
+            <button id="btn-remover-etiqueta" title="Remover etiqueta selecionada" style="color: #D93025;">
+                <span class="material-icons">delete_sweep</span>
+            </button>
+            <button id="btn-imprimir" title="Imprimir página">
+                <span class="material-icons">print</span> Imprimir
+            </button>
+        </div>
+        <div class="toolbar-section">
+             <span class="label">Selecionar Etiqueta:</span>
+            <select id="select-layout-preset" title="Selecionar tamanho e layout da etiqueta">
+                <option value="100x50">100 x 50 mm (1 Col)</option>
+                <option value="50x25">50 x 25 mm (1 Col)</option>
+                <option value="50x25-dupla">50 x 25 mm (2 Col)</option>
+                <option value="personalizado" selected>Personalizado</option>
+            </select>
             <div id="custom-layout-inputs" class="button-group" style="display: none;">
                 <span class="label">Larg. (mm):</span>
                 <input type="number" id="input-custom-width" value="100" class="toolbar-input-number">
@@ -705,133 +697,132 @@
                 <input type="number" id="input-custom-cols" value="1" min="1" max="10" class="toolbar-input-number" style="width: 45px;">
             </div>
         </div>
-        <div class="toolbar-section" style="overflow-x: auto; max-width: 50%;"> <!-- Permite rolagem nesta seção -->
-            <div class="button-group">
-                <span class="label">Adicionar:</span>
-                <button id="btn-add-texto" title="Adicionar caixa de texto">
-                    <span class="material-icons">title</span>
-                </button>
-                <button id="btn-add-imagem" title="Adicionar imagem">
-                    <span class="material-icons">image</span>
-                </button>
-                
-                <select id="select-add-shape" title="Adicionar forma">
-                    <option value="" disabled selected>Forma</option>
-                    <option value="quadrado">Quadrado</option>
-                    <option value="circulo">Círculo</option>
-                    <option value="oval">Oval</option>
-                    <option value="triangulo">Triângulo</option>
-                    <option value="triangulo-inv">Triângulo Inv.</option>
-                    <option value="losango">Losango</option>
-                    <option value="estrela">Estrela</option>
-                    <option value="coracao">Coração</option>
-                    <option value="seta-dir">Seta (Dir)</option>
-                    <option value="seta-esq">Seta (Esq)</option>
-                </select>
-                
-                <button id="btn-add-linha" title="Adicionar linha">
-                    <span class="material-icons">horizontal_rule</span>
-                </button>
-                <button id="btn-add-simbolo" title="Adicionar símbolo">
-                    <span class="material-icons">emoji_emotions</span>
-                </button>
-                <!-- Novos Botões QR e Barcode -->
-                <button id="btn-add-qrcode" title="Adicionar QR Code">
-                    <span class="material-icons">qr_code_2</span>
-                </button>
-                <button id="btn-add-barcode" title="Adicionar Código de Barras">
-                    <span class="material-icons">view_week</span>
-                </button>
-                <button id="btn-add-lapis" title="Desenhar (Lápis)">
-                    <span class="material-icons">draw</span>
-                </button>
-                <!-- Botão IA Removido -->
+        <div class="toolbar-section">
+            <span class="label">Adicionar:</span>
+            <button id="btn-add-texto" title="Adicionar caixa de texto">
+                <span class="material-icons">title</span>
+            </button>
+            <button id="btn-add-imagem" title="Adicionar imagem">
+                <span class="material-icons">image</span>
+            </button>
+            <select id="select-add-shape" title="Adicionar forma">
+                <option value="" disabled selected>Forma</option>
+                <option value="quadrado">Quadrado</option>
+                <option value="circulo">Círculo</option>
+                <option value="oval">Oval</option>
+                <option value="triangulo">Triângulo</option>
+                <option value="triangulo-inv">Triângulo Inv.</option>
+                <option value="losango">Losango</option>
+                <option value="estrela">Estrela</option>
+                <option value="coracao">Coração</option>
+                <option value="seta-dir">Seta (Dir)</option>
+                <option value="seta-esq">Seta (Esq)</option>
+            </select>
+            <button id="btn-add-linha" title="Adicionar linha">
+                <span class="material-icons">horizontal_rule</span>
+            </button>
+            <button id="btn-add-simbolo" title="Adicionar símbolo">
+                <span class="material-icons">emoji_emotions</span>
+            </button>
+            <button id="btn-add-qrcode" title="Adicionar QR Code">
+                <span class="material-icons">qr_code_2</span>
+            </button>
+            <button id="btn-add-barcode" title="Adicionar Código de Barras">
+                <span class="material-icons">view_week</span>
+            </button>
+            <button id="btn-add-lapis" title="Desenhar (Lápis)">
+                <span class="material-icons">draw</span>
+            </button>
+        </div>
+    </aside>
 
-                <button id="btn-remover-item" title="Remover item selecionado" class="btn-danger">
-                    <span class="material-icons">delete</span>
-                </button>
+    <!-- Wrapper para o Conteúdo Principal -->
+    <div id="main-content-wrapper">
+        <!-- Barra de Propriedades Superior (Contextual) -->
+        <header id="top-properties-bar">
+            <!-- As barras de ferramentas contextuais antigas vão aqui -->
+            <div id="text-toolbar-options" class="context-toolbar">
+                 <div class="button-group">
+                    <select id="select-font-family" title="Tipo de Fonte">
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                        <option value="'Courier New', Courier, monospace">Courier New</option>
+                        <option value="Verdana, Geneva, sans-serif">Verdana</option>
+                        <option value="Georgia, serif">Georgia</option>
+                    </select>
+                    <input type="number" id="input-font-size" min="6" max="150" value="10" title="Tamanho da Fonte (px)">
+                    <input type="color" id="input-font-color" class="color-input" value="#000000" title="Cor da Fonte">
+                </div>
+                <div class="button-group">
+                    <button id="btn-text-bold" title="Negrito"><span class="material-icons">format_bold</span></button>
+                    <button id="btn-text-italic" title="Itálico"><span class="material-icons">format_italic</span></button>
+                    <button id="btn-text-underline" title="Sublinhado"><span class="material-icons">format_underlined</span></button>
+                    <button id="btn-text-strike" title="Tachado"><span class="material-icons">strikethrough_s</span></button>
+                </div>
+                <div class="button-group">
+                    <select id="select-text-transform" title="Transformação do Texto">
+                        <option value="none">Normal</option>
+                        <option value="uppercase">MAIÚSCULAS</option>
+                        <option value="lowercase">minúsculas</option>
+                        <option value="capitalize">Capitalizadas</option>
+                    </select>
+                </div>
             </div>
-        </div>
-        <!-- Input oculto para upload de imagem -->
-        <input type="file" id="input-imagem" accept="image/*" style="display: none;">
-    </div>
-    
-    <!-- Barra de Ferramentas de Formatação de Texto -->
-    <div id="text-toolbar-options" class="secondary-toolbar">
-        <div class="button-group">
-            <select id="select-font-family" title="Tipo de Fonte">
-                <option value="Arial, sans-serif">Arial</option>
-                <option value="'Times New Roman', Times, serif">Times New Roman</option>
-                <option value="'Courier New', Courier, monospace">Courier New</option>
-                <option value="Verdana, Geneva, sans-serif">Verdana</option>
-                <option value="Georgia, serif">Georgia</option>
-            </select>
-            <input type="number" id="input-font-size" min="6" max="150" value="10" title="Tamanho da Fonte (px)">
-            <input type="color" id="input-font-color" class="color-input" value="#000000" title="Cor da Fonte">
-        </div>
-        <div class="button-group">
-            <button id="btn-text-bold" title="Negrito"><span class="material-icons">format_bold</span></button>
-            <button id="btn-text-italic" title="Itálico"><span class="material-icons">format_italic</span></button>
-            <button id="btn-text-underline" title="Sublinhado"><span class="material-icons">format_underlined</span></button>
-            <button id="btn-text-strike" title="Tachado"><span class="material-icons">strikethrough_s</span></button>
-        </div>
-        <div class="button-group">
-            <select id="select-text-transform" title="Transformação do Texto">
-                <option value="none">Normal</option>
-                <option value="uppercase">MAIÚSCULAS</option>
-                <option value="lowercase">minúsculas</option>
-                <option value="capitalize">Capitalizadas</option>
-            </select>
-        </div>
-    </div>
-    
-    <!-- Barra de Ferramentas de Estilo (Linhas e Formas) -->
-    <div id="style-toolbar-options" class="secondary-toolbar">
-        <div class="button-group">
-            <span class="label">Cor:</span>
-            <input type="color" id="input-style-color" class="color-input" value="#000000" title="Cor da Linha/Forma">
-        </div>
-        <div class="button-group">
-            <span class="label">Espessura (px):</span>
-            <input type="number" id="input-style-thickness" min="1" max="50" value="2" title="Espessura da Linha/Borda">
-        </div>
-        <div class="button-group">
-            <span class="label">Estilo:</span>
-            <select id="select-style-type" title="Estilo da Linha/Borda">
-                <option value="solid">Sólida</option>
-                <option value="dashed">Tracejada</option>
-                <option value="dotted">Pontilhada</option>
-            </select>
-        </div>
-    </div>
-    
-    <!-- Barra de Ferramentas de Desenho (Lápis/Borracha) -->
-    <div id="drawing-toolbar-options" class="secondary-toolbar">
-         <div class="button-group">
-            <button id="btn-draw-tool-pencil" class="active" title="Lápis">
-                <span class="material-icons">edit</span>
+            <div id="style-toolbar-options" class="context-toolbar">
+                <div class="button-group">
+                    <span class="label">Cor:</span>
+                    <input type="color" id="input-style-color" class="color-input" value="#000000" title="Cor da Linha/Forma">
+                </div>
+                <div class="button-group">
+                    <span class="label">Espessura (px):</span>
+                    <input type="number" id="input-style-thickness" min="1" max="50" value="2" title="Espessura da Linha/Borda">
+                </div>
+                <div class="button-group">
+                    <span class="label">Estilo:</span>
+                    <select id="select-style-type" title="Estilo da Linha/Borda">
+                        <option value="solid">Sólida</option>
+                        <option value="dashed">Tracejada</option>
+                        <option value="dotted">Pontilhada</option>
+                    </select>
+                </div>
+            </div>
+            <div id="drawing-toolbar-options" class="context-toolbar">
+                <div class="button-group">
+                    <button id="btn-draw-tool-pencil" class="active" title="Lápis"><span class="material-icons">edit</span></button>
+                    <button id="btn-draw-tool-eraser" title="Borracha"><span class="material-icons">cleaning_services</span></button>
+                </div>
+                <div class="button-group">
+                    <span class="label">Cor:</span>
+                    <input type="color" id="input-draw-color" class="color-input" value="#000000" title="Cor do Lápis">
+                </div>
+                <div class="button-group">
+                    <span class="label">Espessura (px):</span>
+                    <input type="number" id="input-draw-thickness" min="1" max="50" value="2" title="Espessura do Lápis/Borracha">
+                </div>
+            </div>
+             <!-- O botão de remover item também é contextual -->
+            <button id="btn-remover-item" title="Remover item selecionado" style="color: #D93025; display:none;">
+                <span class="material-icons">delete</span>
             </button>
-            <button id="btn-draw-tool-eraser" title="Borracha">
-                <span class="material-icons">cleaning_services</span>
-            </button>
-         </div>
-         <div class="button-group">
-            <span class="label">Cor:</span>
-            <input type="color" id="input-draw-color" class="color-input" value="#000000" title="Cor do Lápis">
-        </div>
-        <div class="button-group">
-            <span class="label">Espessura (px):</span>
-            <input type="number" id="input-draw-thickness" min="1" max="50" value="2" title="Espessura do Lápis/Borracha">
-        </div>
+        </header>
+
+        <!-- Área de Canvas -->
+        <main id="canvas-area">
+            <div class="zoom-controls">
+                <button id="btn-zoom-out" title="Diminuir Zoom"><span class="material-icons">zoom_out</span></button>
+                <button id="btn-zoom-in" title="Aumentar Zoom"><span class="material-icons">zoom_in</span></button>
+                <button id="btn-zoom-reset" title="Restaurar Zoom"><span class="material-icons">zoom_in_map</span></button>
+            </div>
+            <div id="pagina-de-impressao">
+                <div class="etiqueta-editavel active" data-label-id="label-1">
+                    <!-- Itens arrastáveis serão adicionados aqui -->
+                </div>
+            </div>
+        </main>
     </div>
 
-
-    <!-- Página de Impressão -->
-    <div id="pagina-de-impressao">
-        <div class="etiqueta-editavel active" data-label-id="label-1">
-            <!-- Itens arrastáveis serão adicionados aqui -->
-        </div>
-    </div>
+    <!-- Input de Imagem Oculto -->
+    <input type="file" id="input-imagem" accept="image/*" style="display: none;">
     
     <!-- Modal de Símbolos -->
     <div id="modal-simbolos" class="modal-overlay">
@@ -875,8 +866,9 @@
     <script>
         
         // --- Referências DOM (Principais) ---
+        const topPropertiesBar = document.getElementById('top-properties-bar');
         const paginaDeImpressao = document.getElementById('pagina-de-impressao');
-        const toolbar = document.getElementById('toolbar');
+        const toolbar = document.getElementById('left-toolbar');
         const btnAddEtiqueta = document.getElementById('btn-add-etiqueta');
         const btnImprimir = document.getElementById('btn-imprimir');
         const btnAddTexto = document.getElementById('btn-add-texto');
@@ -982,25 +974,20 @@
         function gerarLabelId() { return `label-${++labelCounter}`; }
 
         function selecionarItem(itemElement) {
-            desselecionarItem(); // Desseleciona anterior
+            desselecionarItem();
             itemSelecionado = itemElement;
             
             if (itemSelecionado) {
+                topPropertiesBar.style.display = 'flex';
                 itemSelecionado.classList.add('selecionado-para-remocao'); 
                 btnRemoverItem.style.display = 'inline-flex';
 
-                // Lógica da barra de ferramentas de CONTEXTO
                 if (itemSelecionado.classList.contains('item-texto') || itemSelecionado.classList.contains('item-simbolo')) {
                     textToolbarOptions.style.display = 'flex';
                     updateTextToolState();
                 } else if (itemSelecionado.classList.contains('item-linha') || itemSelecionado.classList.contains('item-forma')) {
                     styleToolbarOptions.style.display = 'flex';
                     updateStyleToolState();
-                } else {
-                    // Esconde todas as barras de contexto
-                    textToolbarOptions.style.display = 'none';
-                    styleToolbarOptions.style.display = 'none';
-                    drawingToolbarOptions.style.display = 'none';
                 }
             }
         }
@@ -1010,6 +997,7 @@
                 itemSelecionado.classList.remove('selecionado-para-remocao');
             }
             itemSelecionado = null;
+            topPropertiesBar.style.display = 'none';
             btnRemoverItem.style.display = 'none';
             textToolbarOptions.style.display = 'none';
             styleToolbarOptions.style.display = 'none';
@@ -1210,8 +1198,6 @@
             // Adiciona alça de rotação
             const rotateHandle = document.createElement('div');
             rotateHandle.className = 'rotate-handle';
-            // SVG do ícone de rotação
-            rotateHandle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim()}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block; margin: 2px;"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>`;
             item.appendChild(rotateHandle);
 
             // Configuração por tipo
@@ -1676,14 +1662,12 @@
         });
         
         btnAddSimbolo.addEventListener('click', () => {
-            if (isDrawing) pararModoDesenho(false);
-            modalSimbolos.style.display = 'flex';
-            setTimeout(() => modalSimbolos.classList.add('visible'), 10);
+             if (isDrawing) pararModoDesenho(false);
+             modalSimbolos.style.display = 'flex';
         });
 
         modalSimbolosClose.addEventListener('click', () => {
-            modalSimbolos.classList.remove('visible');
-            setTimeout(() => modalSimbolos.style.display = 'none', 300); // Aguarda a transição
+             modalSimbolos.style.display = 'none';
         });
         
         // Listeners QR e Barcode
@@ -1839,51 +1823,40 @@
             modalInputTitle.textContent = title;
             modalInputCallback = callback;
             modalInput.style.display = 'flex';
-            setTimeout(() => modalInput.classList.add('visible'), 10);
             modalInputField.value = '';
             modalInputField.type = 'text'; // Ensure it's text type
             modalInputField.focus();
-        }
-        function closeInputModal() {
-            modalInput.classList.remove('visible');
-            setTimeout(() => {
-                modalInput.style.display = 'none';
-                modalInputCallback = null;
-            }, 300);
         }
         modalInputSubmit.addEventListener('click', () => {
             if (modalInputCallback) {
                 modalInputCallback(modalInputField.value);
             }
-            closeInputModal();
+            modalInput.style.display = 'none';
+            modalInputCallback = null;
         });
         modalInputClose.addEventListener('click', () => {
-            closeInputModal();
+            modalInput.style.display = 'none';
+            modalInputCallback = null;
         });
 
         // --- Lógica do Modal de Contagem de Duplicação ---
         function showDuplicateCountModal() {
             modalDuplicateField.value = '1'; // Reset to 1
             modalDuplicateCount.style.display = 'flex';
-            setTimeout(() => modalDuplicateCount.classList.add('visible'), 10);
             modalDuplicateField.focus();
             modalDuplicateField.select(); // Select the text
-        }
-        function closeDuplicateCountModal() {
-            modalDuplicateCount.classList.remove('visible');
-            setTimeout(() => modalDuplicateCount.style.display = 'none', 300);
         }
         modalDuplicateSubmit.addEventListener('click', () => {
             const count = parseInt(modalDuplicateField.value, 10);
             if (count > 0 && count <= 100) { // Add a reasonable limit
                 duplicarEtiqueta(count);
-                closeDuplicateCountModal();
+                modalDuplicateCount.style.display = 'none';
             } else {
                 alertPersonalizado("Por favor, insira um número entre 1 e 100.");
             }
         });
         modalDuplicateClose.addEventListener('click', () => {
-            closeDuplicateCountModal();
+            modalDuplicateCount.style.display = 'none';
         });
 
         
@@ -1893,39 +1866,33 @@
             if (!etiquetaAtiva) return;
             
             isDrawing = true;
-            btnAddLapis.classList.add('active'); // Highlight pencil button
-            desselecionarItem(); // Deselect any selected item
-            drawingToolbarOptions.style.display = 'flex'; // Show drawing tools
+            // btnAddLapis.classList.add('active'); // O botão de lápis agora está na barra lateral
+            desselecionarItem();
+            topPropertiesBar.style.display = 'flex';
+            drawingToolbarOptions.style.display = 'flex';
             
-            // Set default tool (pencil)
             btnDrawToolPencil.classList.add('active');
             btnDrawToolEraser.classList.remove('active');
             
-            // Create canvas overlay
             drawCanvas = document.createElement('canvas');
             drawCanvas.id = 'draw-canvas-overlay';
-            // Match canvas size to label size
             drawCanvas.width = etiquetaAtiva.offsetWidth; 
             drawCanvas.height = etiquetaAtiva.offsetHeight;
-            etiquetaAtiva.appendChild(drawCanvas); // Append directly to the active label
+            etiquetaAtiva.appendChild(drawCanvas);
             
             drawCtx = drawCanvas.getContext('2d');
-            // Set initial drawing styles
             drawCtx.strokeStyle = inputDrawColor.value;
             drawCtx.lineWidth = inputDrawThickness.value;
-            drawCtx.lineCap = 'round'; // Smooth line ends
-            drawCtx.lineJoin = 'round'; // Smooth line corners
-            drawCtx.globalCompositeOperation = 'source-over'; // Default: Pencil mode
+            drawCtx.lineCap = 'round';
+            drawCtx.lineJoin = 'round';
+            drawCtx.globalCompositeOperation = 'source-over';
             
-            let painting = false; // Flag to track if mouse/touch is down
+            let painting = false;
 
-            // Function to get accurate coordinates relative to the canvas
             function getMousePos(evt) {
                  const rect = drawCanvas.getBoundingClientRect();
-                 // Handle both mouse and touch events
                  const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
                  const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
-                 // Adjust for canvas scaling if its display size differs from its internal resolution
                  const scaleX = drawCanvas.width / rect.width;
                  const scaleY = drawCanvas.height / rect.height;
                  return {
@@ -1933,49 +1900,47 @@
                     y: (clientY - rect.top) * scaleY
                  };
             }
-            // Event handler when drawing starts (mousedown/touchstart)
+
             drawListeners.start = function(e) {
-                e.preventDefault(); // Prevent default actions (like scrolling on touch)
+                e.preventDefault();
                 painting = true;
                 const pos = getMousePos(e);
-                drawCtx.beginPath(); // Start a new path
-                drawCtx.moveTo(pos.x, pos.y); // Move to the starting point
+                drawCtx.beginPath();
+                drawCtx.moveTo(pos.x, pos.y);
             }
-            // Event handler when drawing ends (mouseup/touchend/mouseleave)
+
             drawListeners.end = function() {
                 if (!painting) return;
                 painting = false;
-                drawCtx.beginPath(); // Reset path
+                drawCtx.beginPath();
             }
-            // Event handler while drawing (mousemove/touchmove)
+
             drawListeners.draw = function(e) {
                 e.preventDefault();
                 if (!painting) return;
                 const pos = getMousePos(e);
-                drawCtx.lineTo(pos.x, pos.y); // Draw a line to the new point
-                drawCtx.stroke(); // Render the line segment
-                drawCtx.beginPath(); // Inicia novo caminho para o próximo segmento
-                drawCtx.moveTo(pos.x, pos.y); // Move para o ponto atual
+                drawCtx.lineTo(pos.x, pos.y);
+                drawCtx.stroke();
+                drawCtx.beginPath();
+                drawCtx.moveTo(pos.x, pos.y);
             }
 
-            // Attach Event Listeners for Mouse and Touch
             drawCanvas.addEventListener('mousedown', drawListeners.start);
             drawCanvas.addEventListener('mouseup', drawListeners.end);
-            drawCanvas.addEventListener('mouseleave', drawListeners.end); // Stop drawing if mouse leaves canvas
+            drawCanvas.addEventListener('mouseleave', drawListeners.end);
             drawCanvas.addEventListener('mousemove', drawListeners.draw);
             
-            drawCanvas.addEventListener('touchstart', drawListeners.start, { passive: false }); // Use passive: false to allow preventDefault
+            drawCanvas.addEventListener('touchstart', drawListeners.start, { passive: false });
             drawCanvas.addEventListener('touchend', drawListeners.end);
-            drawCanvas.addEventListener('touchcancel', drawListeners.end); // Handle interruption
+            drawCanvas.addEventListener('touchcancel', drawListeners.end);
             drawCanvas.addEventListener('touchmove', drawListeners.draw, { passive: false });
             
-            // Add "Concluir Desenho" button dynamically
-            if (!btnConcluirDesenho) { // Create only if it doesn't exist
+            if (!btnConcluirDesenho) {
                 btnConcluirDesenho = document.createElement('button');
                 btnConcluirDesenho.id = 'btn-concluir-desenho';
                 btnConcluirDesenho.textContent = 'Concluir Desenho';
-                btnConcluirDesenho.onclick = () => pararModoDesenho(true); // Save drawing on click
-                document.body.appendChild(btnConcluirDesenho);
+                btnConcluirDesenho.onclick = () => pararModoDesenho(true);
+                topPropertiesBar.appendChild(btnConcluirDesenho); // Adiciona na barra superior
             }
         }
         
