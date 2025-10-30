@@ -431,17 +431,18 @@
         /* --- Alça de Rotação --- */
         .rotate-handle {
             position: absolute;
-            top: -22px; /* Aumenta a área de hover um pouco */
+            top: -25px; /* Mais distante do item */
             left: 50%;
             transform: translateX(-50%);
-            width: 24px;  /* Área de hover maior */
-            height: 24px; /* Área de hover maior */
-            background-color: transparent; /* Invisível */
-            border: none; /* Invisível */
+            width: 16px;  /* Menor */
+            height: 16px; /* Menor */
+            background-color: #fff;
+            border: 2px solid #1a73e8;
             border-radius: 50%;
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%231a73e8" d="M16.89,6.28l-2.97-2.98v1.41C11.33,4.8,8.9,5.55,7.1,7.34C4.65,9.79,4.25,13.23,5.6,16.03l-1.33,1.33 C2.67,14.65,3.06,10.7,5.6,8.14c2.14-2.14,4.99-3.03,7.79-2.85V6.7l2.96-2.96l0.01,0.01 M19.74,7.26l1.33-1.33 C22.67,8.65,22.3,12.7,19.74,15.26c-2.14,2.14-4.99,3.03-7.79,2.85V16.7l-2.96,2.96l-0.01-0.01l2.97,2.98V21.2 c2.59,0.09,5.02-0.66,6.82-2.46c2.55-2.55,2.95-6,1.6-8.78L19.74,7.26z"/></svg>') 12 12, auto;
+            cursor: grab;
             display: none;
             z-index: 12;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
         }
         .item-arrastavel.selecionado-para-remocao .rotate-handle {
             display: block; /* Mostra quando o item está selecionado */
