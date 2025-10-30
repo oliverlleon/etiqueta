@@ -249,7 +249,8 @@
 
 
         /* Botões de ícone (Negrito, Itálico, etc.) */
-        .secondary-toolbar button {
+        .secondary-toolbar button,
+        #toolbar button.icon-only {
              padding: 8px;
              min-width: 36px;
              justify-content: center;
@@ -737,17 +738,17 @@
             <div class="select-wrapper">
                 <span class="material-icons select-icon">category</span>
                 <select id="select-add-shape" title="Adicionar forma">
-                    <option value="" disabled selected>Forma</option>
-                    <option value="quadrado">Quadrado</option>
-                    <option value="circulo">Círculo</option>
-                    <option value="oval">Oval</option>
-                    <option value="triangulo">Triângulo</option>
-                    <option value="triangulo-inv">Triângulo Inv.</option>
-                    <option value="losango">Losango</option>
-                    <option value="estrela">Estrela</option>
-                    <option value="coracao">Coração</option>
-                    <option value="seta-dir">Seta (Dir)</option>
-                    <option value="seta-esq">Seta (Esq)</option>
+                    <option value="" disabled selected></option>
+                    <option value="quadrado">■ Quadrado</option>
+                    <option value="circulo">● Círculo</option>
+                    <option value="oval">○ Oval</option>
+                    <option value="triangulo">▲ Triângulo</option>
+                    <option value="triangulo-inv">▼ Triângulo Inv.</option>
+                    <option value="losango">◆ Losango</option>
+                    <option value="estrela">★ Estrela</option>
+                    <option value="coracao">♥ Coração</option>
+                    <option value="seta-dir">► Seta (Dir)</option>
+                    <option value="seta-esq">◄ Seta (Esq)</option>
                 </select>
             </div>
             
@@ -777,23 +778,23 @@
         <div id="toolbar">
             <div class="toolbar-section">
                 <div class="button-group">
-                    <button id="btn-add-etiqueta" title="Adicionar nova etiqueta à página">
-                        <span class="material-icons">add_to_queue</span> Nova Etiqueta
+                    <button id="btn-add-etiqueta" title="Adicionar nova etiqueta à página" class="icon-only">
+                        <span class="material-icons">add_to_queue</span>
                     </button>
-                    <button id="btn-duplicar-etiqueta" title="Copiar etiqueta selecionada">
-                        <span class="material-icons">content_copy</span> Copiar
+                    <button id="btn-duplicar-etiqueta" title="Copiar etiqueta selecionada" class="icon-only">
+                        <span class="material-icons">content_copy</span>
                     </button>
-                    <button id="btn-remover-etiqueta" title="Remover etiqueta selecionada" style="color: #D93025;">
+                    <button id="btn-remover-etiqueta" title="Remover etiqueta selecionada" class="icon-only" style="color: #D93025;">
                         <span class="material-icons">delete_sweep</span>
                     </button>
-                    <button id="btn-imprimir" title="Imprimir página">
-                        <span class="material-icons">print</span> Imprimir
+                    <button id="btn-imprimir" title="Imprimir página" class="icon-only">
+                        <span class="material-icons">print</span>
                     </button>
-                    <button id="btn-salvar" title="Salvar etiqueta">
-                        <span class="material-icons">save</span> Salvar
+                    <button id="btn-salvar" title="Salvar etiqueta" class="icon-only">
+                        <span class="material-icons">save</span>
                     </button>
-                    <button id="btn-abrir" title="Abrir etiqueta">
-                        <span class="material-icons">folder_open</span> Abrir
+                    <button id="btn-abrir" title="Abrir etiqueta" class="icon-only">
+                        <span class="material-icons">folder_open</span>
                     </button>
                 </div>
                 <div class="button-group">
@@ -1330,18 +1331,7 @@
 
             etiqueta.appendChild(item);
             inicializarInteracao(item);
-
-            // Listeners de seleção
-            item.addEventListener('click', (event) => {
-                event.stopPropagation();
-                selecionarItem(item);
-            });
-             if (tipo === 'texto' || tipo === 'simbolo') {
-                 item.addEventListener('focus', (event) => {
-                    event.stopPropagation();
-                    selecionarItem(item);
-                 });
-             }
+            addSelectionListeners(item); // Attach selection listeners
             
             // Seleciona o item recém-criado (exceto para QR/Barcode que são criados por funções específicas)
             if (tipo !== 'qrcode' && tipo !== 'barcode') {
@@ -1542,6 +1532,22 @@
                         // Save the final angle in the dataset
                         elemento.dataset.angle = angle; 
                     }
+                });
+            }
+        }
+
+        // --- Função Centralizada para Listeners de Seleção ---
+        function addSelectionListeners(item) {
+            item.addEventListener('click', (event) => {
+                event.stopPropagation();
+                selecionarItem(item);
+            });
+
+            // For text and symbol items, also select on focus
+            if (item.classList.contains('item-texto') || item.classList.contains('item-simbolo')) {
+                item.addEventListener('focus', (event) => {
+                    event.stopPropagation();
+                    selecionarItem(item);
                 });
             }
         }
@@ -1828,7 +1834,8 @@
                             rotateHandle.className = 'rotate-handle';
                             item.appendChild(rotateHandle);
 
-                            inicializarInteracao(item); // Make it interactive again
+                            inicializarInteracao(item);
+                            addSelectionListeners(item);
 
                             // Special recreation for QR/Barcode
                             if (itemData.tipo === 'qrcode') {
