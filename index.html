@@ -6,7 +6,7 @@
     <title>Editor de Etiquetas Avançado</title>
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-svg@1.1.0/dist/qrcode.svg.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
     <style>
         :root {
@@ -481,11 +481,22 @@
             line-height: 1;
         }
 
-        .item-imagem img {
+        .item-imagem img, .item-desenho svg {
             width: 100%;
             height: 100%;
             display: block;
             object-fit: contain;
+        }
+
+        .item-desenho {
+            /* O container do desenho não precisa de borda de interação visível */
+            border: 1px dashed transparent;
+            pointer-events: none; /* Permite clicar através do container */
+        }
+
+        .item-desenho.selecionado-para-remocao {
+            border-color: red; /* Mostra a borda ao selecionar para remoção */
+            pointer-events: auto; /* Permite interação quando selecionado */
         }
         
         /* Item Linha (Container) - CORREÇÃO */
@@ -533,6 +544,7 @@
         }
         /* Garante que o conteúdo (svg/canvas) redimensione */
         .item-qrcode > div,
+        .item-qrcode > svg,
         .item-barcode > svg {
             width: 100% !important;
             height: 100% !important;
@@ -1334,6 +1346,13 @@
                 item.style.width = `${startWidth}px`;
                 item.style.height = `${startHeight}px`;
                  // O conteúdo (svg) será adicionado por addBarcode
+            } else if (tipo === 'desenho' && conteudo) {
+                // O 'conteudo' já é o elemento SVG
+                item.appendChild(conteudo);
+                // Ajusta o tamanho do container para o tamanho do SVG
+                const svgRect = conteudo.getBBox();
+                item.style.width = `${svgRect.width}px`;
+                item.style.height = `${svgRect.height}px`;
             }
 
             etiqueta.appendChild(item);
@@ -1357,23 +1376,25 @@
             if (!item) return;
             item.dataset.value = data; // Store the original data
             
-            const qrContainer = document.createElement('div');
-            qrContainer.id = `qr-container-${item.id}`;
-            item.appendChild(qrContainer);
-            
             try {
-                new QRCode(qrContainer, {
-                    text: data,
-                    width: 128, // Tamanho inicial, vai redimensionar
-                    height: 128,
-                    correctLevel : QRCode.CorrectLevel.H
+                const qrcode = new QRCode({
+                    content: data,
+                    padding: 0, // No white space padding
+                    width: 256, // Temporary width for SVG generation
+                    height: 256, // Temporary height for SVG generation
+                    color: "#000000",
+                    background: "#ffffff",
+                    ecl: "H" // High error correction level
                 });
-                // Ensure generated elements fit
-                const qrElement = qrContainer.querySelector('canvas') || qrContainer.querySelector('img');
-                if (qrElement) {
-                    qrElement.style.width = '100%';
-                    qrElement.style.height = '100%';
-                    qrElement.style.objectFit = 'contain';
+                const svgString = qrcode.svg();
+                item.innerHTML = svgString; // Directly insert the SVG string
+
+                // Ensure the generated SVG scales correctly
+                const svgElement = item.querySelector('svg');
+                if (svgElement) {
+                    svgElement.style.width = '100%';
+                    svgElement.style.height = '100%';
+                    svgElement.style.objectFit = 'contain';
                 }
             } catch(e) {
                 console.error("Erro ao gerar QR Code:", e);
@@ -1736,7 +1757,11 @@
                     } else if (tipo === 'linha') {
                          const linhaVisual = itemEl.querySelector('.linha-visual');
                          if(linhaVisual) itemData.linhaStyle = linhaVisual.getAttribute('style');
+                    } else if (tipo === 'desenho') {
+                        const svg = itemEl.querySelector('svg');
+                        if (svg) itemData.conteudo = svg.outerHTML;
                     }
+
 
                     itens.push(itemData);
                 });
@@ -1812,7 +1837,10 @@
                                 linhaVisual.className = 'linha-visual';
                                 linhaVisual.setAttribute('style', itemData.linhaStyle);
                                 item.appendChild(linhaVisual);
+                            } else if (itemData.tipo === 'desenho') {
+                                if (itemData.conteudo) item.innerHTML = itemData.conteudo;
                             }
+
 
                             // --- NOVO: Adiciona o controle de rotação ao item carregado ---
                             const rotateHandle = document.createElement('div');
@@ -1827,15 +1855,16 @@
 
                             // Special recreation for QR/Barcode
                             if (itemData.tipo === 'qrcode') {
-                                const qrContainer = document.createElement('div');
-                                item.appendChild(qrContainer);
-                                new QRCode(qrContainer, { text: itemData.conteudo, width: 128, height: 128, correctLevel: QRCode.CorrectLevel.H });
-                                const qrEl = qrContainer.querySelector('canvas') || qrContainer.querySelector('img');
-                                if (qrEl) {
-                                    qrEl.style.width = '100%';
-                                    qrEl.style.height = '100%';
-                                    qrEl.style.objectFit = 'contain';
-                                }
+                                const qrcode = new QRCode({
+                                    content: itemData.conteudo,
+                                    padding: 0,
+                                    width: 256,
+                                    height: 256,
+                                    color: "#000000",
+                                    background: "#ffffff",
+                                    ecl: "H"
+                                });
+                                item.innerHTML += qrcode.svg(); // Append SVG
                             } else if (itemData.tipo === 'barcode') {
                                 const barcodeSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
                                 item.appendChild(barcodeSvg);
@@ -2125,148 +2154,123 @@
 
         
         // --- Lógica de Desenho (Lápis e Borracha) ---
-        
         function iniciarModoDesenho() {
             if (!etiquetaAtiva) return;
-            
+
             isDrawing = true;
-            btnAddLapis.classList.add('active'); // Highlight pencil button
-            desselecionarItem(); // Deselect any selected item
-            drawingToolbarOptions.style.display = 'flex'; // Show drawing tools
-            
-            // Set default tool (pencil)
-            btnDrawToolPencil.classList.add('active');
-            btnDrawToolEraser.classList.remove('active');
-            
-            // Create canvas overlay
-            drawCanvas = document.createElement('canvas');
-            drawCanvas.id = 'draw-canvas-overlay';
-            // Match canvas size to label size
-            drawCanvas.width = etiquetaAtiva.offsetWidth; 
-            drawCanvas.height = etiquetaAtiva.offsetHeight;
-            etiquetaAtiva.appendChild(drawCanvas); // Append directly to the active label
-            
-            drawCtx = drawCanvas.getContext('2d');
-            // Set initial drawing styles
-            drawCtx.strokeStyle = inputDrawColor.value;
-            drawCtx.lineWidth = inputDrawThickness.value;
-            drawCtx.lineCap = 'round'; // Smooth line ends
-            drawCtx.lineJoin = 'round'; // Smooth line corners
-            drawCtx.globalCompositeOperation = 'source-over'; // Default: Pencil mode
-            
-            let painting = false; // Flag to track if mouse/touch is down
+            btnAddLapis.classList.add('active');
+            desselecionarItem();
+            drawingToolbarOptions.style.display = 'flex';
 
-            // Function to get accurate coordinates relative to the canvas
+            const drawOverlay = document.createElement('div');
+            drawOverlay.id = 'draw-canvas-overlay'; // Reusing style for the overlay
+            etiquetaAtiva.appendChild(drawOverlay);
+
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', '100%');
+            drawOverlay.appendChild(svg);
+
+            let currentPath = null;
+            let pathData = '';
+
             function getMousePos(evt) {
-                 const rect = drawCanvas.getBoundingClientRect();
-                 // Handle both mouse and touch events
-                 const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
-                 const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
-                 // Adjust for canvas scaling if its display size differs from its internal resolution
-                 const scaleX = drawCanvas.width / rect.width;
-                 const scaleY = drawCanvas.height / rect.height;
-                 return {
-                    x: (clientX - rect.left) * scaleX,
-                    y: (clientY - rect.top) * scaleY
-                 };
-            }
-            // Event handler when drawing starts (mousedown/touchstart)
-            drawListeners.start = function(e) {
-                e.preventDefault(); // Prevent default actions (like scrolling on touch)
-                painting = true;
-                const pos = getMousePos(e);
-                drawCtx.beginPath(); // Start a new path
-                drawCtx.moveTo(pos.x, pos.y); // Move to the starting point
-            }
-            // Event handler when drawing ends (mouseup/touchend/mouseleave)
-            drawListeners.end = function() {
-                if (!painting) return;
-                painting = false;
-                drawCtx.beginPath(); // Reset path
-            }
-            // Event handler while drawing (mousemove/touchmove)
-            drawListeners.draw = function(e) {
-                e.preventDefault();
-                if (!painting) return;
-                const pos = getMousePos(e);
-                drawCtx.lineTo(pos.x, pos.y); // Draw a line to the new point
-                drawCtx.stroke(); // Render the line segment
-                drawCtx.beginPath(); // Inicia novo caminho para o próximo segmento
-                drawCtx.moveTo(pos.x, pos.y); // Move para o ponto atual
+                const rect = svg.getBoundingClientRect();
+                const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+                const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+                return {
+                    x: clientX - rect.left,
+                    y: clientY - rect.top
+                };
             }
 
-            // Attach Event Listeners for Mouse and Touch
-            drawCanvas.addEventListener('mousedown', drawListeners.start);
-            drawCanvas.addEventListener('mouseup', drawListeners.end);
-            drawCanvas.addEventListener('mouseleave', drawListeners.end); // Stop drawing if mouse leaves canvas
-            drawCanvas.addEventListener('mousemove', drawListeners.draw);
-            
-            drawCanvas.addEventListener('touchstart', drawListeners.start, { passive: false }); // Use passive: false to allow preventDefault
-            drawCanvas.addEventListener('touchend', drawListeners.end);
-            drawCanvas.addEventListener('touchcancel', drawListeners.end); // Handle interruption
-            drawCanvas.addEventListener('touchmove', drawListeners.draw, { passive: false });
-            
-            // Add "Concluir Desenho" button dynamically
-            if (!btnConcluirDesenho) { // Create only if it doesn't exist
+            drawListeners.start = function(e) {
+                e.preventDefault();
+                const pos = getMousePos(e);
+                pathData = `M${pos.x},${pos.y}`;
+                currentPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                currentPath.setAttribute('d', pathData);
+                currentPath.setAttribute('fill', 'none');
+                currentPath.setAttribute('stroke', inputDrawColor.value);
+                currentPath.setAttribute('stroke-width', inputDrawThickness.value);
+                currentPath.setAttribute('stroke-linecap', 'round');
+                currentPath.setAttribute('stroke-linejoin', 'round');
+
+                // Eraser functionality
+                if(btnDrawToolEraser.classList.contains('active')) {
+                    currentPath.setAttribute('stroke', 'white'); // Use white for erasing effect
+                    currentPath.setAttribute('style', 'mix-blend-mode: screen;'); // Experimental eraser
+                }
+
+                svg.appendChild(currentPath);
+            };
+
+            drawListeners.draw = function(e) {
+                if (!currentPath) return;
+                e.preventDefault();
+                const pos = getMousePos(e);
+                pathData += ` L${pos.x},${pos.y}`;
+                currentPath.setAttribute('d', pathData);
+            };
+
+            drawListeners.end = function() {
+                currentPath = null;
+                pathData = '';
+            };
+
+            drawOverlay.addEventListener('mousedown', drawListeners.start);
+            drawOverlay.addEventListener('mousemove', drawListeners.draw);
+            drawOverlay.addEventListener('mouseup', drawListeners.end);
+            drawOverlay.addEventListener('mouseleave', drawListeners.end);
+            drawOverlay.addEventListener('touchstart', drawListeners.start, { passive: false });
+            drawOverlay.addEventListener('touchmove', drawListeners.draw, { passive: false });
+            drawOverlay.addEventListener('touchend', drawListeners.end);
+
+            if (!btnConcluirDesenho) {
                 btnConcluirDesenho = document.createElement('button');
                 btnConcluirDesenho.id = 'btn-concluir-desenho';
                 btnConcluirDesenho.textContent = 'Concluir Desenho';
-                btnConcluirDesenho.onclick = () => pararModoDesenho(true); // Save drawing on click
+                btnConcluirDesenho.onclick = () => pararModoDesenho(true);
                 document.body.appendChild(btnConcluirDesenho);
             }
         }
-        
-        // Function to stop drawing mode (CORRIGIDO)
-        function pararModoDesenho(salvar = true) {
-             if (!isDrawing) return; // Exit if not drawing
-             
-             if (salvar && drawCanvas) {
-                // Check if canvas is not blank before saving
-                if (!isCanvasBlank(drawCanvas)) {
-                    const dataURL = drawCanvas.toDataURL('image/png'); // Get drawing as PNG
-                    adicionarItem(etiquetaAtiva, 'imagem', dataURL); // Add as a new image item
-                }
-             }
-             
-             // Cleanup
-             isDrawing = false;
-             btnAddLapis.classList.remove('active'); // Deactivate pencil button
-             drawingToolbarOptions.style.display = 'none'; // Hide drawing tools
-             if(drawCanvas) {
-                // Remove listeners que foram salvos
-                drawCanvas.removeEventListener('mousedown', drawListeners.start);
-                drawCanvas.removeEventListener('mouseup', drawListeners.end);
-                drawCanvas.removeEventListener('mouseleave', drawListeners.end);
-                drawCanvas.removeEventListener('mousemove', drawListeners.draw);
-                drawCanvas.removeEventListener('touchstart', drawListeners.start);
-                drawCanvas.removeEventListener('touchend', drawListeners.end);
-                drawCanvas.removeEventListener('touchcancel', drawListeners.end);
-                drawCanvas.removeEventListener('touchmove', drawListeners.draw);
-                drawCanvas.remove(); // Remove canvas from DOM
-             }
-             if(btnConcluirDesenho) {
-                btnConcluirDesenho.remove(); // Remove "Concluir" button
-                btnConcluirDesenho = null; // Reset variable
-             }
-             drawCanvas = null; // Reset variable
-             drawCtx = null; // Reset variable
-             drawListeners = { start: null, end: null, draw: null }; // Limpa listeners
-        }
 
-        // Helper function to check if canvas is blank (all transparent pixels)
-        function isCanvasBlank(canvas) {
-            if (!canvas) return true;
-            const context = canvas.getContext('2d');
-            try {
-                const pixelBuffer = new Uint32Array(
-                    context.getImageData(0, 0, canvas.width, canvas.height).data.buffer
-                );
-                // Check if any pixel has non-zero alpha
-                return !pixelBuffer.some(color => (color & 0xff000000) !== 0);
-            } catch (e) {
-                console.error("Error checking canvas blank state:", e);
-                return false; // Assume not blank if error occurs (e.g., tainted canvas)
+        function pararModoDesenho(salvar = true) {
+            if (!isDrawing) return;
+
+            const drawOverlay = document.getElementById('draw-canvas-overlay');
+            if (salvar && drawOverlay) {
+                const svg = drawOverlay.querySelector('svg');
+                if (svg && svg.children.length > 0) {
+                     // Clone the SVG to preserve it after the overlay is removed
+                    const svgClone = svg.cloneNode(true);
+                    adicionarItem(etiquetaAtiva, 'desenho', svgClone);
+                }
             }
+
+            // Cleanup
+            isDrawing = false;
+            btnAddLapis.classList.remove('active');
+            drawingToolbarOptions.style.display = 'none';
+
+            if (drawOverlay) {
+                // Remove listeners before removing the element
+                drawOverlay.removeEventListener('mousedown', drawListeners.start);
+                drawOverlay.removeEventListener('mousemove', drawListeners.draw);
+                drawOverlay.removeEventListener('mouseup', drawListeners.end);
+                drawOverlay.removeEventListener('mouseleave', drawListeners.end);
+                drawOverlay.removeEventListener('touchstart', drawListeners.start);
+                drawOverlay.removeEventListener('touchmove', drawListeners.draw);
+                drawOverlay.removeEventListener('touchend', drawListeners.end);
+                drawOverlay.remove();
+            }
+
+            if (btnConcluirDesenho) {
+                btnConcluirDesenho.remove();
+                btnConcluirDesenho = null;
+            }
+
+            drawListeners = { start: null, draw: null, end: null };
         }
 
         // Listeners for Drawing Toolbar
