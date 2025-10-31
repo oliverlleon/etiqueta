@@ -426,7 +426,38 @@
             opacity: 0.8;
             z-index: 10;
         }
-        
+
+        /* --- NOVO: Controle de Rotação --- */
+        .rotate-handle {
+            position: absolute;
+            top: -20px; /* Posiciona acima do item */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 16px;
+            height: 16px;
+            background-color: #fff;
+            border: 2px solid #1a73e8;
+            border-radius: 50%;
+            cursor: alias; /* Cursor específico para rotação */
+            display: none; /* Escondido por padrão */
+            z-index: 12;
+        }
+        /* Linha conectora */
+        .rotate-handle::before {
+            content: '';
+            position: absolute;
+            bottom: 14px; /* Começa na base da bolinha */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1px;
+            height: 6px; /* Comprimento da linha */
+            background-color: #1a73e8;
+        }
+        /* Mostra o controle quando a classe é aplicada no item pai */
+        .item-arrastavel.rotation-active .rotate-handle {
+            display: block;
+        }
+
         /* --- Tipos de Itens Específicos --- */
         .item-texto {
             border: 1px dashed #cccccc;
@@ -1251,6 +1282,12 @@
             item.dataset.angle = 0; // Adiciona dado de ângulo
             item.style.transform = `translate(${startX}px, ${startY}px) rotate(0deg)`; // Adiciona rotação
 
+            // --- NOVO: Adiciona o controle de rotação a cada item ---
+            const rotateHandle = document.createElement('div');
+            rotateHandle.className = 'rotate-handle';
+            item.appendChild(rotateHandle);
+            // --- Fim da Adição ---
+
             // Configuração por tipo
             if (tipo === 'texto' || tipo === 'simbolo') {
                 item.contentEditable = 'true';
@@ -1415,21 +1452,6 @@
                     ],
                     inertia: false
                 })
-                .gesturable({
-                    listeners: {
-                        move(event) {
-                            if (isAltPressed) { // Rotaciona apenas se Alt estiver pressionada
-                                angle += event.da;
-                                elemento.style.transform = `translate(${position.x}px, ${position.y}px) rotate(${angle}deg)`;
-                            }
-                        },
-                        end(event) {
-                           if (isAltPressed) {
-                               elemento.dataset.angle = angle;
-                           }
-                        }
-                    }
-                })
                 .resizable({
                     edges: { 
                         top: !elemento.classList.contains('item-linha'),
@@ -1480,6 +1502,30 @@
                     if (event.target.classList.contains('item-texto') || event.target.classList.contains('item-simbolo')) {
                          event.target.focus();
                     }
+                });
+
+            // --- NOVO: Lógica de Rotação pelo Handle ---
+            const rotateHandle = elemento.querySelector('.rotate-handle');
+            interact(rotateHandle)
+                .draggable({
+                    listeners: {
+                        move(event) {
+                            const rect = elemento.getBoundingClientRect();
+                            // Centro do elemento pai
+                            const centerX = rect.left + rect.width / 2;
+                            const centerY = rect.top + rect.height / 2;
+
+                            // Ângulo entre o centro e a posição do mouse
+                            const newAngle = Math.atan2(event.clientY - centerY, event.clientX - centerX) * 180 / Math.PI + 90; // +90 para alinhar
+                            angle = newAngle; // Atualiza o ângulo global para este item
+
+                            elemento.style.transform = `translate(${position.x}px, ${position.y}px) rotate(${angle}deg)`;
+                        },
+                        end(event) {
+                            elemento.dataset.angle = angle; // Salva o ângulo final
+                        }
+                    },
+                    inertia: false
                 });
         }
 
@@ -1767,6 +1813,12 @@
                                 linhaVisual.setAttribute('style', itemData.linhaStyle);
                                 item.appendChild(linhaVisual);
                             }
+
+                            // --- NOVO: Adiciona o controle de rotação ao item carregado ---
+                            const rotateHandle = document.createElement('div');
+                            rotateHandle.className = 'rotate-handle';
+                            item.appendChild(rotateHandle);
+                            // --- Fim da Adição ---
 
                             novaEtiqueta.appendChild(item);
 
@@ -2289,6 +2341,7 @@
         function deactivateRotationMode() {
             if (itemSelecionado) {
                 itemSelecionado.style.cursor = 'grab';
+                itemSelecionado.classList.remove('rotation-active'); // Esconde a bolinha
             }
             isAltPressed = false;
         }
@@ -2297,7 +2350,7 @@
             if (e.key === 'Alt' && !isAltPressed && itemSelecionado) {
                 e.preventDefault();
                 isAltPressed = true;
-                itemSelecionado.style.cursor = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%231a73e8" d="M16.89,6.28l-2.97-2.98v1.41C11.33,4.8,8.9,5.55,7.1,7.34C4.65,9.79,4.25,13.23,5.6,16.03l-1.33,1.33 C2.67,14.65,3.06,10.7,5.6,8.14c2.14-2.14,4.99-3.03,7.79-2.85V6.7l2.96-2.96l0.01,0.01 M19.74,7.26l1.33-1.33 C22.67,8.65,22.3,12.7,19.74,15.26c-2.14,2.14,4.99-3.03,7.79-2.85V16.7l-2.96,2.96l-0.01-0.01l2.97,2.98V21.2 c2.59,0.09,5.02-0.66,6.82-2.46c2.55-2.55,2.95-6,1.6-8.78L19.74,7.26z"/></svg>') 12 12, auto)`;
+                itemSelecionado.classList.add('rotation-active'); // Mostra a bolinha
             }
             if (e.key === 'Delete' || e.key === 'Backspace') {
                 const target = e.target;
