@@ -1388,34 +1388,20 @@
 
             interact(elemento)
                 .draggable({
-                    enabled: true,
                     listeners: {
                         start(event) {
                             selecionarItem(event.target);
-                            if (!isAltPressed) {
-                                event.target.style.cursor = 'grabbing';
-                            }
+                            event.target.style.cursor = 'grabbing';
                         },
                         move(event) {
-                            if (isAltPressed) {
-                                const rect = elemento.getBoundingClientRect();
-                                const centerX = rect.left + rect.width / 2;
-                                const centerY = rect.top + rect.height / 2;
-                                const angleRad = Math.atan2(event.pageY - (centerY + window.scrollY), event.pageX - (centerX + window.scrollX));
-                                angle = angleRad * (180 / Math.PI);
-                            } else {
-                                position.x += event.dx;
-                                position.y += event.dy;
-                            }
+                            position.x += event.dx;
+                            position.y += event.dy;
                             elemento.style.transform = `translate(${position.x}px, ${position.y}px) rotate(${angle}deg)`;
                         },
                         end(event) {
                             elemento.dataset.x = position.x;
                             elemento.dataset.y = position.y;
-                            elemento.dataset.angle = angle;
-                            if (!isAltPressed) {
-                                event.target.style.cursor = 'grab';
-                            }
+                            event.target.style.cursor = 'grab';
                         }
                     },
                     modifiers: [
@@ -1425,9 +1411,9 @@
                 })
                 .resizable({
                     edges: { 
-                        top: !elemento.classList.contains('item-linha'), // Linha NÃO redimensiona na vertical
+                        top: !elemento.classList.contains('item-linha'),
                         left: true, 
-                        bottom: !elemento.classList.contains('item-linha'), // Linha NÃO redimensiona na vertical
+                        bottom: !elemento.classList.contains('item-linha'),
                         right: true 
                     },
                     listeners: {
@@ -2279,10 +2265,13 @@
         // --- Listener para Deletar com Teclado (NOVO) ---
         let isAltPressed = false;
 
+        // Create a separate interaction for rotation
+        const rotationInteraction = interact(document.body); // Initially unbound
+
         function deactivateRotationMode() {
             if (itemSelecionado) {
-                interact(itemSelecionado).draggable({ enabled: true });
                 itemSelecionado.style.cursor = 'grab';
+                rotationInteraction.unset(); // Unbind from the item
             }
             isAltPressed = false;
         }
@@ -2292,6 +2281,16 @@
                 e.preventDefault();
                 isAltPressed = true;
                 itemSelecionado.style.cursor = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%231a73e8" d="M16.89,6.28l-2.97-2.98v1.41C11.33,4.8,8.9,5.55,7.1,7.34C4.65,9.79,4.25,13.23,5.6,16.03l-1.33,1.33 C2.67,14.65,3.06,10.7,5.6,8.14c2.14-2.14,4.99-3.03,7.79-2.85V6.7l2.96-2.96l0.01,0.01 M19.74,7.26l1.33-1.33 C22.67,8.65,22.3,12.7,19.74,15.26c-2.14,2.14,4.99-3.03,7.79-2.85V16.7l-2.96,2.96l-0.01-0.01l2.97,2.98V21.2 c2.59,0.09,5.02-0.66,6.82-2.46c2.55-2.55,2.95-6,1.6-8.78L19.74,7.26z"/></svg>') 12 12, auto)`;
+
+                // Dynamically bind the rotation interaction to the selected item
+                rotationInteraction.target(itemSelecionado).gesturable({
+                    onmove: function (event) {
+                        let angle = parseFloat(itemSelecionado.dataset.angle) || 0;
+                        angle += event.da; // Add the angle change
+                        itemSelecionado.style.transform = itemSelecionado.style.transform.replace(/rotate\([^)]+\)/, `rotate(${angle}deg)`);
+                        itemSelecionado.dataset.angle = angle;
+                    }
+                });
             }
             if (e.key === 'Delete' || e.key === 'Backspace') {
                 const target = e.target;
