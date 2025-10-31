@@ -6,7 +6,7 @@
     <title>Editor de Etiquetas Avançado</title>
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/qrcode-svg@1.1.0/dist/qrcode.svg.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/easyqrcodejs@4.6.2/dist/easy.qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
     <style>
         :root {
@@ -1377,25 +1377,15 @@
             item.dataset.value = data; // Store the original data
             
             try {
-                const qrcode = new QRCode({
-                    content: data,
-                    padding: 0, // No white space padding
-                    width: 256, // Temporary width for SVG generation
-                    height: 256, // Temporary height for SVG generation
-                    color: "#000000",
-                    background: "#ffffff",
-                    ecl: "H" // High error correction level
+                new EasyQRCodeJS(item, {
+                    text: data,
+                    width: 256,
+                    height: 256,
+                    colorDark : "#000000",
+                    colorLight : "#ffffff",
+                    correctLevel : EasyQRCodeJS.CorrectLevel.H,
+                    drawer: 'svg'
                 });
-                const svgString = qrcode.svg();
-                item.innerHTML = svgString; // Directly insert the SVG string
-
-                // Ensure the generated SVG scales correctly
-                const svgElement = item.querySelector('svg');
-                if (svgElement) {
-                    svgElement.style.width = '100%';
-                    svgElement.style.height = '100%';
-                    svgElement.style.objectFit = 'contain';
-                }
             } catch(e) {
                 console.error("Erro ao gerar QR Code:", e);
                 alertPersonalizado("Erro ao gerar QR Code. Verifique os dados.");
@@ -1855,16 +1845,15 @@
 
                             // Special recreation for QR/Barcode
                             if (itemData.tipo === 'qrcode') {
-                                const qrcode = new QRCode({
-                                    content: itemData.conteudo,
-                                    padding: 0,
+                                new EasyQRCodeJS(item, {
+                                    text: itemData.conteudo,
                                     width: 256,
                                     height: 256,
-                                    color: "#000000",
-                                    background: "#ffffff",
-                                    ecl: "H"
+                                    colorDark : "#000000",
+                                    colorLight : "#ffffff",
+                                    correctLevel : EasyQRCodeJS.CorrectLevel.H,
+                                    drawer: 'svg'
                                 });
-                                item.innerHTML += qrcode.svg(); // Append SVG
                             } else if (itemData.tipo === 'barcode') {
                                 const barcodeSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
                                 item.appendChild(barcodeSvg);
