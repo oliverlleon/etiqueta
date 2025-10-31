@@ -431,17 +431,17 @@
         /* --- Alça de Rotação --- */
         .rotate-handle {
             position: absolute;
-            top: -20px;
-            left: 50%;
-            transform: translateX(-50%);
+            top: -8px;
+            right: -8px;
             width: 16px;
             height: 16px;
-            background-color: transparent;
-            border: none;
+            background-color: #fff;
+            border: 2px solid #1a73e8;
             border-radius: 50%;
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%231a73e8" d="M16.89,6.28l-2.97-2.98v1.41C11.33,4.8,8.9,5.55,7.1,7.34C4.65,9.79,4.25,13.23,5.6,16.03l-1.33,1.33 C2.67,14.65,3.06,10.7,5.6,8.14c2.14-2.14,4.99-3.03,7.79-2.85V6.7l2.96-2.96l0.01,0.01 M19.74,7.26l1.33-1.33 C22.67,8.65,22.3,12.7,19.74,15.26c-2.14,2.14,4.99-3.03,7.79,2.85V16.7l-2.96,2.96l-0.01-0.01l2.97,2.98V21.2 c2.59,0.09,5.02-0.66,6.82-2.46c2.55-2.55,2.95-6,1.6-8.78L19.74,7.26z"/></svg>') 12 12, auto;
+            cursor: grab;
             display: none;
             z-index: 12;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
         }
         .item-arrastavel.selecionado-para-remocao .rotate-handle {
             display: block; /* Mostra quando o item está selecionado */
@@ -1505,30 +1505,18 @@
                     onstart: function(event) {
                         event.target.style.cursor = 'grabbing';
                         const rect = elemento.getBoundingClientRect();
-                        // Calculate the element's center point
-                        const centerX = window.scrollX + rect.left + rect.width / 2;
-                        const centerY = window.scrollY + rect.top + rect.height / 2;
-                        // Store the center point in the interaction object
+                        const centerX = rect.left + rect.width / 2;
+                        const centerY = rect.top + rect.height / 2;
                         event.interaction.center = { x: centerX, y: centerY };
                     },
                     onmove: function (event) {
                         const { center } = event.interaction;
-                        // Calculate angle difference from center to pointer
-                        const angleRad = Math.atan2(event.pageY - center.y, event.pageX - center.x);
-                        const angleDeg = angleRad * (180 / Math.PI);
-
-                        // Calculate delta angle based on previous event
-                        // Note: interact.js doesn't easily provide previous angle,
-                        // so we calculate absolute angle and apply it.
-                        // Add 90 degrees offset because atan2 calculates from the positive x-axis
-                        angle = angleDeg + 90; 
-
-                        // Update the element's transform style with the new angle
+                        const angleRad = Math.atan2(event.pageY - (center.y + window.scrollY), event.pageX - (center.x + window.scrollX));
+                        angle = angleRad * (180 / Math.PI);
                         elemento.style.transform = `translate(${position.x}px, ${position.y}px) rotate(${angle}deg)`;
                     },
                     onend: function (event) {
                         event.target.style.cursor = 'grab';
-                        // Save the final angle in the dataset
                         elemento.dataset.angle = angle; 
                     }
                 });
