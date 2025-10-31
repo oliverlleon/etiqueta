@@ -113,7 +113,6 @@
             -moz-appearance: none;
             appearance: none;
             background-image: none; /* Remove default arrow */
-            padding-left: 32px; /* Space for the icon */
         }
         /* Ajuste específico para o botão de remover */
         #left-toolbar #btn-remover-item {
@@ -428,29 +427,6 @@
             z-index: 10;
         }
         
-        /* --- Alça de Rotação --- */
-        .rotate-handle {
-            position: absolute;
-            top: -6px; /* Ajustado para o novo tamanho */
-            right: -6px; /* Ajustado para o novo tamanho */
-            width: 12px; /* Drasticamente menor */
-            height: 12px; /* Drasticamente menor */
-            background-color: #fff;
-            border: 1px solid #1a73e8; /* Borda mais fina */
-            border-radius: 50%;
-            cursor: grab;
-            display: none;
-            z-index: 12;
-            box-shadow: 0 0 4px rgba(0,0,0,0.2);
-        }
-        .item-arrastavel.selecionado-para-remocao .rotate-handle {
-            display: block; /* Mostra quando o item está selecionado */
-        }
-        .rotate-handle:active {
-            cursor: grabbing;
-            background-color: #e8eaed;
-        }
-
         /* --- Tipos de Itens Específicos --- */
         .item-texto {
             border: 1px dashed #cccccc;
@@ -1058,17 +1034,16 @@
                 btnRemoverItem.style.display = 'inline-flex';
 
                 // Lógica da barra de ferramentas de CONTEXTO
+                textToolbarOptions.style.display = 'none';
+                styleToolbarOptions.style.display = 'none';
+                drawingToolbarOptions.style.display = 'none';
+
                 if (itemSelecionado.classList.contains('item-texto') || itemSelecionado.classList.contains('item-simbolo')) {
                     textToolbarOptions.style.display = 'flex';
                     updateTextToolState();
                 } else if (itemSelecionado.classList.contains('item-linha') || itemSelecionado.classList.contains('item-forma')) {
                     styleToolbarOptions.style.display = 'flex';
                     updateStyleToolState();
-                } else {
-                    // Esconde todas as barras de contexto
-                    textToolbarOptions.style.display = 'none';
-                    styleToolbarOptions.style.display = 'none';
-                    drawingToolbarOptions.style.display = 'none';
                 }
             }
         }
@@ -1076,6 +1051,7 @@
         function desselecionarItem() {
             if (itemSelecionado) {
                 itemSelecionado.classList.remove('selecionado-para-remocao');
+                deactivateRotationMode();
             }
             itemSelecionado = null;
             btnRemoverItem.style.display = 'none';
@@ -1275,11 +1251,6 @@
             item.dataset.angle = 0; // Adiciona dado de ângulo
             item.style.transform = `translate(${startX}px, ${startY}px) rotate(0deg)`; // Adiciona rotação
 
-            // Adiciona alça de rotação
-            const rotateHandle = document.createElement('div');
-            rotateHandle.className = 'rotate-handle';
-            item.appendChild(rotateHandle);
-
             // Configuração por tipo
             if (tipo === 'texto' || tipo === 'simbolo') {
                 item.contentEditable = 'true';
@@ -1417,21 +1388,34 @@
 
             interact(elemento)
                 .draggable({
+                    enabled: true,
                     listeners: {
                         start(event) {
                             selecionarItem(event.target);
-                            event.target.style.cursor = 'grabbing';
+                            if (!isAltPressed) {
+                                event.target.style.cursor = 'grabbing';
+                            }
                         },
                         move(event) {
-                            position.x += event.dx;
-                            position.y += event.dy;
-                            // Update transform string preserving rotation
-                            event.target.style.transform = `translate(${position.x}px, ${position.y}px) rotate(${angle}deg)`;
+                            if (isAltPressed) {
+                                const rect = elemento.getBoundingClientRect();
+                                const centerX = rect.left + rect.width / 2;
+                                const centerY = rect.top + rect.height / 2;
+                                const angleRad = Math.atan2(event.pageY - (centerY + window.scrollY), event.pageX - (centerX + window.scrollX));
+                                angle = angleRad * (180 / Math.PI);
+                            } else {
+                                position.x += event.dx;
+                                position.y += event.dy;
+                            }
+                            elemento.style.transform = `translate(${position.x}px, ${position.y}px) rotate(${angle}deg)`;
                         },
                         end(event) {
-                            event.target.dataset.x = position.x;
-                            event.target.dataset.y = position.y;
-                            event.target.style.cursor = 'grab';
+                            elemento.dataset.x = position.x;
+                            elemento.dataset.y = position.y;
+                            elemento.dataset.angle = angle;
+                            if (!isAltPressed) {
+                                event.target.style.cursor = 'grab';
+                            }
                         }
                     },
                     modifiers: [
@@ -1489,38 +1473,7 @@
                     if (event.target.classList.contains('item-texto') || event.target.classList.contains('item-simbolo')) {
                          event.target.focus();
                     }
-                    /* ########## CORREÇÃO DO BUG DE TEXTO ##########
-                       A linha abaixo (que existia no seu original) impedia
-                       o cursor de aparecer na caixa de texto. Eu a removi.
-                       
-                       event.preventDefault(); 
-                       
-                    ################################################# */
                 });
-            
-            // --- Interação da Alça de Rotação ---
-            const rotateHandle = elemento.querySelector('.rotate-handle');
-            if (rotateHandle) {
-                interact(rotateHandle).draggable({
-                    onstart: function(event) {
-                        event.target.style.cursor = 'grabbing';
-                        const rect = elemento.getBoundingClientRect();
-                        const centerX = rect.left + rect.width / 2;
-                        const centerY = rect.top + rect.height / 2;
-                        event.interaction.center = { x: centerX, y: centerY };
-                    },
-                    onmove: function (event) {
-                        const { center } = event.interaction;
-                        const angleRad = Math.atan2(event.pageY - (center.y + window.scrollY), event.pageX - (center.x + window.scrollX));
-                        angle = angleRad * (180 / Math.PI);
-                        elemento.style.transform = `translate(${position.x}px, ${position.y}px) rotate(${angle}deg)`;
-                    },
-                    onend: function (event) {
-                        event.target.style.cursor = 'grab';
-                        elemento.dataset.angle = angle; 
-                    }
-                });
-            }
         }
 
         // --- Função Centralizada para Listeners de Seleção ---
@@ -1591,15 +1544,11 @@
                 
                 selectStyleType.value = (style.borderTopStyle === 'none' || style.borderTopStyle === '') ? 'solid' : style.borderTopStyle;
                 
-                inputStyleThickness.disabled = false;
-                selectStyleType.disabled = false;
             } else if (itemSelecionado.classList.contains('item-forma')) {
                 const style = window.getComputedStyle(itemSelecionado);
-                inputStyleColor.value = rgbToHex(style.backgroundColor); // Cor de preenchimento
+                inputStyleColor.value = rgbToHex(style.backgroundColor);
                 inputStyleThickness.value = parseInt(style.borderTopWidth) || 1;
                 selectStyleType.value = style.borderTopStyle || 'solid';
-                inputStyleThickness.disabled = false;
-                selectStyleType.disabled = false;
             }
         }
         
@@ -1815,11 +1764,6 @@
                             }
 
                             novaEtiqueta.appendChild(item);
-
-                            // Add rotation handle back
-                            const rotateHandle = document.createElement('div');
-                            rotateHandle.className = 'rotate-handle';
-                            item.appendChild(rotateHandle);
 
                             inicializarInteracao(item);
                             addSelectionListeners(item);
@@ -2333,7 +2277,23 @@
         selectAddShape.selectedIndex = 0; // Ensure "Forma" placeholder is selected
 
         // --- Listener para Deletar com Teclado (NOVO) ---
+        let isAltPressed = false;
+
+        function deactivateRotationMode() {
+            if (itemSelecionado) {
+                interact(itemSelecionado).draggable({ enabled: true });
+                itemSelecionado.style.cursor = 'grab';
+            }
+            isAltPressed = false;
+        }
+
         document.addEventListener('keydown', (e) => {
+            if (e.key === 'Alt' && !isAltPressed && itemSelecionado) {
+                e.preventDefault();
+                isAltPressed = true;
+                interact(itemSelecionado).draggable({ enabled: false }); // Disable dragging
+                itemSelecionado.style.cursor = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%231a73e8" d="M16.89,6.28l-2.97-2.98v1.41C11.33,4.8,8.9,5.55,7.1,7.34C4.65,9.79,4.25,13.23,5.6,16.03l-1.33,1.33 C2.67,14.65,3.06,10.7,5.6,8.14c2.14-2.14,4.99-3.03,7.79-2.85V6.7l2.96-2.96l0.01,0.01 M19.74,7.26l1.33-1.33 C22.67,8.65,22.3,12.7,19.74,15.26c-2.14,2.14,4.99-3.03,7.79-2.85V16.7l-2.96,2.96l-0.01-0.01l2.97,2.98V21.2 c2.59,0.09,5.02-0.66,6.82-2.46c2.55-2.55,2.95-6,1.6-8.78L19.74,7.26z"/></svg>') 12 12, auto)`;
+            }
             if (e.key === 'Delete' || e.key === 'Backspace') {
                 const target = e.target;
                 const isEditing = target.tagName === 'INPUT' || 
@@ -2354,6 +2314,12 @@
                     // Se nenhum item, mas uma etiqueta está ativa, remove a etiqueta
                     btnRemoverEtiqueta.click(); // Reutiliza a lógica do botão
                 }
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'Alt' && isAltPressed) {
+                deactivateRotationMode();
             }
         });
 
