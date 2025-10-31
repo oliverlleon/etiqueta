@@ -93,19 +93,26 @@
             border-color: #999;
         }
         /* Ajuste para select (seta) */
+        #left-toolbar .select-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        #left-toolbar .select-wrapper .select-icon {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: #f1f1f1;
+            font-size: 20px;
+            pointer-events: none;
+        }
+
         #left-toolbar select {
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
-            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%2D%2Dxmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%2D%2Dwidth%3D%22292.4%22%2D%2Dheight%3D%22292.4%22%3E%3Cpath%2D%2Dfill%3D%22%23f1f1f1%22%2D%2Dd%3D%22M287%2D%2D69.4a17.6%2D%2D17.6%2D%2D0%2D%2D0%2D%2D-13-5.4H18.4c-5%2D%2D0-9.3%2D%2D1.8-12.9%2D%2D5.4A17.6%2D%2D17.6%2D%2D0%2D%2D0%2D%2D0%2D%2D0%2D%2D82.2c0%2D%2D5%2D%2D1.8%2D%2D9.3%2D%2D5.4%2D%2D12.9l128%2D%2D127.9c3.6%2D%2D3.6%2D%2D7.8%2D%2D5.4%2D%2D12.8%2D%2D5.4s9.2-1.8%2D%2D12.8-5.4L287%2D%2D95c3.5-3.5%2D%2D5.4-7.8%2D%2D5.4-12.8%2D%2D0-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
-            background-repeat: no-repeat;
-            background-position: right 8px center;
-            background-size: 8px 10px;
-            padding-right: 20px;
-            padding-left: 0; /* Centraliza ícone */
-        }
-        #left-toolbar select.has-icon {
-             padding-left: 8px; /* Espaço para ícone se houver */
+            background-image: none; /* Remove default arrow */
         }
         /* Ajuste específico para o botão de remover */
         #left-toolbar #btn-remover-item {
@@ -241,7 +248,8 @@
 
 
         /* Botões de ícone (Negrito, Itálico, etc.) */
-        .secondary-toolbar button {
+        .secondary-toolbar button,
+        #toolbar button.icon-only {
              padding: 8px;
              min-width: 36px;
              justify-content: center;
@@ -418,29 +426,36 @@
             opacity: 0.8;
             z-index: 10;
         }
-        
-        /* --- Alça de Rotação --- */
+
+        /* --- NOVO: Controle de Rotação --- */
         .rotate-handle {
             position: absolute;
-            top: -25px; /* Posição acima do item */
+            top: -20px; /* Posiciona acima do item */
             left: 50%;
             transform: translateX(-50%);
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             background-color: #fff;
             border: 2px solid #1a73e8;
             border-radius: 50%;
-            cursor: grab; /* Cursor de "agarrar" */
-            display: none; /* Oculto por padrão */
-            z-index: 12; /* Acima do item */
-            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+            cursor: alias; /* Cursor específico para rotação */
+            display: none; /* Escondido por padrão */
+            z-index: 12;
         }
-        .item-arrastavel.selecionado-para-remocao .rotate-handle {
-            display: block; /* Mostra quando o item está selecionado */
+        /* Linha conectora */
+        .rotate-handle::before {
+            content: '';
+            position: absolute;
+            bottom: 14px; /* Começa na base da bolinha */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1px;
+            height: 6px; /* Comprimento da linha */
+            background-color: #1a73e8;
         }
-        .rotate-handle:active {
-            cursor: grabbing;
-            background-color: #e8eaed;
+        /* Mostra o controle quando a classe é aplicada no item pai */
+        .item-arrastavel.rotation-active .rotate-handle {
+            display: block;
         }
 
         /* --- Tipos de Itens Específicos --- */
@@ -726,19 +741,22 @@
                 <span class="material-icons">image</span>
             </button>
             
-            <select id="select-add-shape" title="Adicionar forma" class="has-icon">
-                <option value="" disabled selected>Forma</option>
-                <option value="quadrado">Quadrado</option>
-                <option value="circulo">Círculo</option>
-                <option value="oval">Oval</option>
-                <option value="triangulo">Triângulo</option>
-                <option value="triangulo-inv">Triângulo Inv.</option>
-                <option value="losango">Losango</option>
-                <option value="estrela">Estrela</option>
-                <option value="coracao">Coração</option>
-                <option value="seta-dir">Seta (Dir)</option>
-                <option value="seta-esq">Seta (Esq)</option>
-            </select>
+            <div class="select-wrapper">
+                <span class="material-icons select-icon">interests</span>
+                <select id="select-add-shape" title="Adicionar forma">
+                    <option value="" disabled selected></option>
+                    <option value="quadrado">■ Quadrado</option>
+                    <option value="circulo">● Círculo</option>
+                    <option value="oval">○ Oval</option>
+                    <option value="triangulo">▲ Triângulo</option>
+                    <option value="triangulo-inv">▼ Triângulo Inv.</option>
+                    <option value="losango">◆ Losango</option>
+                    <option value="estrela">★ Estrela</option>
+                    <option value="coracao">♥ Coração</option>
+                    <option value="seta-dir">► Seta (Dir)</option>
+                    <option value="seta-esq">◄ Seta (Esq)</option>
+                </select>
+            </div>
             
             <button id="btn-add-linha" title="Adicionar linha">
                 <span class="material-icons">horizontal_rule</span>
@@ -766,17 +784,23 @@
         <div id="toolbar">
             <div class="toolbar-section">
                 <div class="button-group">
-                    <button id="btn-add-etiqueta" title="Adicionar nova etiqueta à página">
-                        <span class="material-icons">add_to_queue</span> Nova Etiqueta
+                    <button id="btn-add-etiqueta" title="Adicionar nova etiqueta à página" class="icon-only">
+                        <span class="material-icons">add_to_queue</span>
                     </button>
-                    <button id="btn-duplicar-etiqueta" title="Copiar etiqueta selecionada">
-                        <span class="material-icons">content_copy</span> Copiar
+                    <button id="btn-duplicar-etiqueta" title="Copiar etiqueta selecionada" class="icon-only">
+                        <span class="material-icons">content_copy</span>
                     </button>
-                    <button id="btn-remover-etiqueta" title="Remover etiqueta selecionada" style="color: #D93025;">
+                    <button id="btn-remover-etiqueta" title="Remover etiqueta selecionada" class="icon-only" style="color: #D93025;">
                         <span class="material-icons">delete_sweep</span>
                     </button>
-                    <button id="btn-imprimir" title="Imprimir página">
-                        <span class="material-icons">print</span> Imprimir
+                    <button id="btn-imprimir" title="Imprimir página" class="icon-only">
+                        <span class="material-icons">print</span>
+                    </button>
+                    <button id="btn-salvar" title="Salvar etiqueta" class="icon-only">
+                        <span class="material-icons">save</span>
+                    </button>
+                    <button id="btn-abrir" title="Abrir etiqueta" class="icon-only">
+                        <span class="material-icons">folder_open</span>
                     </button>
                 </div>
                 <div class="button-group">
@@ -813,6 +837,7 @@
                 </div>
 
             <input type="file" id="input-imagem" accept="image/*" style="display: none;">
+            <input type="file" id="input-abrir-etiqueta" accept=".json,application/json" style="display: none;">
         </div>
         
         <div id="text-toolbar-options" class="secondary-toolbar">
@@ -926,10 +951,13 @@
         const toolbar = document.getElementById('toolbar');
         const btnAddEtiqueta = document.getElementById('btn-add-etiqueta');
         const btnImprimir = document.getElementById('btn-imprimir');
+        const btnSalvar = document.getElementById('btn-salvar');
+        const btnAbrir = document.getElementById('btn-abrir');
         const btnAddTexto = document.getElementById('btn-add-texto');
         const btnAddImagem = document.getElementById('btn-add-imagem');
         const btnRemoverItem = document.getElementById('btn-remover-item');
         const inputImagem = document.getElementById('input-imagem');
+        const inputAbrirEtiqueta = document.getElementById('input-abrir-etiqueta');
         const printStyleDynamic = document.getElementById('print-style-dynamic');
         const screenStyleDynamic = document.getElementById('screen-style-dynamic');
 
@@ -1037,17 +1065,16 @@
                 btnRemoverItem.style.display = 'inline-flex';
 
                 // Lógica da barra de ferramentas de CONTEXTO
+                textToolbarOptions.style.display = 'none';
+                styleToolbarOptions.style.display = 'none';
+                drawingToolbarOptions.style.display = 'none';
+
                 if (itemSelecionado.classList.contains('item-texto') || itemSelecionado.classList.contains('item-simbolo')) {
                     textToolbarOptions.style.display = 'flex';
                     updateTextToolState();
                 } else if (itemSelecionado.classList.contains('item-linha') || itemSelecionado.classList.contains('item-forma')) {
                     styleToolbarOptions.style.display = 'flex';
                     updateStyleToolState();
-                } else {
-                    // Esconde todas as barras de contexto
-                    textToolbarOptions.style.display = 'none';
-                    styleToolbarOptions.style.display = 'none';
-                    drawingToolbarOptions.style.display = 'none';
                 }
             }
         }
@@ -1055,6 +1082,7 @@
         function desselecionarItem() {
             if (itemSelecionado) {
                 itemSelecionado.classList.remove('selecionado-para-remocao');
+                deactivateRotationMode();
             }
             itemSelecionado = null;
             btnRemoverItem.style.display = 'none';
@@ -1254,10 +1282,11 @@
             item.dataset.angle = 0; // Adiciona dado de ângulo
             item.style.transform = `translate(${startX}px, ${startY}px) rotate(0deg)`; // Adiciona rotação
 
-            // Adiciona alça de rotação
+            // --- NOVO: Adiciona o controle de rotação a cada item ---
             const rotateHandle = document.createElement('div');
             rotateHandle.className = 'rotate-handle';
             item.appendChild(rotateHandle);
+            // --- Fim da Adição ---
 
             // Configuração por tipo
             if (tipo === 'texto' || tipo === 'simbolo') {
@@ -1309,18 +1338,7 @@
 
             etiqueta.appendChild(item);
             inicializarInteracao(item);
-
-            // Listeners de seleção
-            item.addEventListener('click', (event) => {
-                event.stopPropagation();
-                selecionarItem(item);
-            });
-             if (tipo === 'texto' || tipo === 'simbolo') {
-                 item.addEventListener('focus', (event) => {
-                    event.stopPropagation();
-                    selecionarItem(item);
-                 });
-             }
+            addSelectionListeners(item); // Attach selection listeners
             
             // Seleciona o item recém-criado (exceto para QR/Barcode que são criados por funções específicas)
             if (tipo !== 'qrcode' && tipo !== 'barcode') {
@@ -1337,6 +1355,7 @@
             if (!etiquetaAtiva) return;
             const item = adicionarItem(etiquetaAtiva, 'qrcode');
             if (!item) return;
+            item.dataset.value = data; // Store the original data
             
             const qrContainer = document.createElement('div');
             qrContainer.id = `qr-container-${item.id}`;
@@ -1368,6 +1387,7 @@
              if (!etiquetaAtiva) return;
              const item = adicionarItem(etiquetaAtiva, 'barcode');
              if (!item) return;
+             item.dataset.value = data; // Store the original data
              
              const barcodeSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
              barcodeSvg.id = `barcode-${item.id}`;
@@ -1411,14 +1431,19 @@
                             event.target.style.cursor = 'grabbing';
                         },
                         move(event) {
-                            position.x += event.dx;
-                            position.y += event.dy;
-                            // Update transform string preserving rotation
-                            event.target.style.transform = `translate(${position.x}px, ${position.y}px) rotate(${angle}deg)`;
+                            // Apenas move se a tecla Alt NÃO estiver pressionada
+                            if (!isAltPressed) {
+                                position.x += event.dx;
+                                position.y += event.dy;
+                                elemento.style.transform = `translate(${position.x}px, ${position.y}px) rotate(${angle}deg)`;
+                            }
                         },
                         end(event) {
-                            event.target.dataset.x = position.x;
-                            event.target.dataset.y = position.y;
+                            // Apenas atualiza a posição se não estava rotacionando
+                            if (!isAltPressed) {
+                                elemento.dataset.x = position.x;
+                                elemento.dataset.y = position.y;
+                            }
                             event.target.style.cursor = 'grab';
                         }
                     },
@@ -1429,9 +1454,9 @@
                 })
                 .resizable({
                     edges: { 
-                        top: !elemento.classList.contains('item-linha'), // Linha NÃO redimensiona na vertical
+                        top: !elemento.classList.contains('item-linha'),
                         left: true, 
-                        bottom: !elemento.classList.contains('item-linha'), // Linha NÃO redimensiona na vertical
+                        bottom: !elemento.classList.contains('item-linha'),
                         right: true 
                     },
                     listeners: {
@@ -1477,48 +1502,45 @@
                     if (event.target.classList.contains('item-texto') || event.target.classList.contains('item-simbolo')) {
                          event.target.focus();
                     }
-                    /* ########## CORREÇÃO DO BUG DE TEXTO ##########
-                       A linha abaixo (que existia no seu original) impedia
-                       o cursor de aparecer na caixa de texto. Eu a removi.
-                       
-                       event.preventDefault(); 
-                       
-                    ################################################# */
                 });
-            
-            // --- Interação da Alça de Rotação ---
+
+            // --- NOVO: Lógica de Rotação pelo Handle ---
             const rotateHandle = elemento.querySelector('.rotate-handle');
-            if (rotateHandle) {
-                interact(rotateHandle).draggable({
-                    onstart: function(event) {
-                        event.target.style.cursor = 'grabbing';
-                        const rect = elemento.getBoundingClientRect();
-                        // Calculate the element's center point
-                        const centerX = window.scrollX + rect.left + rect.width / 2;
-                        const centerY = window.scrollY + rect.top + rect.height / 2;
-                        // Store the center point in the interaction object
-                        event.interaction.center = { x: centerX, y: centerY };
-                    },
-                    onmove: function (event) {
-                        const { center } = event.interaction;
-                        // Calculate angle difference from center to pointer
-                        const angleRad = Math.atan2(event.pageY - center.y, event.pageX - center.x);
-                        const angleDeg = angleRad * (180 / Math.PI);
+            interact(rotateHandle)
+                .draggable({
+                    listeners: {
+                        move(event) {
+                            const rect = elemento.getBoundingClientRect();
+                            // Centro do elemento pai
+                            const centerX = rect.left + rect.width / 2;
+                            const centerY = rect.top + rect.height / 2;
 
-                        // Calculate delta angle based on previous event
-                        // Note: interact.js doesn't easily provide previous angle,
-                        // so we calculate absolute angle and apply it.
-                        // Add 90 degrees offset because atan2 calculates from the positive x-axis
-                        angle = angleDeg + 90; 
+                            // Ângulo entre o centro e a posição do mouse
+                            const newAngle = Math.atan2(event.clientY - centerY, event.clientX - centerX) * 180 / Math.PI + 90; // +90 para alinhar
+                            angle = newAngle; // Atualiza o ângulo global para este item
 
-                        // Update the element's transform style with the new angle
-                        elemento.style.transform = `translate(${position.x}px, ${position.y}px) rotate(${angle}deg)`;
+                            elemento.style.transform = `translate(${position.x}px, ${position.y}px) rotate(${angle}deg)`;
+                        },
+                        end(event) {
+                            elemento.dataset.angle = angle; // Salva o ângulo final
+                        }
                     },
-                    onend: function (event) {
-                        event.target.style.cursor = 'grab';
-                        // Save the final angle in the dataset
-                        elemento.dataset.angle = angle; 
-                    }
+                    inertia: false
+                });
+        }
+
+        // --- Função Centralizada para Listeners de Seleção ---
+        function addSelectionListeners(item) {
+            item.addEventListener('click', (event) => {
+                event.stopPropagation();
+                selecionarItem(item);
+            });
+
+            // For text and symbol items, also select on focus
+            if (item.classList.contains('item-texto') || item.classList.contains('item-simbolo')) {
+                item.addEventListener('focus', (event) => {
+                    event.stopPropagation();
+                    selecionarItem(item);
                 });
             }
         }
@@ -1575,15 +1597,11 @@
                 
                 selectStyleType.value = (style.borderTopStyle === 'none' || style.borderTopStyle === '') ? 'solid' : style.borderTopStyle;
                 
-                inputStyleThickness.disabled = false;
-                selectStyleType.disabled = false;
             } else if (itemSelecionado.classList.contains('item-forma')) {
                 const style = window.getComputedStyle(itemSelecionado);
-                inputStyleColor.value = rgbToHex(style.backgroundColor); // Cor de preenchimento
+                inputStyleColor.value = rgbToHex(style.backgroundColor);
                 inputStyleThickness.value = parseInt(style.borderTopWidth) || 1;
                 selectStyleType.value = style.borderTopStyle || 'solid';
-                inputStyleThickness.disabled = false;
-                selectStyleType.disabled = false;
             }
         }
         
@@ -1676,6 +1694,186 @@
             if (isDrawing) pararModoDesenho(false);
             setTimeout(() => { window.print(); }, 50);
         });
+
+        // --- Funções de Salvar e Abrir ---
+
+        function salvarEtiqueta() {
+            if (isDrawing) pararModoDesenho(false);
+            desselecionarItem();
+
+            const dadosSalvos = {
+                layout: {
+                    width: inputCustomWidth.value,
+                    height: inputCustomHeight.value,
+                    cols: inputCustomCols.value,
+                    preset: selectLayoutPreset.value
+                },
+                etiquetas: []
+            };
+
+            document.querySelectorAll('.etiqueta-editavel').forEach(etiquetaEl => {
+                const itens = [];
+                etiquetaEl.querySelectorAll('.item-arrastavel').forEach(itemEl => {
+                    const tipo = Array.from(itemEl.classList).find(c => c.startsWith('item-') && c !== 'item-arrastavel').replace('item-', '');
+
+                    const itemData = {
+                        id: itemEl.id,
+                        tipo: tipo,
+                        style: itemEl.getAttribute('style'), // Salva todo o estilo inline
+                        dataset: { ...itemEl.dataset } // Salva todos os data attributes
+                    };
+
+                    // Handle content-specific data
+                    if (tipo === 'texto' || tipo === 'simbolo') {
+                        itemData.conteudo = itemEl.innerHTML;
+                    } else if (tipo === 'imagem') {
+                        const img = itemEl.querySelector('img');
+                        if (img) itemData.conteudo = img.src;
+                    } else if (tipo === 'qrcode' || tipo === 'barcode') {
+                        itemData.conteudo = itemEl.dataset.value; // Already stored
+                    } else if (tipo === 'forma') {
+                        itemData.shapeType = Array.from(itemEl.classList).find(c => c.startsWith('shape-')).replace('shape-', '');
+                    } else if (tipo === 'linha') {
+                         const linhaVisual = itemEl.querySelector('.linha-visual');
+                         if(linhaVisual) itemData.linhaStyle = linhaVisual.getAttribute('style');
+                    }
+
+                    itens.push(itemData);
+                });
+                dadosSalvos.etiquetas.push({ id: etiquetaEl.dataset.labelId, itens: itens });
+            });
+
+            const dataStr = JSON.stringify(dadosSalvos, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'etiqueta.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            alertPersonalizado('Etiqueta salva com sucesso!');
+        }
+
+        function abrirEtiqueta(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const dados = JSON.parse(e.target.result);
+
+                    // Limpa a página atual
+                    paginaDeImpressao.innerHTML = '';
+                    desselecionarItem();
+
+                    // Restaura o layout
+                    inputCustomWidth.value = dados.layout.width;
+                    inputCustomHeight.value = dados.layout.height;
+                    inputCustomCols.value = dados.layout.cols;
+                    selectLayoutPreset.value = dados.layout.preset;
+                    definirLayoutETamanho(dados.layout.preset);
+
+                    // Recria as etiquetas e itens
+                    dados.etiquetas.forEach((etiquetaData, index) => {
+                        const novaEtiqueta = document.createElement('div');
+                        novaEtiqueta.classList.add('etiqueta-editavel');
+                        novaEtiqueta.dataset.labelId = etiquetaData.id;
+                        paginaDeImpressao.appendChild(novaEtiqueta);
+
+                        etiquetaData.itens.forEach(itemData => {
+                            const item = document.createElement('div');
+                            item.id = itemData.id;
+                            item.className = `item-arrastavel item-${itemData.tipo}`;
+                            item.setAttribute('style', itemData.style);
+
+                            // Restore dataset
+                            if (itemData.dataset) {
+                                for (const key in itemData.dataset) {
+                                    item.dataset[key] = itemData.dataset[key];
+                                }
+                            }
+
+                            // Recreate content
+                            if (itemData.tipo === 'texto' || itemData.tipo === 'simbolo') {
+                                item.innerHTML = itemData.conteudo;
+                                item.contentEditable = 'true';
+                            } else if (itemData.tipo === 'imagem') {
+                                const img = document.createElement('img');
+                                img.src = itemData.conteudo;
+                                img.draggable = false;
+                                item.appendChild(img);
+                            } else if (itemData.tipo === 'forma') {
+                                item.classList.add(`shape-${itemData.shapeType}`);
+                            } else if (itemData.tipo === 'linha') {
+                                const linhaVisual = document.createElement('div');
+                                linhaVisual.className = 'linha-visual';
+                                linhaVisual.setAttribute('style', itemData.linhaStyle);
+                                item.appendChild(linhaVisual);
+                            }
+
+                            // --- NOVO: Adiciona o controle de rotação ao item carregado ---
+                            const rotateHandle = document.createElement('div');
+                            rotateHandle.className = 'rotate-handle';
+                            item.appendChild(rotateHandle);
+                            // --- Fim da Adição ---
+
+                            novaEtiqueta.appendChild(item);
+
+                            inicializarInteracao(item);
+                            addSelectionListeners(item);
+
+                            // Special recreation for QR/Barcode
+                            if (itemData.tipo === 'qrcode') {
+                                const qrContainer = document.createElement('div');
+                                item.appendChild(qrContainer);
+                                new QRCode(qrContainer, { text: itemData.conteudo, width: 128, height: 128, correctLevel: QRCode.CorrectLevel.H });
+                                const qrEl = qrContainer.querySelector('canvas') || qrContainer.querySelector('img');
+                                if (qrEl) {
+                                    qrEl.style.width = '100%';
+                                    qrEl.style.height = '100%';
+                                    qrEl.style.objectFit = 'contain';
+                                }
+                            } else if (itemData.tipo === 'barcode') {
+                                const barcodeSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                                item.appendChild(barcodeSvg);
+                                JsBarcode(barcodeSvg, itemData.conteudo, { format: "CODE128", displayValue: true, fontSize: 14, width: 2, height: 40, margin: 5 });
+                                barcodeSvg.style.width = '100%';
+                                barcodeSvg.style.height = '100%';
+                                barcodeSvg.style.objectFit = 'fill';
+                            }
+                        });
+
+                        if (index === 0) {
+                            definirEtiquetaAtiva(novaEtiqueta);
+                        }
+                    });
+
+                    alertPersonalizado('Etiqueta carregada com sucesso!');
+                } catch (error) {
+                    console.error("Erro ao carregar o arquivo:", error);
+                    alertPersonalizado('Erro: O arquivo selecionado não é válido.');
+                } finally {
+                    // Reset file input to allow opening the same file again
+                    event.target.value = null;
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        btnSalvar.addEventListener('click', salvarEtiqueta);
+
+        btnAbrir.addEventListener('click', () => {
+            if (isDrawing) pararModoDesenho(false);
+            confirmPersonalizado("Abrir um novo arquivo irá descartar quaisquer alterações não salvas. Deseja continuar?", () => {
+                inputAbrirEtiqueta.click();
+            });
+        });
+
+        inputAbrirEtiqueta.addEventListener('change', abrirEtiqueta);
+
 
         btnAddTexto.addEventListener('click', () => {
             const itemTexto = adicionarItem(etiquetaAtiva, 'texto');
@@ -2138,25 +2336,64 @@
         selectAddShape.selectedIndex = 0; // Ensure "Forma" placeholder is selected
 
         // --- Listener para Deletar com Teclado (NOVO) ---
+        let isAltPressed = false;
+
+        function deactivateRotationMode() {
+            if (itemSelecionado) {
+                itemSelecionado.style.cursor = 'grab';
+                itemSelecionado.classList.remove('rotation-active'); // Esconde a bolinha
+            }
+            isAltPressed = false;
+        }
+
         document.addEventListener('keydown', (e) => {
+            if (e.key === 'Alt' && !isAltPressed && itemSelecionado) {
+                e.preventDefault();
+                isAltPressed = true;
+                itemSelecionado.classList.add('rotation-active'); // Mostra a bolinha
+            }
             if (e.key === 'Delete' || e.key === 'Backspace') {
-                // Evita deletar se estiver digitando em um input ou texto
                 const target = e.target;
                 const isEditing = target.tagName === 'INPUT' || 
                                   target.tagName === 'SELECT' || 
                                   target.isContentEditable;
 
-                if (itemSelecionado && !isEditing) {
-                    e.preventDefault(); // Impede o navegador de voltar (Backspace)
-                    
-                    // Reutiliza a função de confirmação
+                if (isEditing) return; // Não faz nada se estiver editando
+
+                e.preventDefault(); // Impede o navegador de voltar (Backspace)
+
+                if (itemSelecionado) {
+                    // Se um item está selecionado, remove o item
                     confirmPersonalizado("Tem certeza que deseja remover este item?", () => {
                         itemSelecionado.remove();
                         desselecionarItem();
                     });
+                } else if (etiquetaAtiva) {
+                    // Se nenhum item, mas uma etiqueta está ativa, remove a etiqueta
+                    btnRemoverEtiqueta.click(); // Reutiliza a lógica do botão
                 }
             }
         });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'Alt' && isAltPressed) {
+                deactivateRotationMode();
+            }
+        });
+
+        // --- Listener para Zoom com Scroll (NOVO) ---
+        document.addEventListener('wheel', (e) => {
+            if (e.altKey) {
+                e.preventDefault(); // Impede a rolagem da página
+                if (e.deltaY < 0) {
+                    // Scroll para cima, aumenta o zoom
+                    btnZoomIn.click();
+                } else {
+                    // Scroll para baixo, diminui o zoom
+                    btnZoomOut.click();
+                }
+            }
+        }, { passive: false }); // Necessário para que preventDefault funcione
 
     </script>
 </body>
