@@ -1377,13 +1377,13 @@
             item.dataset.value = data; // Store the original data
             
             try {
-                new EasyQRCodeJS(item, {
+                new QRCode(item, {
                     text: data,
                     width: 256,
                     height: 256,
                     colorDark : "#000000",
                     colorLight : "#ffffff",
-                    correctLevel : EasyQRCodeJS.CorrectLevel.H,
+                    correctLevel : QRCode.CorrectLevel.H,
                     drawer: 'svg'
                 });
             } catch(e) {
@@ -1845,13 +1845,13 @@
 
                             // Special recreation for QR/Barcode
                             if (itemData.tipo === 'qrcode') {
-                                new EasyQRCodeJS(item, {
+                                new QRCode(item, {
                                     text: itemData.conteudo,
                                     width: 256,
                                     height: 256,
                                     colorDark : "#000000",
                                     colorLight : "#ffffff",
-                                    correctLevel : EasyQRCodeJS.CorrectLevel.H,
+                                    correctLevel : QRCode.CorrectLevel.H,
                                     drawer: 'svg'
                                 });
                             } else if (itemData.tipo === 'barcode') {
