@@ -1551,6 +1551,7 @@
             elemento.style.transform = `translate(${position.x}px, ${position.y}px) rotate(${angle}deg)`;
 
             interact(elemento)
+                .preventDefault('never')
                 .draggable({
                     listeners: {
                         start(event) {
