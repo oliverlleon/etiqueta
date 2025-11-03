@@ -1495,7 +1495,18 @@
                     },
                     modifiers: [
                         interact.modifiers.restrictRect({ restriction: 'parent' }),
-                        interact.modifiers.restrictSize({ min: { width: 20, height: 1 } }) // Min height 1 for lines
+                        interact.modifiers.restrictSize({
+                            min: { width: 20, height: 1 }, // Min height 1 for lines
+                            max: function (x, y, element) {
+                                const parent = element.parentNode;
+                                // Use clientWidth/Height and subtract a small buffer (e.g., 2px)
+                                // to ensure resize handles remain accessible inside the parent.
+                                return {
+                                    width: parent.clientWidth - 2,
+                                    height: parent.clientHeight - 2,
+                                };
+                            }
+                        })
                     ],
                 })
                 .on('tap', function (event) {
