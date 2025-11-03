@@ -415,9 +415,10 @@
             transform-origin: center center;
         }
         .item-arrastavel:hover { border-color: #1a73e8; }
-        .item-arrastavel.selecionado-para-remocao {
-            outline: 2px solid red;
-            z-index: 11;
+        .item-arrastavel.selecionado {
+            outline: 2px solid #1a73e8;
+            border-color: #1a73e8;
+            border-style: solid;
         }
         .item-arrastavel.interactjs-dragging,
         .item-arrastavel.interactjs-resizing {
@@ -425,6 +426,11 @@
             border-style: solid;
             opacity: 0.8;
             z-index: 10;
+        }
+
+        .item-grupo {
+            border: 2px dotted #cccccc;
+            padding: 5px;
         }
 
         /* --- NOVO: Controle de Rotação --- */
@@ -906,6 +912,36 @@
             </div>
         </div>
 
+        <div id="alignment-toolbar" class="secondary-toolbar">
+            <div class="button-group">
+                <span class="label">Alinhar:</span>
+                <button id="btn-align-left" title="Alinhar à Esquerda"><span class="material-icons">align_horizontal_left</span></button>
+                <button id="btn-align-center" title="Centralizar Horizontalmente"><span class="material-icons">align_horizontal_center</span></button>
+                <button id="btn-align-right" title="Alinhar à Direita"><span class="material-icons">align_horizontal_right</span></button>
+            </div>
+            <div class="button-group">
+                <button id="btn-align-top" title="Alinhar ao Topo"><span class="material-icons">align_vertical_top</span></button>
+                <button id="btn-align-middle" title="Centralizar Verticalmente"><span class="material-icons">align_vertical_center</span></button>
+                <button id="btn-align-bottom" title="Alinhar à Base"><span class="material-icons">align_vertical_bottom</span></button>
+            </div>
+        </div>
+
+        <div id="layering-toolbar" class="secondary-toolbar">
+            <div class="button-group">
+                <span class="label">Camada:</span>
+                <button id="btn-layer-front" title="Trazer para Frente"><span class="material-icons">flip_to_front</span></button>
+                <button id="btn-layer-back" title="Enviar para Trás"><span class="material-icons">flip_to_back</span></button>
+            </div>
+        </div>
+
+        <div id="grouping-toolbar" class="secondary-toolbar">
+             <div class="button-group">
+                <span class="label">Agrupar:</span>
+                <button id="btn-group-items" title="Agrupar Itens"><span class="material-icons">group_work</span></button>
+                <button id="btn-ungroup-items" title="Desagrupar Itens"><span class="material-icons">layers_clear</span></button>
+            </div>
+        </div>
+
 
         <div id="pagina-de-impressao">
             <div class="etiqueta-editavel active" data-label-id="label-1">
@@ -1020,9 +1056,26 @@
         const inputDrawColor = document.getElementById('input-draw-color');
         const inputDrawThickness = document.getElementById('input-draw-thickness');
 
+        const alignmentToolbar = document.getElementById('alignment-toolbar');
+        const layeringToolbar = document.getElementById('layering-toolbar');
+        const groupingToolbar = document.getElementById('grouping-toolbar');
+
+        const btnLayerFront = document.getElementById('btn-layer-front');
+        const btnLayerBack = document.getElementById('btn-layer-back');
+
+        const btnAlignLeft = document.getElementById('btn-align-left');
+        const btnAlignCenter = document.getElementById('btn-align-center');
+        const btnAlignRight = document.getElementById('btn-align-right');
+        const btnAlignTop = document.getElementById('btn-align-top');
+        const btnAlignMiddle = document.getElementById('btn-align-middle');
+        const btnAlignBottom = document.getElementById('btn-align-bottom');
+
+        const btnGroupItems = document.getElementById('btn-group-items');
+        const btnUngroupItems = document.getElementById('btn-ungroup-items');
+
         // --- Variáveis de Estado ---
         let etiquetaAtiva = document.querySelector('.etiqueta-editavel.active');
-        let itemSelecionado = null;
+        let itensSelecionados = [];
         let labelCounter = 1;
         let itemCounter = 0;
         let tamanhoAtualEtiqueta = { width: '100mm', height: '50mm' };
@@ -1050,45 +1103,72 @@
             if (etiquetaAtiva) {
                 etiquetaAtiva.classList.add('active');
             }
-            desselecionarItem();
+            desselecionarTodos();
         }
 
         function gerarItemId() { return `item-${++itemCounter}`; }
         function gerarLabelId() { return `label-${++labelCounter}`; }
 
-        function selecionarItem(itemElement) {
-            desselecionarItem(); // Desseleciona anterior
-            itemSelecionado = itemElement;
-            
-            if (itemSelecionado) {
-                itemSelecionado.classList.add('selecionado-para-remocao'); 
-                btnRemoverItem.style.display = 'inline-flex';
+        function selecionarItem(itemElement, multiSelecao = false) {
+            if (!multiSelecao) {
+                desselecionarTodos();
+            }
 
-                // Lógica da barra de ferramentas de CONTEXTO
-                textToolbarOptions.style.display = 'none';
-                styleToolbarOptions.style.display = 'none';
-                drawingToolbarOptions.style.display = 'none';
+            const index = itensSelecionados.indexOf(itemElement);
+            if (index > -1) {
+                // Se já estiver selecionado em modo de multi-seleção, remove
+                if (multiSelecao) {
+                    itemElement.classList.remove('selecionado');
+                    itensSelecionados.splice(index, 1);
+                }
+            } else {
+                // Adiciona à seleção
+                itemElement.classList.add('selecionado');
+                itensSelecionados.push(itemElement);
+            }
+            atualizarUISelecao();
+        }
 
-                if (itemSelecionado.classList.contains('item-texto') || itemSelecionado.classList.contains('item-simbolo')) {
+        function desselecionarTodos() {
+            itensSelecionados.forEach(item => {
+                item.classList.remove('selecionado');
+                // Adicionar lógica para desativar rotação se necessário
+            });
+            itensSelecionados = [];
+            atualizarUISelecao();
+        }
+
+        function atualizarUISelecao() {
+            const numSelecionados = itensSelecionados.length;
+            btnRemoverItem.style.display = numSelecionados > 0 ? 'inline-flex' : 'none';
+
+            // Esconde todas as barras de ferramentas de contexto por padrão
+            textToolbarOptions.style.display = 'none';
+            styleToolbarOptions.style.display = 'none';
+            drawingToolbarOptions.style.display = 'none';
+            alignmentToolbar.style.display = 'none';
+            layeringToolbar.style.display = 'none';
+            groupingToolbar.style.display = 'none';
+
+            if (numSelecionados === 1) {
+                const item = itensSelecionados[0];
+                 if (item.classList.contains('item-texto') || item.classList.contains('item-simbolo')) {
                     textToolbarOptions.style.display = 'flex';
                     updateTextToolState();
-                } else if (itemSelecionado.classList.contains('item-linha') || itemSelecionado.classList.contains('item-forma')) {
+                } else if (item.classList.contains('item-linha') || item.classList.contains('item-forma')) {
                     styleToolbarOptions.style.display = 'flex';
                     updateStyleToolState();
                 }
             }
-        }
 
-        function desselecionarItem() {
-            if (itemSelecionado) {
-                itemSelecionado.classList.remove('selecionado-para-remocao');
-                deactivateRotationMode();
+            if (numSelecionados >= 1) {
+                layeringToolbar.style.display = 'flex';
             }
-            itemSelecionado = null;
-            btnRemoverItem.style.display = 'none';
-            textToolbarOptions.style.display = 'none';
-            styleToolbarOptions.style.display = 'none';
-            drawingToolbarOptions.style.display = 'none';
+
+            if (numSelecionados >= 2) {
+                alignmentToolbar.style.display = 'flex';
+                groupingToolbar.style.display = 'flex';
+            }
         }
         
         function rgbToHex(rgb) {
@@ -1338,14 +1418,14 @@
 
             etiqueta.appendChild(item);
             inicializarInteracao(item);
-            addSelectionListeners(item); // Attach selection listeners
+              // Attach selection listeners
             
             // Seleciona o item recém-criado (exceto para QR/Barcode que são criados por funções específicas)
             if (tipo !== 'qrcode' && tipo !== 'barcode') {
                 selecionarItem(item);
                 if (tipo === 'texto') item.focus();
             }
-
+            ajustarZIndex();
             return item;
         }
         
@@ -1498,10 +1578,11 @@
                     ],
                 })
                 .on('tap', function (event) {
-                    selecionarItem(event.target);
-                    if (event.target.classList.contains('item-texto') || event.target.classList.contains('item-simbolo')) {
-                         event.target.focus();
+                    selecionarItem(event.target, event.shiftKey);
+                    if (itensSelecionados.length === 1 && (event.target.classList.contains('item-texto') || event.target.classList.contains('item-simbolo'))) {
+                        event.target.focus();
                     }
+                    event.preventDefault();
                 });
 
             // --- NOVO: Lógica de Rotação pelo Handle ---
@@ -1528,28 +1609,13 @@
                     inertia: false
                 });
         }
-
-        // --- Função Centralizada para Listeners de Seleção ---
-        function addSelectionListeners(item) {
-            item.addEventListener('click', (event) => {
-                event.stopPropagation();
-                selecionarItem(item);
-            });
-
-            // For text and symbol items, also select on focus
-            if (item.classList.contains('item-texto') || item.classList.contains('item-simbolo')) {
-                item.addEventListener('focus', (event) => {
-                    event.stopPropagation();
-                    selecionarItem(item);
-                });
-            }
-        }
         
         // --- Funções da Barra de Ferramentas de Texto ---
 
         function updateTextToolState() {
-            if (!itemSelecionado) return;
-            const style = window.getComputedStyle(itemSelecionado);
+            if (itensSelecionados.length !== 1) return;
+            const item = itensSelecionados[0];
+            const style = window.getComputedStyle(item);
             let fontFamily = style.fontFamily.split(',')[0].replace(/['"]/g, '').trim();
             let foundFont = Array.from(selectFontFamily.options).find(opt => opt.value.toLowerCase().includes(fontFamily.toLowerCase()));
             selectFontFamily.value = foundFont ? foundFont.value : 'Arial, sans-serif';
@@ -1564,28 +1630,30 @@
         }
         
         function toggleTextDecoration(style, button) {
-            if (!itemSelecionado) return;
-            let currentDecor = itemSelecionado.style.textDecorationLine || '';
+            if (itensSelecionados.length !== 1) return;
+            const item = itensSelecionados[0];
+            let currentDecor = item.style.textDecorationLine || '';
             const hasStyle = currentDecor.includes(style);
             let newDecor = currentDecor.split(' ').filter(s => s.trim() !== '' && s !== style);
             if (!hasStyle) newDecor.push(style);
-            itemSelecionado.style.textDecorationLine = newDecor.join(' ');
+            item.style.textDecorationLine = newDecor.join(' ');
             button.classList.toggle('active', !hasStyle);
-            if (itemSelecionado.style.textDecorationLine) {
-                 itemSelecionado.style.textDecorationColor = 'inherit';
-                 itemSelecionado.style.textDecorationStyle = 'solid';
+            if (item.style.textDecorationLine) {
+                 item.style.textDecorationColor = 'inherit';
+                 item.style.textDecorationStyle = 'solid';
             } else {
-                 itemSelecionado.style.textDecoration = 'none';
+                 item.style.textDecoration = 'none';
             }
         }
         
         // --- Funções da Barra de Ferramentas de Estilo (Linha/Forma) ---
 
         function updateStyleToolState() {
-            if (!itemSelecionado) return;
+            if (itensSelecionados.length !== 1) return;
+            const item = itensSelecionados[0];
             
-            if (itemSelecionado.classList.contains('item-linha')) {
-                const linhaVisual = itemSelecionado.querySelector('.linha-visual');
+            if (item.classList.contains('item-linha')) {
+                const linhaVisual = item.querySelector('.linha-visual');
                 if (!linhaVisual) return;
                 const style = window.getComputedStyle(linhaVisual);
                 
@@ -1597,8 +1665,8 @@
                 
                 selectStyleType.value = (style.borderTopStyle === 'none' || style.borderTopStyle === '') ? 'solid' : style.borderTopStyle;
                 
-            } else if (itemSelecionado.classList.contains('item-forma')) {
-                const style = window.getComputedStyle(itemSelecionado);
+            } else if (item.classList.contains('item-forma')) {
+                const style = window.getComputedStyle(item);
                 inputStyleColor.value = rgbToHex(style.backgroundColor);
                 inputStyleThickness.value = parseInt(style.borderTopWidth) || 1;
                 selectStyleType.value = style.borderTopStyle || 'solid';
@@ -1606,12 +1674,13 @@
         }
         
         function applyLineStyle(styleType) {
-             if (!itemSelecionado) return;
+             if (itensSelecionados.length !== 1) return;
+             const item = itensSelecionados[0];
              const color = inputStyleColor.value;
              const thickness = inputStyleThickness.value + 'px';
              
-             if (itemSelecionado.classList.contains('item-linha')) {
-                const linhaVisual = itemSelecionado.querySelector('.linha-visual');
+             if (item.classList.contains('item-linha')) {
+                const linhaVisual = item.querySelector('.linha-visual');
                 if (!linhaVisual) return;
 
                 if (styleType === 'solid') {
@@ -1624,11 +1693,11 @@
                     linhaVisual.style.height = '0px'; // Border provides the height
                 }
                 // Store style properties for printing
-                itemSelecionado.style.setProperty('--line-print-color', color);
-                itemSelecionado.style.setProperty('--line-print-style', styleType);
-             } else if (itemSelecionado.classList.contains('item-forma')) {
-                 itemSelecionado.style.backgroundColor = color;
-                 itemSelecionado.style.border = `${thickness} ${styleType} ${color}`;
+                item.style.setProperty('--line-print-color', color);
+                item.style.setProperty('--line-print-style', styleType);
+             } else if (item.classList.contains('item-forma')) {
+                 item.style.backgroundColor = color;
+                 item.style.border = `${thickness} ${styleType} ${color}`;
              }
         }
 
@@ -1690,7 +1759,7 @@
 
         
         btnImprimir.addEventListener('click', () => {
-            desselecionarItem();
+            desselecionarTodos();
             if (isDrawing) pararModoDesenho(false);
             setTimeout(() => { window.print(); }, 50);
         });
@@ -1699,7 +1768,7 @@
 
         function salvarEtiqueta() {
             if (isDrawing) pararModoDesenho(false);
-            desselecionarItem();
+            desselecionarTodos();
 
             const dadosSalvos = {
                 layout: {
@@ -1711,35 +1780,40 @@
                 etiquetas: []
             };
 
-            document.querySelectorAll('.etiqueta-editavel').forEach(etiquetaEl => {
-                const itens = [];
-                etiquetaEl.querySelectorAll('.item-arrastavel').forEach(itemEl => {
+            function salvarItensRecursivamente(container) {
+                const itemsData = [];
+                container.querySelectorAll(':scope > .item-arrastavel').forEach(itemEl => {
                     const tipo = Array.from(itemEl.classList).find(c => c.startsWith('item-') && c !== 'item-arrastavel').replace('item-', '');
-
                     const itemData = {
                         id: itemEl.id,
                         tipo: tipo,
-                        style: itemEl.getAttribute('style'), // Salva todo o estilo inline
-                        dataset: { ...itemEl.dataset } // Salva todos os data attributes
+                        style: itemEl.getAttribute('style'),
+                        dataset: { ...itemEl.dataset }
                     };
 
-                    // Handle content-specific data
                     if (tipo === 'texto' || tipo === 'simbolo') {
                         itemData.conteudo = itemEl.innerHTML;
                     } else if (tipo === 'imagem') {
                         const img = itemEl.querySelector('img');
                         if (img) itemData.conteudo = img.src;
                     } else if (tipo === 'qrcode' || tipo === 'barcode') {
-                        itemData.conteudo = itemEl.dataset.value; // Already stored
+                        itemData.conteudo = itemEl.dataset.value;
                     } else if (tipo === 'forma') {
                         itemData.shapeType = Array.from(itemEl.classList).find(c => c.startsWith('shape-')).replace('shape-', '');
                     } else if (tipo === 'linha') {
                          const linhaVisual = itemEl.querySelector('.linha-visual');
                          if(linhaVisual) itemData.linhaStyle = linhaVisual.getAttribute('style');
+                    } else if (tipo === 'grupo') {
+                        itemData.children = salvarItensRecursivamente(itemEl);
                     }
 
-                    itens.push(itemData);
+                    itemsData.push(itemData);
                 });
+                return itemsData;
+            }
+
+            document.querySelectorAll('.etiqueta-editavel').forEach(etiquetaEl => {
+                const itens = salvarItensRecursivamente(etiquetaEl);
                 dadosSalvos.etiquetas.push({ id: etiquetaEl.dataset.labelId, itens: itens });
             });
 
@@ -1767,7 +1841,7 @@
 
                     // Limpa a página atual
                     paginaDeImpressao.innerHTML = '';
-                    desselecionarItem();
+                    desselecionarTodos();
 
                     // Restaura o layout
                     inputCustomWidth.value = dados.layout.width;
@@ -1776,27 +1850,19 @@
                     selectLayoutPreset.value = dados.layout.preset;
                     definirLayoutETamanho(dados.layout.preset);
 
-                    // Recria as etiquetas e itens
-                    dados.etiquetas.forEach((etiquetaData, index) => {
-                        const novaEtiqueta = document.createElement('div');
-                        novaEtiqueta.classList.add('etiqueta-editavel');
-                        novaEtiqueta.dataset.labelId = etiquetaData.id;
-                        paginaDeImpressao.appendChild(novaEtiqueta);
-
-                        etiquetaData.itens.forEach(itemData => {
+                    function abrirItensRecursivamente(container, itemsData) {
+                        itemsData.forEach(itemData => {
                             const item = document.createElement('div');
                             item.id = itemData.id;
                             item.className = `item-arrastavel item-${itemData.tipo}`;
                             item.setAttribute('style', itemData.style);
 
-                            // Restore dataset
                             if (itemData.dataset) {
                                 for (const key in itemData.dataset) {
                                     item.dataset[key] = itemData.dataset[key];
                                 }
                             }
 
-                            // Recreate content
                             if (itemData.tipo === 'texto' || itemData.tipo === 'simbolo') {
                                 item.innerHTML = itemData.conteudo;
                                 item.contentEditable = 'true';
@@ -1812,20 +1878,17 @@
                                 linhaVisual.className = 'linha-visual';
                                 linhaVisual.setAttribute('style', itemData.linhaStyle);
                                 item.appendChild(linhaVisual);
+                            } else if (itemData.tipo === 'grupo' && itemData.children) {
+                                abrirItensRecursivamente(item, itemData.children);
                             }
 
-                            // --- NOVO: Adiciona o controle de rotação ao item carregado ---
                             const rotateHandle = document.createElement('div');
                             rotateHandle.className = 'rotate-handle';
                             item.appendChild(rotateHandle);
-                            // --- Fim da Adição ---
 
-                            novaEtiqueta.appendChild(item);
-
+                            container.appendChild(item);
                             inicializarInteracao(item);
-                            addSelectionListeners(item);
 
-                            // Special recreation for QR/Barcode
                             if (itemData.tipo === 'qrcode') {
                                 const qrContainer = document.createElement('div');
                                 item.appendChild(qrContainer);
@@ -1845,12 +1908,22 @@
                                 barcodeSvg.style.objectFit = 'fill';
                             }
                         });
+                    }
+
+                    // Recria as etiquetas e itens
+                    dados.etiquetas.forEach((etiquetaData, index) => {
+                        const novaEtiqueta = document.createElement('div');
+                        novaEtiqueta.classList.add('etiqueta-editavel');
+                        novaEtiqueta.dataset.labelId = etiquetaData.id;
+                        paginaDeImpressao.appendChild(novaEtiqueta);
+
+                        abrirItensRecursivamente(novaEtiqueta, etiquetaData.itens);
 
                         if (index === 0) {
                             definirEtiquetaAtiva(novaEtiqueta);
                         }
                     });
-
+                    ajustarZIndex();
                     alertPersonalizado('Etiqueta carregada com sucesso!');
                 } catch (error) {
                     console.error("Erro ao carregar o arquivo:", error);
@@ -1887,10 +1960,10 @@
         });
 
         btnRemoverItem.addEventListener('click', () => {
-            if (itemSelecionado) {
+            if (itensSelecionados.length > 0) {
                  confirmPersonalizado("Tem certeza que deseja remover este item?", () => {
-                    itemSelecionado.remove();
-                    desselecionarItem();
+                    itensSelecionados.forEach(item => item.remove());
+                    desselecionarTodos();
                  });
             }
         });
@@ -1970,7 +2043,7 @@
                 definirEtiquetaAtiva(etiquetaClicada);
                 // If click was directly on the label (not an item), deselect item
                 if (!event.target.closest('.item-arrastavel') && event.target === etiquetaClicada) {
-                    desselecionarItem();
+                    desselecionarTodos();
                 }
             } else if (!event.target.closest('#toolbar') 
                        && !event.target.closest('.secondary-toolbar') 
@@ -1978,7 +2051,7 @@
                        && !event.target.closest('.modal-overlay') 
                        && !isDrawing // Don't deselect if drawing
                        && !event.target.closest('.etiqueta-editavel')) { // Clicked outside labels too
-                desselecionarItem();
+                desselecionarTodos();
             }
         });
 
@@ -2007,23 +2080,23 @@
         
         
         // --- Event Listeners da Barra de Texto ---
-        selectFontFamily.addEventListener('change', () => { if (itemSelecionado) itemSelecionado.style.fontFamily = selectFontFamily.value; });
-        inputFontSize.addEventListener('input', () => { if (itemSelecionado) itemSelecionado.style.fontSize = inputFontSize.value + 'px'; });
-        inputFontColor.addEventListener('input', () => { if (itemSelecionado) itemSelecionado.style.color = inputFontColor.value; });
-        selectTextTransform.addEventListener('change', () => { if (itemSelecionado) itemSelecionado.style.textTransform = selectTextTransform.value; });
+        selectFontFamily.addEventListener('change', () => { if (itensSelecionados.length === 1) itensSelecionados[0].style.fontFamily = selectFontFamily.value; });
+        inputFontSize.addEventListener('input', () => { if (itensSelecionados.length === 1) itensSelecionados[0].style.fontSize = inputFontSize.value + 'px'; });
+        inputFontColor.addEventListener('input', () => { if (itensSelecionados.length === 1) itensSelecionados[0].style.color = inputFontColor.value; });
+        selectTextTransform.addEventListener('change', () => { if (itensSelecionados.length === 1) itensSelecionados[0].style.textTransform = selectTextTransform.value; });
         btnTextBold.addEventListener('click', () => {
-            if (itemSelecionado) {
-                const style = window.getComputedStyle(itemSelecionado);
+            if (itensSelecionados.length === 1) {
+                const style = window.getComputedStyle(itensSelecionados[0]);
                 const isBold = style.fontWeight === 'bold' || parseInt(style.fontWeight) >= 700;
-                itemSelecionado.style.fontWeight = isBold ? 'normal' : 'bold';
+                itensSelecionados[0].style.fontWeight = isBold ? 'normal' : 'bold';
                 btnTextBold.classList.toggle('active', !isBold);
             }
         });
         btnTextItalic.addEventListener('click', () => {
-            if (itemSelecionado) {
-                const style = window.getComputedStyle(itemSelecionado);
+            if (itensSelecionados.length === 1) {
+                const style = window.getComputedStyle(itensSelecionados[0]);
                 const isItalic = style.fontStyle === 'italic';
-                itemSelecionado.style.fontStyle = isItalic ? 'normal' : 'italic';
+                itensSelecionados[0].style.fontStyle = isItalic ? 'normal' : 'italic';
                 btnTextItalic.classList.toggle('active', !isItalic);
             }
         });
@@ -2033,31 +2106,34 @@
         
         // --- Event Listeners da Barra de Estilo (Linha/Forma) ---
         inputStyleColor.addEventListener('input', () => {
-             if (!itemSelecionado) return;
+             if (itensSelecionados.length !== 1) return;
+             const item = itensSelecionados[0];
              const color = inputStyleColor.value;
-             if (itemSelecionado.classList.contains('item-linha')) {
+             if (item.classList.contains('item-linha')) {
                  applyLineStyle(selectStyleType.value); // Use current style type
-             } else if (itemSelecionado.classList.contains('item-forma')) {
-                 itemSelecionado.style.backgroundColor = color;
-                 itemSelecionado.style.borderColor = color; // Mudar borda junto
+             } else if (item.classList.contains('item-forma')) {
+                 item.style.backgroundColor = color;
+                 item.style.borderColor = color; // Mudar borda junto
              }
         });
         inputStyleThickness.addEventListener('input', () => {
-             if (!itemSelecionado) return;
+             if (itensSelecionados.length !== 1) return;
+             const item = itensSelecionados[0];
              const thickness = inputStyleThickness.value + 'px';
-             if (itemSelecionado.classList.contains('item-linha')) {
+             if (item.classList.contains('item-linha')) {
                  applyLineStyle(selectStyleType.value); // Reaplica com nova espessura
-             } else if (itemSelecionado.classList.contains('item-forma')) {
-                 itemSelecionado.style.borderWidth = thickness;
+             } else if (item.classList.contains('item-forma')) {
+                 item.style.borderWidth = thickness;
              }
         });
         selectStyleType.addEventListener('change', () => {
-             if (!itemSelecionado) return;
+             if (itensSelecionados.length !== 1) return;
+             const item = itensSelecionados[0];
              const styleType = selectStyleType.value;
-             if (itemSelecionado.classList.contains('item-linha')) {
+             if (item.classList.contains('item-linha')) {
                  applyLineStyle(styleType); // Reaplica com novo estilo
-             } else if (itemSelecionado.classList.contains('item-forma')) {
-                 itemSelecionado.style.borderStyle = styleType;
+             } else if (item.classList.contains('item-forma')) {
+                 item.style.borderStyle = styleType;
              }
         });
         
@@ -2145,7 +2221,7 @@
             
             isDrawing = true;
             btnAddLapis.classList.add('active'); // Highlight pencil button
-            desselecionarItem(); // Deselect any selected item
+            desselecionarTodos(); // Deselect any selected item
             drawingToolbarOptions.style.display = 'flex'; // Show drawing tools
             
             // Set default tool (pencil)
@@ -2369,18 +2445,20 @@
         let isAltPressed = false;
 
         function deactivateRotationMode() {
-            if (itemSelecionado) {
-                itemSelecionado.style.cursor = 'grab';
-                itemSelecionado.classList.remove('rotation-active'); // Esconde a bolinha
+            if (itensSelecionados.length > 0) {
+                itensSelecionados.forEach(item => {
+                    item.style.cursor = 'grab';
+                    item.classList.remove('rotation-active');
+                });
             }
             isAltPressed = false;
         }
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Alt' && !isAltPressed && itemSelecionado) {
+            if (e.key === 'Alt' && !isAltPressed && itensSelecionados.length === 1) {
                 e.preventDefault();
                 isAltPressed = true;
-                itemSelecionado.classList.add('rotation-active'); // Mostra a bolinha
+                itensSelecionados[0].classList.add('rotation-active'); // Mostra a bolinha
             }
             if (e.key === 'Delete' || e.key === 'Backspace') {
                 const target = e.target;
@@ -2392,11 +2470,11 @@
 
                 e.preventDefault(); // Impede o navegador de voltar (Backspace)
 
-                if (itemSelecionado) {
+                if (itensSelecionados.length > 0) {
                     // Se um item está selecionado, remove o item
                     confirmPersonalizado("Tem certeza que deseja remover este item?", () => {
-                        itemSelecionado.remove();
-                        desselecionarItem();
+                        itensSelecionados.forEach(item => item.remove());
+                        desselecionarTodos();
                     });
                 } else if (etiquetaAtiva) {
                     // Se nenhum item, mas uma etiqueta está ativa, remove a etiqueta
@@ -2407,7 +2485,7 @@
 
         document.addEventListener('keyup', (e) => {
             if (e.key === 'Alt' && isAltPressed) {
-                deactivateRotationMode();
+
             }
         });
 
@@ -2425,6 +2503,171 @@
             }
         }, { passive: false }); // Necessário para que preventDefault funcione
 
+
+        function ajustarZIndex() {
+            if (!etiquetaAtiva) return;
+            const items = Array.from(etiquetaAtiva.querySelectorAll('.item-arrastavel'));
+            items.forEach((item, index) => {
+                item.style.zIndex = index + 1;
+            });
+        }
+
+        btnLayerFront.addEventListener('click', () => {
+            if (itensSelecionados.length > 0) {
+                itensSelecionados.forEach(item => {
+                    etiquetaAtiva.appendChild(item);
+                });
+                ajustarZIndex();
+            }
+        });
+
+        btnLayerBack.addEventListener('click', () => {
+            if (itensSelecionados.length > 0) {
+                itensSelecionados.forEach(item => {
+                    etiquetaAtiva.prepend(item);
+                });
+                ajustarZIndex();
+            }
+        });
+
+        function getItemBounds(item) {
+            const rect = item.getBoundingClientRect();
+            const parentEl = item.parentElement.classList.contains('item-grupo') ? item.parentElement : etiquetaAtiva;
+            const parentRect = parentEl.getBoundingClientRect();
+            return {
+                left: rect.left - parentRect.left,
+                top: rect.top - parentRect.top,
+                right: rect.right - parentRect.left,
+                bottom: rect.bottom - parentRect.top,
+                width: rect.width,
+                height: rect.height,
+                centerX: (rect.left + rect.right) / 2 - parentRect.left,
+                centerY: (rect.top + rect.bottom) / 2 - parentRect.top,
+            };
+        }
+
+        function alignItems(alignment) {
+            if (itensSelecionados.length < 2) return;
+
+            const bounds = itensSelecionados.map(getItemBounds);
+            const collectiveBounds = {
+                left: Math.min(...bounds.map(b => b.left)),
+                top: Math.min(...bounds.map(b => b.top)),
+                right: Math.max(...bounds.map(b => b.right)),
+                bottom: Math.max(...bounds.map(b => b.bottom)),
+            };
+
+            itensSelecionados.forEach((item, index) => {
+                const itemBounds = bounds[index];
+                let dx = 0;
+                let dy = 0;
+
+                switch (alignment) {
+                    case 'left':
+                        dx = collectiveBounds.left - itemBounds.left;
+                        break;
+                    case 'center':
+                        dx = collectiveBounds.left + (collectiveBounds.right - collectiveBounds.left) / 2 - itemBounds.centerX;
+                        break;
+                    case 'right':
+                        dx = collectiveBounds.right - itemBounds.right;
+                        break;
+                    case 'top':
+                        dy = collectiveBounds.top - itemBounds.top;
+                        break;
+                    case 'middle':
+                        dy = collectiveBounds.top + (collectiveBounds.bottom - collectiveBounds.top) / 2 - itemBounds.centerY;
+                        break;
+                    case 'bottom':
+                        dy = collectiveBounds.bottom - itemBounds.bottom;
+                        break;
+                }
+
+                const currentX = parseFloat(item.dataset.x) || 0;
+                const currentY = parseFloat(item.dataset.y) || 0;
+                const newX = currentX + dx;
+                const newY = currentY + dy;
+
+                item.dataset.x = newX;
+                item.dataset.y = newY;
+                const angle = parseFloat(item.dataset.angle) || 0;
+                item.style.transform = `translate(${newX}px, ${newY}px) rotate(${angle}deg)`;
+            });
+        }
+        btnAlignLeft.addEventListener('click', () => alignItems('left'));
+        btnAlignCenter.addEventListener('click', () => alignItems('center'));
+        btnAlignRight.addEventListener('click', () => alignItems('right'));
+        btnAlignTop.addEventListener('click', () => alignItems('top'));
+        btnAlignMiddle.addEventListener('click', () => alignItems('middle'));
+        btnAlignBottom.addEventListener('click', () => alignItems('bottom'));
+
+        btnGroupItems.addEventListener('click', () => {
+            if (itensSelecionados.length < 2) return;
+
+            const group = document.createElement('div');
+            group.className = 'item-arrastavel item-grupo';
+            group.id = gerarItemId();
+
+            const bounds = itensSelecionados.map(getItemBounds);
+            const collectiveBounds = {
+                left: Math.min(...bounds.map(b => b.left)),
+                top: Math.min(...bounds.map(b => b.top)),
+                right: Math.max(...bounds.map(b => b.right)),
+                bottom: Math.max(...bounds.map(b => b.bottom)),
+            };
+
+            group.style.left = `${collectiveBounds.left}px`;
+            group.style.top = `${collectiveBounds.top}px`;
+            group.style.width = `${collectiveBounds.right - collectiveBounds.left}px`;
+            group.style.height = `${collectiveBounds.bottom - collectiveBounds.top}px`;
+            group.dataset.x = collectiveBounds.left;
+            group.dataset.y = collectiveBounds.top;
+            group.dataset.angle = 0;
+            group.style.transform = `translate(${collectiveBounds.left}px, ${collectiveBounds.top}px) rotate(0deg)`;
+
+            etiquetaAtiva.appendChild(group);
+
+            itensSelecionados.forEach(item => {
+                const itemBounds = getItemBounds(item);
+                const newLeft = itemBounds.left - collectiveBounds.left;
+                const newTop = itemBounds.top - collectiveBounds.top;
+
+                item.dataset.x = newLeft;
+                item.dataset.y = newTop;
+                const angle = parseFloat(item.dataset.angle) || 0;
+                item.style.transform = `translate(${newLeft}px, ${newTop}px) rotate(${angle}deg)`;
+
+                group.appendChild(item);
+            });
+
+            desselecionarTodos();
+            inicializarInteracao(group);
+            selecionarItem(group);
+        });
+
+        btnUngroupItems.addEventListener('click', () => {
+            const group = itensSelecionados.find(item => item.classList.contains('item-grupo'));
+            if (!group) return;
+
+            const groupBounds = getItemBounds(group);
+            const children = Array.from(group.querySelectorAll('.item-arrastavel'));
+
+            children.forEach(child => {
+                const childBounds = getItemBounds(child);
+                const newX = groupBounds.left + childBounds.left;
+                const newY = groupBounds.top + childBounds.top;
+
+                child.dataset.x = newX;
+                child.dataset.y = newY;
+                const angle = parseFloat(child.dataset.angle) || 0;
+                child.style.transform = `translate(${newX}px, ${newY}px) rotate(${angle}deg)`;
+
+                etiquetaAtiva.appendChild(child);
+            });
+
+            group.remove();
+            desselecionarTodos();
+        });
     </script>
 </body>
 </html>
