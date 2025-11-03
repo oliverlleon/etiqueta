@@ -2661,6 +2661,14 @@
             });
         });
 
+        // --- Impede que cliques nas barras de ferramentas "vazem" para o interact.js ---
+        const toolbars = document.querySelectorAll('#left-toolbar, #toolbar, .secondary-toolbar');
+        toolbars.forEach(tb => {
+            tb.addEventListener('pointerdown', (event) => {
+                event.stopPropagation();
+            });
+        });
+
         // --- Listener para Zoom com Scroll (NOVO) ---
         document.addEventListener('wheel', (e) => {
             if (e.altKey) {
