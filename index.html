@@ -1947,7 +1947,7 @@
              if (!etiquetaAtiva) { alertPersonalizado("Selecione uma etiqueta primeiro!"); return; }
              showInputModal("Digite o valor para o Cód. Barras:", (data) => {
                 if (data) addBarcode(data);
-            });
+            }, 'number');
         });
 
         // Adicionar Lápis (Modo Desenho)
@@ -2083,12 +2083,12 @@
         }
         
         // --- Lógica do Modal de Input (QR/Barcode) ---
-        function showInputModal(title, callback) {
+        function showInputModal(title, callback, inputType = 'text') {
             modalInputTitle.textContent = title;
             modalInputCallback = callback;
+            modalInputField.type = inputType;
             modalInput.style.display = 'flex';
             modalInputField.value = '';
-            modalInputField.type = 'text'; // Ensure it's text type
             modalInputField.focus();
         }
         modalInputSubmit.addEventListener('click', () => {
