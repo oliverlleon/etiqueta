@@ -157,30 +157,35 @@
         }
         
         /* --- Barras de Ferramentas Secundárias (Contexto) --- */
-        .secondary-toolbar {
+        #secondary-toolbar-container {
             position: fixed;
-            top: var(--toolbar-height); /* Posicionada abaixo da principal */
-            /* MODIFICADO: left: 0; -> left: var(--left-toolbar-width); */
+            top: var(--toolbar-height);
             left: var(--left-toolbar-width);
-            /* MODIFICADO: width: 100%; -> width: calc(100% - var(--left-toolbar-width)); */
             width: calc(100% - var(--left-toolbar-width));
             height: var(--secondary-toolbar-height);
             background-color: #f8f9fa;
             border-bottom: 1px solid #DADCE0;
             padding: 0 20px;
             box-sizing: border-box;
-            display: none; /* Oculta por padrão */
-            justify-content: flex-start;
+            display: none; /* Oculto por padrão, JS controla a visibilidade */
             align-items: center;
             z-index: 99;
+            gap: 20px; /* Espaço entre as barras de ferramentas */
+            overflow-x: auto;
+        }
+
+        .secondary-toolbar {
+            display: none; /* Oculto por padrão, JS controla a visibilidade */
+            align-items: center;
             gap: 15px;
-            overflow-x: auto; /* Permite rolagem se não couber */
+            flex-shrink: 0; /* Previne que as barras encolham */
         }
         
         /* Mostra a barra quando o JS define display: flex */
-        #text-toolbar-options[style*="display: flex"],
-        #style-toolbar-options[style*="display: flex"],
-        #drawing-toolbar-options[style*="display: flex"] {
+        #secondary-toolbar-container[style*="display: flex"] {
+            display: flex !important;
+        }
+        .secondary-toolbar[style*="display: flex"] {
             display: flex !important;
         }
 
@@ -846,99 +851,101 @@
             <input type="file" id="input-abrir-etiqueta" accept=".json,application/json" style="display: none;">
         </div>
         
-        <div id="text-toolbar-options" class="secondary-toolbar">
-            <div class="button-group">
-                <select id="select-font-family" title="Tipo de Fonte">
-                    <option value="Arial, sans-serif">Arial</option>
-                    <option value="'Times New Roman', Times, serif">Times New Roman</option>
-                    <option value="'Courier New', Courier, monospace">Courier New</option>
-                    <option value="Verdana, Geneva, sans-serif">Verdana</option>
-                    <option value="Georgia, serif">Georgia</option>
-                </select>
-                <input type="number" id="input-font-size" min="6" max="150" value="10" title="Tamanho da Fonte (px)">
-                <input type="color" id="input-font-color" class="color-input" value="#000000" title="Cor da Fonte">
+        <div id="secondary-toolbar-container">
+            <div id="text-toolbar-options" class="secondary-toolbar">
+                <div class="button-group">
+                    <select id="select-font-family" title="Tipo de Fonte">
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                        <option value="'Courier New', Courier, monospace">Courier New</option>
+                        <option value="Verdana, Geneva, sans-serif">Verdana</option>
+                        <option value="Georgia, serif">Georgia</option>
+                    </select>
+                    <input type="number" id="input-font-size" min="6" max="150" value="10" title="Tamanho da Fonte (px)">
+                    <input type="color" id="input-font-color" class="color-input" value="#000000" title="Cor da Fonte">
+                </div>
+                <div class="button-group">
+                    <button id="btn-text-bold" title="Negrito"><span class="material-icons">format_bold</span></button>
+                    <button id="btn-text-italic" title="Itálico"><span class="material-icons">format_italic</span></button>
+                    <button id="btn-text-underline" title="Sublinhado"><span class="material-icons">format_underlined</span></button>
+                    <button id="btn-text-strike" title="Tachado"><span class="material-icons">strikethrough_s</span></button>
+                </div>
+                <div class="button-group">
+                    <select id="select-text-transform" title="Transformação do Texto">
+                        <option value="none">Normal</option>
+                        <option value="uppercase">MAIÚSCULAS</option>
+                        <option value="lowercase">minúsculas</option>
+                        <option value="capitalize">Capitalizadas</option>
+                    </select>
+                </div>
             </div>
-            <div class="button-group">
-                <button id="btn-text-bold" title="Negrito"><span class="material-icons">format_bold</span></button>
-                <button id="btn-text-italic" title="Itálico"><span class="material-icons">format_italic</span></button>
-                <button id="btn-text-underline" title="Sublinhado"><span class="material-icons">format_underlined</span></button>
-                <button id="btn-text-strike" title="Tachado"><span class="material-icons">strikethrough_s</span></button>
-            </div>
-            <div class="button-group">
-                <select id="select-text-transform" title="Transformação do Texto">
-                    <option value="none">Normal</option>
-                    <option value="uppercase">MAIÚSCULAS</option>
-                    <option value="lowercase">minúsculas</option>
-                    <option value="capitalize">Capitalizadas</option>
-                </select>
-            </div>
-        </div>
-        
-        <div id="style-toolbar-options" class="secondary-toolbar">
-            <div class="button-group">
-                <span class="label">Cor:</span>
-                <input type="color" id="input-style-color" class="color-input" value="#000000" title="Cor da Linha/Forma">
-            </div>
-            <div class="button-group">
-                <span class="label">Espessura (px):</span>
-                <input type="number" id="input-style-thickness" min="1" max="50" value="2" title="Espessura da Linha/Borda">
-            </div>
-            <div class="button-group">
-                <span class="label">Estilo:</span>
-                <select id="select-style-type" title="Estilo da Linha/Borda">
-                    <option value="solid">Sólida</option>
-                    <option value="dashed">Tracejada</option>
-                    <option value="dotted">Pontilhada</option>
-                </select>
-            </div>
-        </div>
-        
-        <div id="drawing-toolbar-options" class="secondary-toolbar">
-             <div class="button-group">
-                <button id="btn-draw-tool-pencil" class="active" title="Lápis">
-                    <span class="material-icons">edit</span>
-                </button>
-                <button id="btn-draw-tool-eraser" title="Borracha">
-                    <span class="material-icons">cleaning_services</span>
-                </button>
-             </div>
-             <div class="button-group">
-                <span class="label">Cor:</span>
-                <input type="color" id="input-draw-color" class="color-input" value="#000000" title="Cor do Lápis">
-            </div>
-            <div class="button-group">
-                <span class="label">Espessura (px):</span>
-                <input type="number" id="input-draw-thickness" min="1" max="50" value="2" title="Espessura do Lápis/Borracha">
-            </div>
-        </div>
 
-        <div id="alignment-toolbar" class="secondary-toolbar">
-            <div class="button-group">
-                <span class="label">Alinhar:</span>
-                <button id="btn-align-left" title="Alinhar à Esquerda"><span class="material-icons">align_horizontal_left</span></button>
-                <button id="btn-align-center" title="Centralizar Horizontalmente"><span class="material-icons">align_horizontal_center</span></button>
-                <button id="btn-align-right" title="Alinhar à Direita"><span class="material-icons">align_horizontal_right</span></button>
+            <div id="style-toolbar-options" class="secondary-toolbar">
+                <div class="button-group">
+                    <span class="label">Cor:</span>
+                    <input type="color" id="input-style-color" class="color-input" value="#000000" title="Cor da Linha/Forma">
+                </div>
+                <div class="button-group">
+                    <span class="label">Espessura (px):</span>
+                    <input type="number" id="input-style-thickness" min="1" max="50" value="2" title="Espessura da Linha/Borda">
+                </div>
+                <div class="button-group">
+                    <span class="label">Estilo:</span>
+                    <select id="select-style-type" title="Estilo da Linha/Borda">
+                        <option value="solid">Sólida</option>
+                        <option value="dashed">Tracejada</option>
+                        <option value="dotted">Pontilhada</option>
+                    </select>
+                </div>
             </div>
-            <div class="button-group">
-                <button id="btn-align-top" title="Alinhar ao Topo"><span class="material-icons">align_vertical_top</span></button>
-                <button id="btn-align-middle" title="Centralizar Verticalmente"><span class="material-icons">align_vertical_center</span></button>
-                <button id="btn-align-bottom" title="Alinhar à Base"><span class="material-icons">align_vertical_bottom</span></button>
-            </div>
-        </div>
 
-        <div id="layering-toolbar" class="secondary-toolbar">
-            <div class="button-group">
-                <span class="label">Camada:</span>
-                <button id="btn-layer-front" title="Trazer para Frente"><span class="material-icons">flip_to_front</span></button>
-                <button id="btn-layer-back" title="Enviar para Trás"><span class="material-icons">flip_to_back</span></button>
+            <div id="drawing-toolbar-options" class="secondary-toolbar">
+                 <div class="button-group">
+                    <button id="btn-draw-tool-pencil" class="active" title="Lápis">
+                        <span class="material-icons">edit</span>
+                    </button>
+                    <button id="btn-draw-tool-eraser" title="Borracha">
+                        <span class="material-icons">cleaning_services</span>
+                    </button>
+                 </div>
+                 <div class="button-group">
+                    <span class="label">Cor:</span>
+                    <input type="color" id="input-draw-color" class="color-input" value="#000000" title="Cor do Lápis">
+                </div>
+                <div class="button-group">
+                    <span class="label">Espessura (px):</span>
+                    <input type="number" id="input-draw-thickness" min="1" max="50" value="2" title="Espessura do Lápis/Borracha">
+                </div>
             </div>
-        </div>
 
-        <div id="grouping-toolbar" class="secondary-toolbar">
-             <div class="button-group">
-                <span class="label">Agrupar:</span>
-                <button id="btn-group-items" title="Agrupar Itens"><span class="material-icons">group_work</span></button>
-                <button id="btn-ungroup-items" title="Desagrupar Itens"><span class="material-icons">layers_clear</span></button>
+            <div id="alignment-toolbar" class="secondary-toolbar">
+                <div class="button-group">
+                    <span class="label">Alinhar:</span>
+                    <button id="btn-align-left" title="Alinhar à Esquerda"><span class="material-icons">align_horizontal_left</span></button>
+                    <button id="btn-align-center" title="Centralizar Horizontalmente"><span class="material-icons">align_horizontal_center</span></button>
+                    <button id="btn-align-right" title="Alinhar à Direita"><span class="material-icons">align_horizontal_right</span></button>
+                </div>
+                <div class="button-group">
+                    <button id="btn-align-top" title="Alinhar ao Topo"><span class="material-icons">align_vertical_top</span></button>
+                    <button id="btn-align-middle" title="Centralizar Verticalmente"><span class="material-icons">align_vertical_center</span></button>
+                    <button id="btn-align-bottom" title="Alinhar à Base"><span class="material-icons">align_vertical_bottom</span></button>
+                </div>
+            </div>
+
+            <div id="layering-toolbar" class="secondary-toolbar">
+                <div class="button-group">
+                    <span class="label">Camada:</span>
+                    <button id="btn-layer-front" title="Trazer para Frente"><span class="material-icons">flip_to_front</span></button>
+                    <button id="btn-layer-back" title="Enviar para Trás"><span class="material-icons">flip_to_back</span></button>
+                </div>
+            </div>
+
+            <div id="grouping-toolbar" class="secondary-toolbar">
+                 <div class="button-group">
+                    <span class="label">Agrupar:</span>
+                    <button id="btn-group-items" title="Agrupar Itens"><span class="material-icons">group_work</span></button>
+                    <button id="btn-ungroup-items" title="Desagrupar Itens"><span class="material-icons">layers_clear</span></button>
+                </div>
             </div>
         </div>
 
@@ -1035,6 +1042,7 @@
 
 
         // --- Referências DOM (Barras Secundárias) ---
+        const secondaryToolbarContainer = document.getElementById('secondary-toolbar-container');
         const textToolbarOptions = document.getElementById('text-toolbar-options');
         const selectFontFamily = document.getElementById('select-font-family');
         const inputFontSize = document.getElementById('input-font-size');
@@ -1142,33 +1150,55 @@
             const numSelecionados = itensSelecionados.length;
             btnRemoverItem.style.display = numSelecionados > 0 ? 'inline-flex' : 'none';
 
-            // Esconde todas as barras de ferramentas de contexto por padrão
-            textToolbarOptions.style.display = 'none';
-            styleToolbarOptions.style.display = 'none';
-            drawingToolbarOptions.style.display = 'none';
-            alignmentToolbar.style.display = 'none';
-            layeringToolbar.style.display = 'none';
-            groupingToolbar.style.display = 'none';
+            let isAnyToolbarVisible = false;
 
+            // Lógica para barras de item único
             if (numSelecionados === 1) {
                 const item = itensSelecionados[0];
-                 if (item.classList.contains('item-texto') || item.classList.contains('item-simbolo')) {
+                if (item.classList.contains('item-texto') || item.classList.contains('item-simbolo')) {
                     textToolbarOptions.style.display = 'flex';
+                    styleToolbarOptions.style.display = 'none';
                     updateTextToolState();
+                    isAnyToolbarVisible = true;
                 } else if (item.classList.contains('item-linha') || item.classList.contains('item-forma')) {
                     styleToolbarOptions.style.display = 'flex';
+                    textToolbarOptions.style.display = 'none';
                     updateStyleToolState();
+                    isAnyToolbarVisible = true;
                 }
+            } else {
+                textToolbarOptions.style.display = 'none';
+                styleToolbarOptions.style.display = 'none';
             }
 
+            // Lógica para barras de múltiplos itens
             if (numSelecionados >= 1) {
                 layeringToolbar.style.display = 'flex';
+                isAnyToolbarVisible = true;
+            } else {
+                layeringToolbar.style.display = 'none';
             }
 
             if (numSelecionados >= 2) {
                 alignmentToolbar.style.display = 'flex';
                 groupingToolbar.style.display = 'flex';
+                isAnyToolbarVisible = true;
+            } else {
+                alignmentToolbar.style.display = 'none';
+                groupingToolbar.style.display = 'none';
             }
+
+            // A barra de desenho é especial
+            if (isDrawing) {
+                 drawingToolbarOptions.style.display = 'flex';
+                 isAnyToolbarVisible = true;
+            } else {
+                 drawingToolbarOptions.style.display = 'none';
+            }
+
+
+            // Controla a visibilidade do contêiner principal
+            secondaryToolbarContainer.style.display = isAnyToolbarVisible ? 'flex' : 'none';
         }
         
         function rgbToHex(rgb) {
@@ -1507,23 +1537,26 @@
                 .draggable({
                     listeners: {
                         start(event) {
-                            selecionarItem(event.target);
+                            if (!event.target.classList.contains('selecionado')) {
+                                selecionarItem(event.target);
+                            }
                             event.target.style.cursor = 'grabbing';
                         },
                         move(event) {
-                            // Apenas move se a tecla Alt NÃO estiver pressionada
                             if (!isAltPressed) {
-                                position.x += event.dx;
-                                position.y += event.dy;
-                                elemento.style.transform = `translate(${position.x}px, ${position.y}px) rotate(${angle}deg)`;
+                                const dx = event.dx;
+                                const dy = event.dy;
+                                itensSelecionados.forEach(item => {
+                                    const x = (parseFloat(item.dataset.x) || 0) + dx;
+                                    const y = (parseFloat(item.dataset.y) || 0) + dy;
+                                    const angle = parseFloat(item.dataset.angle) || 0;
+                                    item.style.transform = `translate(${x}px, ${y}px) rotate(${angle}deg)`;
+                                    item.dataset.x = x;
+                                    item.dataset.y = y;
+                                });
                             }
                         },
                         end(event) {
-                            // Apenas atualiza a posição se não estava rotacionando
-                            if (!isAltPressed) {
-                                elemento.dataset.x = position.x;
-                                elemento.dataset.y = position.y;
-                            }
                             event.target.style.cursor = 'grab';
                         }
                     },
