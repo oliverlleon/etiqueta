@@ -2653,10 +2653,12 @@
             }
         });
 
-        // --- Configuração Global do Interact.js para Ignorar Barras de Ferramentas ---
-        interact.dynamicDrop(true); // Habilita funcionalidades avançadas se necessário
-        interact.pointerEvents({
-            ignoreFrom: '#left-toolbar, #toolbar, .secondary-toolbar'
+        // --- Impede que cliques nas barras de ferramentas "vazem" para o interact.js ---
+        const toolbars = document.querySelectorAll('#left-toolbar, #toolbar, .secondary-toolbar');
+        toolbars.forEach(tb => {
+            tb.addEventListener('pointerdown', (event) => {
+                event.stopPropagation();
+            });
         });
 
         // --- Listener para Zoom com Scroll (NOVO) ---
