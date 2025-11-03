@@ -1947,7 +1947,7 @@
              if (!etiquetaAtiva) { alertPersonalizado("Selecione uma etiqueta primeiro!"); return; }
              showInputModal("Digite o valor para o Cód. Barras:", (data) => {
                 if (data) addBarcode(data);
-            });
+            }, 'number');
         });
 
         // Adicionar Lápis (Modo Desenho)
@@ -2083,12 +2083,12 @@
         }
         
         // --- Lógica do Modal de Input (QR/Barcode) ---
-        function showInputModal(title, callback) {
+        function showInputModal(title, callback, inputType = 'text') {
             modalInputTitle.textContent = title;
             modalInputCallback = callback;
+            modalInputField.type = inputType;
             modalInput.style.display = 'flex';
             modalInputField.value = '';
-            modalInputField.type = 'text'; // Ensure it's text type
             modalInputField.focus();
         }
         modalInputSubmit.addEventListener('click', () => {
@@ -2097,6 +2097,13 @@
             }
             modalInput.style.display = 'none';
             modalInputCallback = null;
+        });
+
+        modalInputField.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && modalInput.style.display === 'flex') {
+                e.preventDefault();
+                modalInputSubmit.click();
+            }
         });
         modalInputClose.addEventListener('click', () => {
             modalInput.style.display = 'none';
@@ -2121,6 +2128,13 @@
         });
         modalDuplicateClose.addEventListener('click', () => {
             modalDuplicateCount.style.display = 'none';
+        });
+
+        modalDuplicateField.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && modalDuplicateCount.style.display === 'flex') {
+                e.preventDefault();
+                modalDuplicateSubmit.click();
+            }
         });
 
         
@@ -2307,24 +2321,40 @@
             btnOK.style.cssText = `background-color: #1a73e8; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; font-weight: 500; transition: background-color 0.2s;`;
             btnOK.onmouseover = () => btnOK.style.backgroundColor = '#185abc';
             btnOK.onmouseout = () => btnOK.style.backgroundColor = '#1a73e8';
-            btnOK.onclick = () => {
-                if (onConfirm) onConfirm();
+
+            const handleKeydown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    btnOK.click();
+                }
+            };
+
+            const cleanup = () => {
+                document.removeEventListener('keydown', handleKeydown);
                 overlay.remove();
             };
+
+            btnOK.onclick = () => {
+                if (onConfirm) onConfirm();
+                cleanup();
+            };
             buttonContainer.appendChild(btnOK);
-            if (!isAlert) { // Only add Cancel button if it's not just an alert
+
+            if (!isAlert) {
                 const btnCancel = document.createElement('button');
                 btnCancel.textContent = 'Cancelar';
                 btnCancel.style.cssText = `background-color: #f1f3f4; color: #3c4043; border: 1px solid #dadce0; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; transition: background-color 0.2s;`;
                 btnCancel.onmouseover = () => btnCancel.style.backgroundColor = '#e8eaed';
                 btnCancel.onmouseout = () => btnCancel.style.backgroundColor = '#f1f3f4';
-                btnCancel.onclick = () => overlay.remove();
+                btnCancel.onclick = cleanup;
                 buttonContainer.appendChild(btnCancel);
             }
             modal.appendChild(msgElement);
             modal.appendChild(buttonContainer);
             overlay.appendChild(modal);
             document.body.appendChild(overlay);
+
+            document.addEventListener('keydown', handleKeydown);
         }
 
 
