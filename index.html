@@ -1552,6 +1552,7 @@
 
             interact(elemento)
                 .draggable({
+                    allowFrom: '.item-arrastavel',
                     listeners: {
                         start(event) {
                             // Se o item clicado não estiver selecionado, a seleção é limpa
@@ -1588,6 +1589,7 @@
                     inertia: false
                 })
                 .resizable({
+                    allowFrom: '.item-arrastavel',
                     // Ativa o redimensionamento apenas se UM item estiver selecionado
                     enabled: itensSelecionados.length === 1,
                     edges: { 
@@ -1628,7 +1630,7 @@
                         interact.modifiers.restrictSize({ min: { width: 20, height: 1 } })
                     ],
                 })
-                .on('tap', function (event) {
+                .on('tap', { allowFrom: '.item-arrastavel' }, function (event) {
                     selecionarItem(event.target, event);
                     // Foca apenas se for uma seleção única
                     if (itensSelecionados.length === 1 &&
