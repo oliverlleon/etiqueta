@@ -415,9 +415,10 @@
             transform-origin: center center;
         }
         .item-arrastavel:hover { border-color: #1a73e8; }
-        .item-arrastavel.selecionado-para-remocao {
-            outline: 2px solid red;
-            z-index: 11;
+        .item-arrastavel.item-selecionado {
+            outline: 2px solid #1a73e8;
+            border-color: #1a73e8;
+            border-style: solid;
         }
         .item-arrastavel.interactjs-dragging,
         .item-arrastavel.interactjs-resizing {
@@ -866,6 +867,11 @@
                     <option value="capitalize">Capitalizadas</option>
                 </select>
             </div>
+            <div class="button-group">
+                <span class="label">Contorno:</span>
+                <input type="color" id="input-stroke-color" class="color-input" value="#000000" title="Cor do Contorno">
+                <input type="number" id="input-stroke-width" min="0" max="10" value="0" title="Espessura do Contorno (px)" style="width: 50px;">
+            </div>
         </div>
         
         <div id="style-toolbar-options" class="secondary-toolbar">
@@ -903,6 +909,46 @@
             <div class="button-group">
                 <span class="label">Espessura (px):</span>
                 <input type="number" id="input-draw-thickness" min="1" max="50" value="2" title="Espessura do Lápis/Borracha">
+            </div>
+        </div>
+
+        <div id="alignment-toolbar" class="secondary-toolbar">
+            <div class="button-group">
+                <button id="btn-align-left" title="Alinhar à Esquerda"><span class="material-icons">align_horizontal_left</span></button>
+                <button id="btn-align-center" title="Alinhar ao Centro"><span class="material-icons">align_horizontal_center</span></button>
+                <button id="btn-align-right" title="Alinhar à Direita"><span class="material-icons">align_horizontal_right</span></button>
+            </div>
+            <div class="button-group">
+                <button id="btn-align-top" title="Alinhar ao Topo"><span class="material-icons">align_vertical_top</span></button>
+                <button id="btn-align-middle" title="Alinhar ao Meio"><span class="material-icons">align_vertical_center</span></button>
+                <button id="btn-align-bottom" title="Alinhar à Base"><span class="material-icons">align_vertical_bottom</span></button>
+            </div>
+            <div class="button-group">
+                <button id="btn-distribute-horizontally" title="Distribuir Horizontalmente"><span class="material-icons">horizontal_distribute</span></button>
+                <button id="btn-distribute-vertically" title="Distribuir Verticalmente"><span class="material-icons">vertical_distribute</span></button>
+            </div>
+        </div>
+
+        <div id="layering-toolbar" class="secondary-toolbar">
+             <div class="button-group">
+                <button id="btn-layer-front" title="Trazer para Frente"><span class="material-icons">flip_to_front</span></button>
+                <button id="btn-layer-forward" title="Avançar"><span class="material-icons">keyboard_arrow_up</span></button>
+                <button id="btn-layer-backward" title="Recuar"><span class="material-icons">keyboard_arrow_down</span></button>
+                <button id="btn-layer-back" title="Enviar para Trás"><span class="material-icons">flip_to_back</span></button>
+            </div>
+        </div>
+
+        <div id="advanced-style-toolbar" class="secondary-toolbar">
+            <div class="button-group">
+                <span class="label">Opacidade:</span>
+                <input type="range" id="input-opacity" min="0" max="1" step="0.05" value="1" title="Opacidade do Item">
+            </div>
+            <div class="button-group">
+                <span class="label">Sombra:</span>
+                <input type="color" id="input-shadow-color" class="color-input" value="#000000" title="Cor da Sombra">
+                <input type="number" id="input-shadow-x" value="2" title="Deslocamento X" style="width: 50px;">
+                <input type="number" id="input-shadow-y" value="2" title="Deslocamento Y" style="width: 50px;">
+                <input type="number" id="input-shadow-blur" value="3" min="0" title="Esmaecimento (Blur)" style="width: 50px;">
             </div>
         </div>
 
@@ -1020,9 +1066,40 @@
         const inputDrawColor = document.getElementById('input-draw-color');
         const inputDrawThickness = document.getElementById('input-draw-thickness');
 
+        // --- Novas Barras de Ferramentas (Alinhamento e Camadas) ---
+        const alignmentToolbar = document.getElementById('alignment-toolbar');
+        const layeringToolbar = document.getElementById('layering-toolbar');
+
+        // --- Botões de Alinhamento ---
+        const btnAlignLeft = document.getElementById('btn-align-left');
+        const btnAlignCenter = document.getElementById('btn-align-center');
+        const btnAlignRight = document.getElementById('btn-align-right');
+        const btnAlignTop = document.getElementById('btn-align-top');
+        const btnAlignMiddle = document.getElementById('btn-align-middle');
+        const btnAlignBottom = document.getElementById('btn-align-bottom');
+        const btnDistributeHorizontally = document.getElementById('btn-distribute-horizontally');
+        const btnDistributeVertically = document.getElementById('btn-distribute-vertically');
+
+        // --- Botões de Camadas ---
+        const btnLayerFront = document.getElementById('btn-layer-front');
+        const btnLayerForward = document.getElementById('btn-layer-forward');
+        const btnLayerBackward = document.getElementById('btn-layer-backward');
+        const btnLayerBack = document.getElementById('btn-layer-back');
+
+        // --- Controles de Estilo Avançado ---
+        const advancedStyleToolbar = document.getElementById('advanced-style-toolbar');
+        const inputOpacity = document.getElementById('input-opacity');
+        const inputShadowColor = document.getElementById('input-shadow-color');
+        const inputShadowX = document.getElementById('input-shadow-x');
+        const inputShadowY = document.getElementById('input-shadow-y');
+        const inputShadowBlur = document.getElementById('input-shadow-blur');
+        const inputStrokeColor = document.getElementById('input-stroke-color');
+        const inputStrokeWidth = document.getElementById('input-stroke-width');
+
+
         // --- Variáveis de Estado ---
         let etiquetaAtiva = document.querySelector('.etiqueta-editavel.active');
-        let itemSelecionado = null;
+        let itensSelecionados = [];
         let labelCounter = 1;
         let itemCounter = 0;
         let tamanhoAtualEtiqueta = { width: '100mm', height: '50mm' };
@@ -1056,19 +1133,74 @@
         function gerarItemId() { return `item-${++itemCounter}`; }
         function gerarLabelId() { return `label-${++labelCounter}`; }
 
-        function selecionarItem(itemElement) {
-            desselecionarItem(); // Desseleciona anterior
-            itemSelecionado = itemElement;
+        function selecionarItem(itemElement, event = {}) {
+            const isShiftClick = event.shiftKey;
+
+            if (!isShiftClick) {
+                // Se o item clicado já é o único selecionado, não faz nada.
+                if (itensSelecionados.length === 1 && itensSelecionados[0] === itemElement) {
+                    return;
+                }
+                // Limpa a seleção anterior
+                desselecionarItem(false);
+                itensSelecionados = [itemElement];
+                itemElement.classList.add('item-selecionado');
+            } else {
+                // Lógica para adicionar/remover da seleção com Shift
+                const index = itensSelecionados.indexOf(itemElement);
+                if (index > -1) {
+                    // Item já está selecionado, então remove
+                    itemElement.classList.remove('item-selecionado');
+                    itensSelecionados.splice(index, 1);
+                } else {
+                    // Item não está selecionado, então adiciona
+                    itensSelecionados.push(itemElement);
+                    itemElement.classList.add('item-selecionado');
+                }
+            }
             
+            // Atualiza o estado da UI com base na seleção atual
+            atualizarUISelecao();
+        }
+
+
+        function desselecionarItem(atualizarUI = true) {
+            itensSelecionados.forEach(item => {
+                item.classList.remove('item-selecionado');
+                // A rotação é desativada para todos
+                if (item.classList.contains('rotation-active')) {
+                     deactivateRotationMode(item);
+                }
+            });
+            itensSelecionados = [];
+            if (atualizarUI) {
+                atualizarUISelecao();
+            }
+        }
+
+        function atualizarUISelecao() {
+            const selectionCount = itensSelecionados.length;
+            const itemSelecionado = selectionCount === 1 ? itensSelecionados[0] : null;
+
+            btnRemoverItem.style.display = selectionCount > 0 ? 'inline-flex' : 'none';
+
+            textToolbarOptions.style.display = 'none';
+            styleToolbarOptions.style.display = 'none';
+            drawingToolbarOptions.style.display = 'none';
+            alignmentToolbar.style.display = 'none';
+            layeringToolbar.style.display = 'none';
+            advancedStyleToolbar.style.display = 'none';
+
+            if (selectionCount > 0) {
+                layeringToolbar.style.display = 'flex';
+                advancedStyleToolbar.style.display = 'flex';
+            }
+
+            if (selectionCount >= 2) {
+                alignmentToolbar.style.display = 'flex';
+            }
+
             if (itemSelecionado) {
-                itemSelecionado.classList.add('selecionado-para-remocao'); 
-                btnRemoverItem.style.display = 'inline-flex';
-
-                // Lógica da barra de ferramentas de CONTEXTO
-                textToolbarOptions.style.display = 'none';
-                styleToolbarOptions.style.display = 'none';
-                drawingToolbarOptions.style.display = 'none';
-
                 if (itemSelecionado.classList.contains('item-texto') || itemSelecionado.classList.contains('item-simbolo')) {
                     textToolbarOptions.style.display = 'flex';
                     updateTextToolState();
@@ -1077,18 +1209,10 @@
                     updateStyleToolState();
                 }
             }
-        }
 
-        function desselecionarItem() {
-            if (itemSelecionado) {
-                itemSelecionado.classList.remove('selecionado-para-remocao');
-                deactivateRotationMode();
-            }
-            itemSelecionado = null;
-            btnRemoverItem.style.display = 'none';
-            textToolbarOptions.style.display = 'none';
-            styleToolbarOptions.style.display = 'none';
-            drawingToolbarOptions.style.display = 'none';
+            interact('.item-arrastavel').resizable({
+                enabled: selectionCount === 1
+            });
         }
         
         function rgbToHex(rgb) {
@@ -1101,6 +1225,38 @@
 
 
         // --- Funções de Gerenciamento de Layout e Tamanho ---
+        function getRotatedBoundingBox(element) {
+            const rect = element.getBoundingClientRect();
+            const x = parseFloat(element.dataset.x) || 0;
+            const y = parseFloat(element.dataset.y) || 0;
+            const angle = parseFloat(element.dataset.angle) || 0;
+            const width = rect.width;
+            const height = rect.height;
+
+            const rad = angle * Math.PI / 180;
+            const cos = Math.abs(Math.cos(rad));
+            const sin = Math.abs(Math.sin(rad));
+
+            const visualWidth = width * cos + height * sin;
+            const visualHeight = width * sin + height * cos;
+
+            return {
+                x: x,
+                y: y,
+                width: width,
+                height: height,
+                visualWidth: visualWidth,
+                visualHeight: visualHeight,
+                left: x,
+                right: x + visualWidth,
+                top: y,
+                bottom: y + visualHeight,
+                centerX: x + visualWidth / 2,
+                centerY: y + visualHeight / 2,
+                angle: angle
+            };
+        }
+
         function aplicarLayout(width_mm, height_mm, colunas) {
             const width = `${width_mm}mm`;
             const height = `${height_mm}mm`;
@@ -1343,7 +1499,9 @@
             // Seleciona o item recém-criado (exceto para QR/Barcode que são criados por funções específicas)
             if (tipo !== 'qrcode' && tipo !== 'barcode') {
                 selecionarItem(item);
-                if (tipo === 'texto') item.focus();
+                if (itensSelecionados.length === 1 && tipo === 'texto') {
+                    item.focus();
+                }
             }
 
             return item;
@@ -1424,26 +1582,35 @@
             elemento.style.transform = `translate(${position.x}px, ${position.y}px) rotate(${angle}deg)`;
 
             interact(elemento)
+                .preventDefault('never')
                 .draggable({
                     listeners: {
                         start(event) {
-                            selecionarItem(event.target);
+                            // Se o item clicado não estiver selecionado, a seleção é limpa
+                            // e apenas este item é selecionado.
+                            if (!event.target.classList.contains('item-selecionado')) {
+                                selecionarItem(event.target, event);
+                            }
                             event.target.style.cursor = 'grabbing';
                         },
                         move(event) {
-                            // Apenas move se a tecla Alt NÃO estiver pressionada
-                            if (!isAltPressed) {
-                                position.x += event.dx;
-                                position.y += event.dy;
-                                elemento.style.transform = `translate(${position.x}px, ${position.y}px) rotate(${angle}deg)`;
-                            }
+                            if (isAltPressed) return; // Não move se estiver rotacionando
+
+                            const dx = event.dx;
+                            const dy = event.dy;
+
+                            // Move todos os itens selecionados juntos
+                            itensSelecionados.forEach(item => {
+                                const x = parseFloat(item.dataset.x) || 0;
+                                const y = parseFloat(item.dataset.y) || 0;
+                                const ang = parseFloat(item.dataset.angle) || 0;
+
+                                item.dataset.x = x + dx;
+                                item.dataset.y = y + dy;
+                                item.style.transform = `translate(${item.dataset.x}px, ${item.dataset.y}px) rotate(${ang}deg)`;
+                            });
                         },
                         end(event) {
-                            // Apenas atualiza a posição se não estava rotacionando
-                            if (!isAltPressed) {
-                                elemento.dataset.x = position.x;
-                                elemento.dataset.y = position.y;
-                            }
                             event.target.style.cursor = 'grab';
                         }
                     },
@@ -1453,6 +1620,8 @@
                     inertia: false
                 })
                 .resizable({
+                    // Ativa o redimensionamento apenas se UM item estiver selecionado
+                    enabled: itensSelecionados.length === 1,
                     edges: { 
                         top: !elemento.classList.contains('item-linha'),
                         left: true, 
@@ -1460,46 +1629,42 @@
                         right: true 
                     },
                     listeners: {
-                        start(event) {
-                            selecionarItem(event.target);
-                        },
                         move: function (event) {
-                            // Update position based on resize delta, considering current angle
+                            // O código de redimensionamento permanece o mesmo,
+                            // pois ele só roda quando há um único item.
+                            const ang = parseFloat(event.target.dataset.angle) || 0;
+                            let x = parseFloat(event.target.dataset.x) || 0;
+                            let y = parseFloat(event.target.dataset.y) || 0;
+
                             const dx = event.deltaRect.left;
                             const dy = event.deltaRect.top;
-                            
-                            // Adjust position based on rotation to keep top-left corner anchored during resize
-                            const rad = angle * Math.PI / 180;
+                            const rad = ang * Math.PI / 180;
                             const cos = Math.cos(rad);
                             const sin = Math.sin(rad);
                             
-                            // Transform the delta position according to the element's rotation
-                            const rotatedDx = dx * cos - dy * sin;
-                            const rotatedDy = dx * sin + dy * cos;
-
-                            position.x += rotatedDx;
-                            position.y += rotatedDy;
+                            x += dx * cos - dy * sin;
+                            y += dx * sin + dy * cos;
 
                             Object.assign(event.target.style, {
                                 width: `${event.rect.width}px`,
                                 height: `${event.rect.height}px`,
-                                // Update transform string with new position and existing rotation
-                                transform: `translate(${position.x}px, ${position.y}px) rotate(${angle}deg)`
+                                transform: `translate(${x}px, ${y}px) rotate(${ang}deg)`
                             });
 
-                            // Update dataset position
-                            event.target.dataset.x = position.x;
-                            event.target.dataset.y = position.y;
+                            event.target.dataset.x = x;
+                            event.target.dataset.y = y;
                         }
                     },
                     modifiers: [
                         interact.modifiers.restrictRect({ restriction: 'parent' }),
-                        interact.modifiers.restrictSize({ min: { width: 20, height: 1 } }) // Min height 1 for lines
+                        interact.modifiers.restrictSize({ min: { width: 20, height: 1 } })
                     ],
                 })
                 .on('tap', function (event) {
-                    selecionarItem(event.target);
-                    if (event.target.classList.contains('item-texto') || event.target.classList.contains('item-simbolo')) {
+                    selecionarItem(event.target, event);
+                    // Foca apenas se for uma seleção única
+                    if (itensSelecionados.length === 1 &&
+                       (event.target.classList.contains('item-texto') || event.target.classList.contains('item-simbolo'))) {
                          event.target.focus();
                     }
                 });
@@ -1531,23 +1696,14 @@
 
         // --- Função Centralizada para Listeners de Seleção ---
         function addSelectionListeners(item) {
-            item.addEventListener('click', (event) => {
-                event.stopPropagation();
-                selecionarItem(item);
-            });
-
-            // For text and symbol items, also select on focus
-            if (item.classList.contains('item-texto') || item.classList.contains('item-simbolo')) {
-                item.addEventListener('focus', (event) => {
-                    event.stopPropagation();
-                    selecionarItem(item);
-                });
-            }
+            // Este listener de 'tap' do interact.js substitui o 'click'
+            // para melhor consistência com as interações de arrastar.
         }
         
         // --- Funções da Barra de Ferramentas de Texto ---
 
         function updateTextToolState() {
+            const itemSelecionado = itensSelecionados.length === 1 ? itensSelecionados[0] : null;
             if (!itemSelecionado) return;
             const style = window.getComputedStyle(itemSelecionado);
             let fontFamily = style.fontFamily.split(',')[0].replace(/['"]/g, '').trim();
@@ -1564,6 +1720,7 @@
         }
         
         function toggleTextDecoration(style, button) {
+            const itemSelecionado = itensSelecionados.length === 1 ? itensSelecionados[0] : null;
             if (!itemSelecionado) return;
             let currentDecor = itemSelecionado.style.textDecorationLine || '';
             const hasStyle = currentDecor.includes(style);
@@ -1579,9 +1736,134 @@
             }
         }
         
+        // --- Funções de Alinhamento e Distribuição ---
+
+        function alignItems(mode) {
+            if (itensSelecionados.length < 2) return;
+
+            const anchor = itensSelecionados[0]; // O primeiro item selecionado é a âncora
+            const anchorBox = getRotatedBoundingBox(anchor);
+
+            itensSelecionados.slice(1).forEach(item => {
+                const itemBox = getRotatedBoundingBox(item);
+                let dx = 0;
+                let dy = 0;
+
+                switch (mode) {
+                    case 'left':
+                        dx = anchorBox.left - itemBox.left;
+                        break;
+                    case 'center':
+                        dx = anchorBox.centerX - itemBox.centerX;
+                        break;
+                    case 'right':
+                        dx = anchorBox.right - itemBox.right;
+                        break;
+                    case 'top':
+                        dy = anchorBox.top - itemBox.top;
+                        break;
+                    case 'middle':
+                        dy = anchorBox.centerY - itemBox.centerY;
+                        break;
+                    case 'bottom':
+                        dy = anchorBox.bottom - itemBox.bottom;
+                        break;
+                }
+
+                const newX = itemBox.x + dx;
+                const newY = itemBox.y + dy;
+
+                item.dataset.x = newX;
+                item.dataset.y = newY;
+                item.style.transform = `translate(${newX}px, ${newY}px) rotate(${itemBox.angle}deg)`;
+            });
+        }
+
+        function reindexItems(label) {
+            if (!label) return;
+            const items = Array.from(label.querySelectorAll('.item-arrastavel'));
+            items.sort((a, b) => (parseInt(a.style.zIndex) || 0) - (parseInt(b.style.zIndex) || 0));
+            items.forEach((item, index) => {
+                item.style.zIndex = index + 1;
+            });
+        }
+
+        function changeLayer(direction) {
+            if (itensSelecionados.length === 0 || !etiquetaAtiva) return;
+
+            const items = Array.from(etiquetaAtiva.querySelectorAll('.item-arrastavel'));
+            const maxZ = items.length;
+
+            itensSelecionados.forEach(selectedItem => {
+                let currentZ = parseInt(selectedItem.style.zIndex) || 0;
+
+                switch (direction) {
+                    case 'front':
+                        selectedItem.style.zIndex = maxZ + 1;
+                        break;
+                    case 'back':
+                        selectedItem.style.zIndex = 0;
+                        break;
+                    case 'forward':
+                        if (currentZ < maxZ) {
+                            selectedItem.style.zIndex = currentZ + 1;
+                            // Move other item back
+                            const otherItem = items.find(item => (parseInt(item.style.zIndex) || 0) === currentZ + 1);
+                            if (otherItem) otherItem.style.zIndex = currentZ;
+                        }
+                        break;
+                    case 'backward':
+                        if (currentZ > 1) {
+                            selectedItem.style.zIndex = currentZ - 1;
+                            // Move other item forward
+                            const otherItem = items.find(item => (parseInt(item.style.zIndex) || 0) === currentZ - 1);
+                            if (otherItem) otherItem.style.zIndex = currentZ;
+                        }
+                        break;
+                }
+            });
+
+            reindexItems(etiquetaAtiva);
+        }
+
+        function distributeItems(mode) {
+            if (itensSelecionados.length < 3) return;
+
+            const boxes = itensSelecionados.map(getRotatedBoundingBox).sort((a, b) => {
+                return mode === 'horizontally' ? a.left - b.left : a.top - b.top;
+            });
+
+            const first = boxes[0];
+            const last = boxes[boxes.length - 1];
+
+            const totalSpan = mode === 'horizontally'
+                ? (last.left + last.visualWidth) - first.left
+                : (last.top + last.visualHeight) - first.top;
+
+            const totalItemsWidth = boxes.reduce((sum, box) => sum + (mode === 'horizontally' ? box.visualWidth : box.visualHeight), 0);
+            const spacing = (totalSpan - totalItemsWidth) / (boxes.length - 1);
+
+            let currentPos = mode === 'horizontally' ? first.left + first.visualWidth + spacing : first.top + first.visualHeight + spacing;
+
+            boxes.slice(1, -1).forEach(box => {
+                const item = document.getElementById(box.id);
+                if (mode === 'horizontally') {
+                    item.dataset.x = currentPos;
+                    item.style.transform = `translate(${item.dataset.x}px, ${item.dataset.y}px) rotate(${box.angle}deg)`;
+                    currentPos += box.visualWidth + spacing;
+                } else {
+                    item.dataset.y = currentPos;
+                    item.style.transform = `translate(${item.dataset.x}px, ${item.dataset.y}px) rotate(${box.angle}deg)`;
+                    currentPos += box.visualHeight + spacing;
+                }
+            });
+        }
+
+
         // --- Funções da Barra de Ferramentas de Estilo (Linha/Forma) ---
 
         function updateStyleToolState() {
+            const itemSelecionado = itensSelecionados.length === 1 ? itensSelecionados[0] : null;
             if (!itemSelecionado) return;
             
             if (itemSelecionado.classList.contains('item-linha')) {
@@ -1606,6 +1888,7 @@
         }
         
         function applyLineStyle(styleType) {
+             const itemSelecionado = itensSelecionados.length === 1 ? itensSelecionados[0] : null;
              if (!itemSelecionado) return;
              const color = inputStyleColor.value;
              const thickness = inputStyleThickness.value + 'px';
@@ -1887,9 +2170,12 @@
         });
 
         btnRemoverItem.addEventListener('click', () => {
-            if (itemSelecionado) {
-                 confirmPersonalizado("Tem certeza que deseja remover este item?", () => {
-                    itemSelecionado.remove();
+            if (itensSelecionados.length > 0) {
+                 const message = itensSelecionados.length === 1
+                    ? "Tem certeza que deseja remover este item?"
+                    : `Tem certeza que deseja remover os ${itensSelecionados.length} itens selecionados?`;
+                 confirmPersonalizado(message, () => {
+                    itensSelecionados.forEach(item => item.remove());
                     desselecionarItem();
                  });
             }
@@ -1963,21 +2249,19 @@
 
 
         // --- Event Listener para Seleção de Etiqueta ---
-        paginaDeImpressao.addEventListener('click', (event) => {
-            const etiquetaClicada = event.target.closest('.etiqueta-editavel'); 
-            
-            if (etiquetaClicada && !isDrawing) { // Don't select labels while drawing
-                definirEtiquetaAtiva(etiquetaClicada);
-                // If click was directly on the label (not an item), deselect item
-                if (!event.target.closest('.item-arrastavel') && event.target === etiquetaClicada) {
+        document.addEventListener('click', (event) => {
+            const target = event.target;
+            const isLabelClick = target.closest('.etiqueta-editavel');
+            const isToolbarClick = target.closest('#toolbar') || target.closest('.secondary-toolbar') || target.closest('#left-toolbar');
+            const isModalClick = target.closest('.modal-overlay');
+            const isItemClick = target.closest('.item-arrastavel');
+
+            if (isLabelClick && !isDrawing) {
+                definirEtiquetaAtiva(isLabelClick);
+                if (!isItemClick) {
                     desselecionarItem();
                 }
-            } else if (!event.target.closest('#toolbar') 
-                       && !event.target.closest('.secondary-toolbar') 
-                       && !event.target.closest('#left-toolbar') // NOVO: Ignora cliques na barra esquerda
-                       && !event.target.closest('.modal-overlay') 
-                       && !isDrawing // Don't deselect if drawing
-                       && !event.target.closest('.etiqueta-editavel')) { // Clicked outside labels too
+            } else if (!isItemClick && !isToolbarClick && !isModalClick && !isDrawing) {
                 desselecionarItem();
             }
         });
@@ -2007,33 +2291,51 @@
         
         
         // --- Event Listeners da Barra de Texto ---
-        selectFontFamily.addEventListener('change', () => { if (itemSelecionado) itemSelecionado.style.fontFamily = selectFontFamily.value; });
-        inputFontSize.addEventListener('input', () => { if (itemSelecionado) itemSelecionado.style.fontSize = inputFontSize.value + 'px'; });
-        inputFontColor.addEventListener('input', () => { if (itemSelecionado) itemSelecionado.style.color = inputFontColor.value; });
-        selectTextTransform.addEventListener('change', () => { if (itemSelecionado) itemSelecionado.style.textTransform = selectTextTransform.value; });
+        function applyStyleToSelection(styleProperty, value) {
+            if (itensSelecionados.length === 0) return;
+            itensSelecionados.forEach(item => {
+                // Aplica apenas a itens de texto/símbolo
+                if (item.classList.contains('item-texto') || item.classList.contains('item-simbolo')) {
+                    item.style[styleProperty] = value;
+                }
+            });
+        }
+
+        selectFontFamily.addEventListener('change', () => applyStyleToSelection('fontFamily', selectFontFamily.value));
+        inputFontSize.addEventListener('input', () => applyStyleToSelection('fontSize', inputFontSize.value + 'px'));
+        inputFontColor.addEventListener('input', () => applyStyleToSelection('color', inputFontColor.value));
+        selectTextTransform.addEventListener('change', () => applyStyleToSelection('textTransform', selectTextTransform.value));
+
         btnTextBold.addEventListener('click', () => {
-            if (itemSelecionado) {
-                const style = window.getComputedStyle(itemSelecionado);
-                const isBold = style.fontWeight === 'bold' || parseInt(style.fontWeight) >= 700;
-                itemSelecionado.style.fontWeight = isBold ? 'normal' : 'bold';
-                btnTextBold.classList.toggle('active', !isBold);
-            }
+            if (itensSelecionados.length === 0) return;
+            // A lógica 'toggle' baseia-se no primeiro item selecionado
+            const style = window.getComputedStyle(itensSelecionados[0]);
+            const isBold = style.fontWeight === 'bold' || parseInt(style.fontWeight) >= 700;
+            applyStyleToSelection('fontWeight', isBold ? 'normal' : 'bold');
+            btnTextBold.classList.toggle('active', !isBold);
         });
+
         btnTextItalic.addEventListener('click', () => {
-            if (itemSelecionado) {
-                const style = window.getComputedStyle(itemSelecionado);
-                const isItalic = style.fontStyle === 'italic';
-                itemSelecionado.style.fontStyle = isItalic ? 'normal' : 'italic';
-                btnTextItalic.classList.toggle('active', !isItalic);
-            }
+            if (itensSelecionados.length === 0) return;
+            const style = window.getComputedStyle(itensSelecionados[0]);
+            const isItalic = style.fontStyle === 'italic';
+            applyStyleToSelection('fontStyle', isItalic ? 'normal' : 'italic');
+            btnTextItalic.classList.toggle('active', !isItalic);
         });
-        btnTextUnderline.addEventListener('click', () => { toggleTextDecoration('underline', btnTextUnderline); });
-        btnTextStrike.addEventListener('click', () => { toggleTextDecoration('line-through', btnTextStrike); });
+
+        btnTextUnderline.addEventListener('click', () => {
+            // A função toggleTextDecoration já foi atualizada para usar o item selecionado
+            toggleTextDecoration('underline', btnTextUnderline);
+        });
+        btnTextStrike.addEventListener('click', () => {
+            toggleTextDecoration('line-through', btnTextStrike);
+        });
         
         
         // --- Event Listeners da Barra de Estilo (Linha/Forma) ---
         inputStyleColor.addEventListener('input', () => {
-             if (!itemSelecionado) return;
+             if (itensSelecionados.length !== 1) return;
+             const itemSelecionado = itensSelecionados[0];
              const color = inputStyleColor.value;
              if (itemSelecionado.classList.contains('item-linha')) {
                  applyLineStyle(selectStyleType.value); // Use current style type
@@ -2043,7 +2345,8 @@
              }
         });
         inputStyleThickness.addEventListener('input', () => {
-             if (!itemSelecionado) return;
+             if (itensSelecionados.length !== 1) return;
+             const itemSelecionado = itensSelecionados[0];
              const thickness = inputStyleThickness.value + 'px';
              if (itemSelecionado.classList.contains('item-linha')) {
                  applyLineStyle(selectStyleType.value); // Reaplica com nova espessura
@@ -2052,7 +2355,8 @@
              }
         });
         selectStyleType.addEventListener('change', () => {
-             if (!itemSelecionado) return;
+             if (itensSelecionados.length !== 1) return;
+             const itemSelecionado = itensSelecionados[0];
              const styleType = selectStyleType.value;
              if (itemSelecionado.classList.contains('item-linha')) {
                  applyLineStyle(styleType); // Reaplica com novo estilo
@@ -2338,47 +2642,55 @@
         // --- Listener para Deletar com Teclado (NOVO) ---
         let isAltPressed = false;
 
-        function deactivateRotationMode() {
-            if (itemSelecionado) {
-                itemSelecionado.style.cursor = 'grab';
-                itemSelecionado.classList.remove('rotation-active'); // Esconde a bolinha
-            }
+        function deactivateRotationMode(item) {
+            if (!item) return;
+            item.style.cursor = 'grab';
+            item.classList.remove('rotation-active');
             isAltPressed = false;
         }
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Alt' && !isAltPressed && itemSelecionado) {
+            // A rotação com Alt só funciona com UM item selecionado.
+            if (e.key === 'Alt' && !isAltPressed && itensSelecionados.length === 1) {
                 e.preventDefault();
                 isAltPressed = true;
-                itemSelecionado.classList.add('rotation-active'); // Mostra a bolinha
+                itensSelecionados[0].classList.add('rotation-active'); // Mostra a bolinha no único item
             }
+
             if (e.key === 'Delete' || e.key === 'Backspace') {
                 const target = e.target;
                 const isEditing = target.tagName === 'INPUT' || 
                                   target.tagName === 'SELECT' || 
                                   target.isContentEditable;
 
-                if (isEditing) return; // Não faz nada se estiver editando
+                if (isEditing) return;
 
-                e.preventDefault(); // Impede o navegador de voltar (Backspace)
+                e.preventDefault();
 
-                if (itemSelecionado) {
-                    // Se um item está selecionado, remove o item
-                    confirmPersonalizado("Tem certeza que deseja remover este item?", () => {
-                        itemSelecionado.remove();
-                        desselecionarItem();
-                    });
+                if (itensSelecionados.length > 0) {
+                    // Reutiliza a lógica do botão de remover
+                    btnRemoverItem.click();
                 } else if (etiquetaAtiva) {
-                    // Se nenhum item, mas uma etiqueta está ativa, remove a etiqueta
-                    btnRemoverEtiqueta.click(); // Reutiliza a lógica do botão
+                    btnRemoverEtiqueta.click();
                 }
             }
         });
 
         document.addEventListener('keyup', (e) => {
             if (e.key === 'Alt' && isAltPressed) {
-                deactivateRotationMode();
+                if (itensSelecionados.length === 1) {
+                    deactivateRotationMode(itensSelecionados[0]);
+                }
+                isAltPressed = false; // Garante que será resetado
             }
+        });
+
+        // --- Impede que cliques nas barras de ferramentas "vazem" para o interact.js ---
+        const toolbars = document.querySelectorAll('#left-toolbar, #toolbar, .secondary-toolbar');
+        toolbars.forEach(tb => {
+            tb.addEventListener('pointerdown', (event) => {
+                event.stopPropagation();
+            });
         });
 
         // --- Listener para Zoom com Scroll (NOVO) ---
@@ -2394,6 +2706,59 @@
                 }
             }
         }, { passive: false }); // Necessário para que preventDefault funcione
+
+        // --- Event Listeners de Alinhamento e Distribuição ---
+        btnAlignLeft.addEventListener('click', () => alignItems('left'));
+        btnAlignCenter.addEventListener('click', () => alignItems('center'));
+        btnAlignRight.addEventListener('click', () => alignItems('right'));
+        btnAlignTop.addEventListener('click', () => alignItems('top'));
+        btnAlignMiddle.addEventListener('click', () => alignItems('middle'));
+        btnAlignBottom.addEventListener('click', () => alignItems('bottom'));
+        btnDistributeHorizontally.addEventListener('click', () => distributeItems('horizontally'));
+        btnDistributeVertically.addEventListener('click', () => distributeItems('vertically'));
+
+        // --- Event Listeners de Camadas ---
+        btnLayerFront.addEventListener('click', () => changeLayer('front'));
+        btnLayerBack.addEventListener('click', () => changeLayer('back'));
+        btnLayerForward.addEventListener('click', () => changeLayer('forward'));
+        btnLayerBackward.addEventListener('click', () => changeLayer('backward'));
+
+        // --- Event Listeners de Estilos Avançados ---
+        inputOpacity.addEventListener('input', () => {
+            applyStyleToSelection('opacity', inputOpacity.value);
+        });
+
+        function applyShadow() {
+            const color = inputShadowColor.value;
+            const x = inputShadowX.value + 'px';
+            const y = inputShadowY.value + 'px';
+            const blur = inputShadowBlur.value + 'px';
+            const shadow = `${x} ${y} ${blur} ${color}`;
+
+            itensSelecionados.forEach(item => {
+                item.style.boxShadow = shadow;
+            });
+        }
+
+        inputShadowColor.addEventListener('input', applyShadow);
+        inputShadowX.addEventListener('input', applyShadow);
+        inputShadowY.addEventListener('input', applyShadow);
+        inputShadowBlur.addEventListener('input', applyShadow);
+
+        function applyTextStroke() {
+            const width = inputStrokeWidth.value + 'px';
+            const color = inputStrokeColor.value;
+            const stroke = `${width} ${color}`;
+
+            itensSelecionados.forEach(item => {
+                if (item.classList.contains('item-texto') || item.classList.contains('item-simbolo')) {
+                    item.style.webkitTextStroke = stroke;
+                }
+            });
+        }
+
+        inputStrokeColor.addEventListener('input', applyTextStroke);
+        inputStrokeWidth.addEventListener('input', applyTextStroke);
 
     </script>
 </body>
