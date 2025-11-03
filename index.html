@@ -867,6 +867,11 @@
                     <option value="capitalize">Capitalizadas</option>
                 </select>
             </div>
+            <div class="button-group">
+                <span class="label">Contorno:</span>
+                <input type="color" id="input-stroke-color" class="color-input" value="#000000" title="Cor do Contorno">
+                <input type="number" id="input-stroke-width" min="0" max="10" value="0" title="Espessura do Contorno (px)" style="width: 50px;">
+            </div>
         </div>
         
         <div id="style-toolbar-options" class="secondary-toolbar">
@@ -930,6 +935,20 @@
                 <button id="btn-layer-forward" title="Avançar"><span class="material-icons">keyboard_arrow_up</span></button>
                 <button id="btn-layer-backward" title="Recuar"><span class="material-icons">keyboard_arrow_down</span></button>
                 <button id="btn-layer-back" title="Enviar para Trás"><span class="material-icons">flip_to_back</span></button>
+            </div>
+        </div>
+
+        <div id="advanced-style-toolbar" class="secondary-toolbar">
+            <div class="button-group">
+                <span class="label">Opacidade:</span>
+                <input type="range" id="input-opacity" min="0" max="1" step="0.05" value="1" title="Opacidade do Item">
+            </div>
+            <div class="button-group">
+                <span class="label">Sombra:</span>
+                <input type="color" id="input-shadow-color" class="color-input" value="#000000" title="Cor da Sombra">
+                <input type="number" id="input-shadow-x" value="2" title="Deslocamento X" style="width: 50px;">
+                <input type="number" id="input-shadow-y" value="2" title="Deslocamento Y" style="width: 50px;">
+                <input type="number" id="input-shadow-blur" value="3" min="0" title="Esmaecimento (Blur)" style="width: 50px;">
             </div>
         </div>
 
@@ -1067,6 +1086,16 @@
         const btnLayerBackward = document.getElementById('btn-layer-backward');
         const btnLayerBack = document.getElementById('btn-layer-back');
 
+        // --- Controles de Estilo Avançado ---
+        const advancedStyleToolbar = document.getElementById('advanced-style-toolbar');
+        const inputOpacity = document.getElementById('input-opacity');
+        const inputShadowColor = document.getElementById('input-shadow-color');
+        const inputShadowX = document.getElementById('input-shadow-x');
+        const inputShadowY = document.getElementById('input-shadow-y');
+        const inputShadowBlur = document.getElementById('input-shadow-blur');
+        const inputStrokeColor = document.getElementById('input-stroke-color');
+        const inputStrokeWidth = document.getElementById('input-stroke-width');
+
 
         // --- Variáveis de Estado ---
         let etiquetaAtiva = document.querySelector('.etiqueta-editavel.active');
@@ -1160,9 +1189,11 @@
             drawingToolbarOptions.style.display = 'none';
             alignmentToolbar.style.display = 'none';
             layeringToolbar.style.display = 'none';
+            advancedStyleToolbar.style.display = 'none';
 
             if (selectionCount > 0) {
                 layeringToolbar.style.display = 'flex';
+                advancedStyleToolbar.style.display = 'flex';
             }
 
             if (selectionCount >= 2) {
@@ -2657,14 +2688,6 @@
         // --- Impede que cliques nas barras de ferramentas "vazem" para o interact.js ---
         const toolbars = document.querySelectorAll('#left-toolbar, #toolbar, .secondary-toolbar');
         toolbars.forEach(tb => {
-            tb.addEventListener('mousedown', (event) => {
-                event.stopPropagation();
-            });
-        });
-
-        // --- Impede que cliques nas barras de ferramentas "vazem" para o interact.js ---
-        const toolbars = document.querySelectorAll('#left-toolbar, #toolbar, .secondary-toolbar');
-        toolbars.forEach(tb => {
             tb.addEventListener('pointerdown', (event) => {
                 event.stopPropagation();
             });
@@ -2699,6 +2722,44 @@
         btnLayerBack.addEventListener('click', () => changeLayer('back'));
         btnLayerForward.addEventListener('click', () => changeLayer('forward'));
         btnLayerBackward.addEventListener('click', () => changeLayer('backward'));
+
+        // --- Event Listeners de Estilos Avançados ---
+        inputOpacity.addEventListener('input', () => {
+            applyStyleToSelection('opacity', inputOpacity.value);
+        });
+
+        function applyShadow() {
+            const color = inputShadowColor.value;
+            const x = inputShadowX.value + 'px';
+            const y = inputShadowY.value + 'px';
+            const blur = inputShadowBlur.value + 'px';
+            const shadow = `${x} ${y} ${blur} ${color}`;
+
+            itensSelecionados.forEach(item => {
+                item.style.boxShadow = shadow;
+            });
+        }
+
+        inputShadowColor.addEventListener('input', applyShadow);
+        inputShadowX.addEventListener('input', applyShadow);
+        inputShadowY.addEventListener('input', applyShadow);
+        inputShadowBlur.addEventListener('input', applyShadow);
+
+        function applyTextStroke() {
+            const width = inputStrokeWidth.value + 'px';
+            const color = inputStrokeColor.value;
+            const stroke = `${width} ${color}`;
+
+            itensSelecionados.forEach(item => {
+                if (item.classList.contains('item-texto') || item.classList.contains('item-simbolo')) {
+                    item.style.webkitTextStroke = stroke;
+                }
+            });
+        }
+
+        inputStrokeColor.addEventListener('input', applyTextStroke);
+        inputStrokeWidth.addEventListener('input', applyTextStroke);
+
     </script>
 </body>
 </html>
