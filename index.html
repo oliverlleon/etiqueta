@@ -370,6 +370,7 @@
         .etiqueta-editavel.active {
             border-color: #1a73e8;
             box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.3);
+            z-index: 10; /* Garante que a etiqueta ativa fique na frente das outras */
         }
         
         /* Overlay de Desenho */
@@ -1042,6 +1043,7 @@
         // --- Funções Auxiliares (Definir Ativa, IDs, Seleção) ---
 
         function definirEtiquetaAtiva(etiqueta) {
+            if (etiqueta === etiquetaAtiva) return; // Não faz nada se já estiver ativa
             if (isDrawing) pararModoDesenho(false); // Cancela desenho ao trocar
             if (etiquetaAtiva) {
                 etiquetaAtiva.classList.remove('active');
@@ -1057,6 +1059,7 @@
         function gerarLabelId() { return `label-${++labelCounter}`; }
 
         function selecionarItem(itemElement) {
+            if (itemSelecionado === itemElement) return; // Não faz nada se o mesmo item for clicado
             desselecionarItem(); // Desseleciona anterior
             itemSelecionado = itemElement;
             
@@ -1338,7 +1341,6 @@
 
             etiqueta.appendChild(item);
             inicializarInteracao(item);
-            addSelectionListeners(item); // Attach selection listeners
             
             // Seleciona o item recém-criado (exceto para QR/Barcode que são criados por funções específicas)
             if (tipo !== 'qrcode' && tipo !== 'barcode') {
@@ -1462,6 +1464,11 @@
                     listeners: {
                         start(event) {
                             selecionarItem(event.target);
+                            // Allow overflow during resize to see handles
+                            const parentLabel = event.target.closest('.etiqueta-editavel');
+                            if (parentLabel) {
+                                parentLabel.style.overflow = 'visible';
+                            }
                         },
                         move: function (event) {
                             // Update position based on resize delta, considering current angle
@@ -1490,6 +1497,13 @@
                             // Update dataset position
                             event.target.dataset.x = position.x;
                             event.target.dataset.y = position.y;
+                        },
+                        end(event) {
+                            // Restore overflow hidden after resize
+                            const parentLabel = event.target.closest('.etiqueta-editavel');
+                            if (parentLabel) {
+                                parentLabel.style.overflow = 'hidden';
+                            }
                         }
                     },
                     modifiers: [
@@ -1529,22 +1543,6 @@
                 });
         }
 
-        // --- Função Centralizada para Listeners de Seleção ---
-        function addSelectionListeners(item) {
-            item.addEventListener('click', (event) => {
-                event.stopPropagation();
-                selecionarItem(item);
-            });
-
-            // For text and symbol items, also select on focus
-            if (item.classList.contains('item-texto') || item.classList.contains('item-simbolo')) {
-                item.addEventListener('focus', (event) => {
-                    event.stopPropagation();
-                    selecionarItem(item);
-                });
-            }
-        }
-        
         // --- Funções da Barra de Ferramentas de Texto ---
 
         function updateTextToolState() {
@@ -1823,7 +1821,6 @@
                             novaEtiqueta.appendChild(item);
 
                             inicializarInteracao(item);
-                            addSelectionListeners(item);
 
                             // Special recreation for QR/Barcode
                             if (itemData.tipo === 'qrcode') {
@@ -1962,24 +1959,23 @@
         });
 
 
-        // --- Event Listener para Seleção de Etiqueta ---
-        paginaDeImpressao.addEventListener('click', (event) => {
-            const etiquetaClicada = event.target.closest('.etiqueta-editavel'); 
-            
-            if (etiquetaClicada && !isDrawing) { // Don't select labels while drawing
+        // --- Event Listener para Seleção e Desseleção com Interact.js ---
+        interact(paginaDeImpressao).on('tap', function (event) {
+            const etiquetaClicada = event.target.closest('.etiqueta-editavel');
+            const itemClicado = event.target.closest('.item-arrastavel');
+
+            if (isDrawing) return;
+
+            // Se clicou em uma etiqueta, defina-a como ativa
+            if (etiquetaClicada) {
                 definirEtiquetaAtiva(etiquetaClicada);
-                // If click was directly on the label (not an item), deselect item
-                if (!event.target.closest('.item-arrastavel') && event.target === etiquetaClicada) {
-                    desselecionarItem();
-                }
-            } else if (!event.target.closest('#toolbar') 
-                       && !event.target.closest('.secondary-toolbar') 
-                       && !event.target.closest('#left-toolbar') // NOVO: Ignora cliques na barra esquerda
-                       && !event.target.closest('.modal-overlay') 
-                       && !isDrawing // Don't deselect if drawing
-                       && !event.target.closest('.etiqueta-editavel')) { // Clicked outside labels too
+            }
+
+            // Se o clique não foi em um item, deselecione
+            if (!itemClicado) {
                 desselecionarItem();
             }
+
         });
 
         // --- Listener para Mudança de Tamanho/Layout ---
