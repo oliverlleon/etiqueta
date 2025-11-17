@@ -6,6 +6,9 @@
     <title>Editor de Etiquetas Avançado</title>
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Open+Sans&family=Montserrat&family=Lato&family=Poppins&family=Inter&family=Source+Sans+Pro&family=Noto+Sans&family=Ubuntu&family=Raleway&family=PT+Sans&family=Oswald&family=Merriweather+Sans&family=Nunito&family=Work+Sans&family=Fira+Sans&family=Quicksand&family=Barlow&family=Rubik&family=Mukta&family=Hind&family=Karla&family=Mulish&family=Manrope&family=Public+Sans&family=DM+Sans&family=Cabin&family=Oxygen&family=Arimo&family=Titillium+Web&family=Assistant&family=Prompt&family=Tajawal&family=Cairo&family=Signika&family=Kanit&family=Josefin+Sans&family=Libre+Franklin&family=Chakra+Petch&family=Exo+2&family=Rajdhani&family=Teko&family=Anton&family=Fjalla+One&family=Bebas+Neue&family=Archivo&family=Catamaran&family=Asap&family=Cuprum&family=Barlow+Condensed&family=Ruda&family=Maven+Pro&family=Varela+Round&family=Questrial&family=Cantarell&family=Playfair+Display&family=Merriweather&family=Lora&family=PT+Serif&family=Roboto+Slab&family=Slabo+27px&family=Source+Serif+Pro&family=Crimson+Text&family=Libre+Baskerville&family=Arvo&family=EB+Garamond&family=Bitter&family=Vollkorn&family=Tinos&family=Josefin+Slab&family=BioRhyme&family=Zilla+Slab&family=Rokkitt&family=Crete+Round&family=Caudex&family=Frank+Ruhl+Libre&family=Domine&family=Bree+Serif&family=Aleo&family=Faustina&family=Cormorant+Garamond&family=Cinzel&family=Spectral&family=Noto+Serif&family=Cardo&family=Old+Standard+TT&family=Prata&family=Neuton&family=Glegoo&family=Alice&family=Amiri&family=Abhaya+Libre&family=Bodoni+Moda&family=Fira+Code&family=JetBrains+Mono&family=Source+Code+Pro&family=Inconsolata&family=Roboto+Mono&family=Ubuntu+Mono&family=Space+Mono&family=IBM+Plex+Mono&family=Anonymous+Pro&family=Cousine&family=PT+Mono&family=Cutive+Mono&family=Overpass+Mono&family=Share+Tech+Mono&family=VT323&family=Nova+Mono&family=Oxygen+Mono&family=Lobster&family=Pacifico&family=Dancing+Script&family=Great+Vibes&family=Satisfy&family=Cookie&family=Kaushan+Script&family=Sacramento&family=Allura&family=Parisienne&family=Indie+Flower&family=Amatic+SC&family=Shadows+Into+Light&family=Caveat&family=Permanent+Marker&family=Gloria+Hallelujah&family=Yellowtail&family=Courgette&family=Damion&family=Marck+Script&family=Mr+Dafoe&family=Pinyon+Script&family=Tangerine&family=Bad+Script&family=Gochi+Hand&family=Handlee&family=Patrick+Hand&family=Just+Another+Hand&family=Covered+By+Your+Grace&family=Rock+Salt&family=Bangers&family=Chewy&family=Fredoka+One&family=Luckiest+Guy&family=Russo+One&family=Press+Start+2P&family=Creepster&family=Special+Elite&family=Monoton&family=Audiowide&family=Orbitron&family=Black+Ops+One&family=Carter+One&family=Passion+One&family=Patua+One&family=Ultra&family=Changa+One&family=Titan+One&family=Yeseva+One&family=Righteous&family=Alfa+Slab+One&family=Abril+Fatface&family=Staatliches&family=Bungee&family=Unica+One&family=Boogaloo&family=Spicy+Rice&family=Ranchers&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
     <style>
@@ -844,11 +847,216 @@
         <div id="text-toolbar-options" class="secondary-toolbar">
             <div class="button-group">
                 <select id="select-font-family" title="Tipo de Fonte">
-                    <option value="Arial, sans-serif">Arial</option>
-                    <option value="'Times New Roman', Times, serif">Times New Roman</option>
-                    <option value="'Courier New', Courier, monospace">Courier New</option>
-                    <option value="Verdana, Geneva, sans-serif">Verdana</option>
-                    <option value="Georgia, serif">Georgia</option>
+                    <optgroup label="Sans Serif">
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="Helvetica, sans-serif">Helvetica</option>
+                        <option value="Roboto, sans-serif">Roboto</option>
+                        <option value="Open Sans, sans-serif">Open Sans</option>
+                        <option value="Montserrat, sans-serif">Montserrat</option>
+                        <option value="Lato, sans-serif">Lato</option>
+                        <option value="Poppins, sans-serif">Poppins</option>
+                        <option value="Inter, sans-serif">Inter</option>
+                        <option value="Source Sans Pro, sans-serif">Source Sans Pro</option>
+                        <option value="Noto Sans, sans-serif">Noto Sans</option>
+                        <option value="Ubuntu, sans-serif">Ubuntu</option>
+                        <option value="Raleway, sans-serif">Raleway</option>
+                        <option value="PT Sans, sans-serif">PT Sans</option>
+                        <option value="Oswald, sans-serif">Oswald</option>
+                        <option value="Merriweather Sans, sans-serif">Merriweather Sans</option>
+                        <option value="Nunito, sans-serif">Nunito</option>
+                        <option value="Work Sans, sans-serif">Work Sans</option>
+                        <option value="Fira Sans, sans-serif">Fira Sans</option>
+                        <option value="Quicksand, sans-serif">Quicksand</option>
+                        <option value="Barlow, sans-serif">Barlow</option>
+                        <option value="Rubik, sans-serif">Rubik</option>
+                        <option value="Mukta, sans-serif">Mukta</option>
+                        <option value="Hind, sans-serif">Hind</option>
+                        <option value="Karla, sans-serif">Karla</option>
+                        <option value="Mulish, sans-serif">Mulish</option>
+                        <option value="Manrope, sans-serif">Manrope</option>
+                        <option value="Public Sans, sans-serif">Public Sans</option>
+                        <option value="DM Sans, sans-serif">DM Sans</option>
+                        <option value="Cabin, sans-serif">Cabin</option>
+                        <option value="Oxygen, sans-serif">Oxygen</option>
+                        <option value="Arimo, sans-serif">Arimo</option>
+                        <option value="Droid Sans, sans-serif">Droid Sans</option>
+                        <option value="Titillium Web, sans-serif">Titillium Web</option>
+                        <option value="Assistant, sans-serif">Assistant</option>
+                        <option value="Prompt, sans-serif">Prompt</option>
+                        <option value="Tajawal, sans-serif">Tajawal</option>
+                        <option value="Cairo, sans-serif">Cairo</option>
+                        <option value="Signika, sans-serif">Signika</option>
+                        <option value="Kanit, sans-serif">Kanit</option>
+                        <option value="Josefin Sans, sans-serif">Josefin Sans</option>
+                        <option value="Libre Franklin, sans-serif">Libre Franklin</option>
+                        <option value="Chakra Petch, sans-serif">Chakra Petch</option>
+                        <option value="Exo 2, sans-serif">Exo 2</option>
+                        <option value="Rajdhani, sans-serif">Rajdhani</option>
+                        <option value="Teko, sans-serif">Teko</option>
+                        <option value="Anton, sans-serif">Anton</option>
+                        <option value="Fjalla One, sans-serif">Fjalla One</option>
+                        <option value="Bebas Neue, sans-serif">Bebas Neue</option>
+                        <option value="Archivo, sans-serif">Archivo</option>
+                        <option value="Catamaran, sans-serif">Catamaran</option>
+                        <option value="Asap, sans-serif">Asap</option>
+                        <option value="Cuprum, sans-serif">Cuprum</option>
+                        <option value="Barlow Condensed, sans-serif">Barlow Condensed</option>
+                        <option value="Ruda, sans-serif">Ruda</option>
+                        <option value="Maven Pro, sans-serif">Maven Pro</option>
+                        <option value="Varela Round, sans-serif">Varela Round</option>
+                        <option value="Questrial, sans-serif">Questrial</option>
+                        <option value="Cantarell, sans-serif">Cantarell</option>
+                        <option value="Futura, sans-serif">Futura</option>
+                        <option value="Gill Sans, sans-serif">Gill Sans</option>
+                    </optgroup>
+                    <optgroup label="Serif">
+                        <option value="Times New Roman, serif">Times New Roman</option>
+                        <option value="Georgia, serif">Georgia</option>
+                        <option value="Garamond, serif">Garamond</option>
+                        <option value="Baskerville, serif">Baskerville</option>
+                        <option value="Playfair Display, serif">Playfair Display</option>
+                        <option value="Merriweather, serif">Merriweather</option>
+                        <option value="Lora, serif">Lora</option>
+                        <option value="PT Serif, serif">PT Serif</option>
+                        <option value="Roboto Slab, serif">Roboto Slab</option>
+                        <option value="Slabo 27px, serif">Slabo 27px</option>
+                        <option value="Source Serif Pro, serif">Source Serif Pro</option>
+                        <option value="Crimson Text, serif">Crimson Text</option>
+                        <option value="Libre Baskerville, serif">Libre Baskerville</option>
+                        <option value="Arvo, serif">Arvo</option>
+                        <option value="EB Garamond, serif">EB Garamond</option>
+                        <option value="Bitter, serif">Bitter</option>
+                        <option value="Vollkorn, serif">Vollkorn</option>
+                        <option value="Tinos, serif">Tinos</option>
+                        <option value="Josefin Slab, serif">Josefin Slab</option>
+                        <option value="BioRhyme, serif">BioRhyme</option>
+                        <option value="Zilla Slab, serif">Zilla Slab</option>
+                        <option value="Rokkitt, serif">Rokkitt</option>
+                        <option value="Crete Round, serif">Crete Round</option>
+                        <option value="Caudex, serif">Caudex</option>
+                        <option value="Frank Ruhl Libre, serif">Frank Ruhl Libre</option>
+                        <option value="Domine, serif">Domine</option>
+                        <option value="Bree Serif, serif">Bree Serif</option>
+                        <option value="Aleo, serif">Aleo</option>
+                        <option value="Faustina, serif">Faustina</option>
+                        <option value="Cormorant Garamond, serif">Cormorant Garamond</option>
+                        <option value="Cinzel, serif">Cinzel</option>
+                        <option value="Spectral, serif">Spectral</option>
+                        <option value="Noto Serif, serif">Noto Serif</option>
+                        <option value="Cardo, serif">Cardo</option>
+                        <option value="Old Standard TT, serif">Old Standard TT</option>
+                        <option value="Prata, serif">Prata</option>
+                        <option value="Neuton, serif">Neuton</option>
+                        <option value="Glegoo, serif">Glegoo</option>
+                        <option value="Alice, serif">Alice</option>
+                        <option value="Amiri, serif">Amiri</option>
+                        <option value="Abhaya Libre, serif">Abhaya Libre</option>
+                        <option value="Bodoni Moda, serif">Bodoni Moda</option>
+                        <option value="Caslon, serif">Caslon</option>
+                        <option value="Didot, serif">Didot</option>
+                        <option value="Cambria, serif">Cambria</option>
+                        <option value="Constantia, serif">Constantia</option>
+                        <option value="Palatino Linotype, serif">Palatino Linotype</option>
+                        <option value="Bookman Old Style, serif">Bookman Old Style</option>
+                        <option value="Century Schoolbook, serif">Century Schoolbook</option>
+                        <option value="Rockwell, serif">Rockwell</option>
+                    </optgroup>
+                    <optgroup label="Monospace">
+                        <option value="Courier New, monospace">Courier New</option>
+                        <option value="Consolas, monospace">Consolas</option>
+                        <option value="Monaco, monospace">Monaco</option>
+                        <option value="Fira Code, monospace">Fira Code</option>
+                        <option value="JetBrains Mono, monospace">JetBrains Mono</option>
+                        <option value="Source Code Pro, monospace">Source Code Pro</option>
+                        <option value="Inconsolata, monospace">Inconsolata</option>
+                        <option value="Roboto Mono, monospace">Roboto Mono</option>
+                        <option value="Ubuntu Mono, monospace">Ubuntu Mono</option>
+                        <option value="Space Mono, monospace">Space Mono</option>
+                        <option value="IBM Plex Mono, monospace">IBM Plex Mono</option>
+                        <option value="Anonymous Pro, monospace">Anonymous Pro</option>
+                        <option value="Hack, monospace">Hack</option>
+                        <option value="Menlo, monospace">Menlo</option>
+                        <option value="Lucida Console, monospace">Lucida Console</option>
+                        <option value="Andale Mono, monospace">Andale Mono</option>
+                        <option value="Cousine, monospace">Cousine</option>
+                        <option value="PT Mono, monospace">PT Mono</option>
+                        <option value="Cutive Mono, monospace">Cutive Mono</option>
+                        <option value="Overpass Mono, monospace">Overpass Mono</option>
+                        <option value="Share Tech Mono, monospace">Share Tech Mono</option>
+                        <option value="VT323, monospace">VT323</option>
+                        <option value="Nova Mono, monospace">Nova Mono</option>
+                        <option value="Oxygen Mono, monospace">Oxygen Mono</option>
+                        <option value="Droid Sans Mono, monospace">Droid Sans Mono</option>
+                        <option value="DejaVu Sans Mono, monospace">DejaVu Sans Mono</option>
+                        <option value="Liberation Mono, monospace">Liberation Mono</option>
+                        <option value="Terminus, monospace">Terminus</option>
+                        <option value="Input Mono, monospace">Input Mono</option>
+                        <option value="Proggy, monospace">Proggy</option>
+                    </optgroup>
+                    <optgroup label="Script & Handwriting">
+                        <option value="Lobster, cursive">Lobster</option>
+                        <option value="Pacifico, cursive">Pacifico</option>
+                        <option value="Dancing Script, cursive">Dancing Script</option>
+                        <option value="Great Vibes, cursive">Great Vibes</option>
+                        <option value="Satisfy, cursive">Satisfy</option>
+                        <option value="Cookie, cursive">Cookie</option>
+                        <option value="Kaushan Script, cursive">Kaushan Script</option>
+                        <option value="Sacramento, cursive">Sacramento</option>
+                        <option value="Allura, cursive">Allura</option>
+                        <option value="Parisienne, cursive">Parisienne</option>
+                        <option value="Indie Flower, cursive">Indie Flower</option>
+                        <option value="Amatic SC, cursive">Amatic SC</option>
+                        <option value="Shadows Into Light, cursive">Shadows Into Light</option>
+                        <option value="Caveat, cursive">Caveat</option>
+                        <option value="Permanent Marker, cursive">Permanent Marker</option>
+                        <option value="Gloria Hallelujah, cursive">Gloria Hallelujah</option>
+                        <option value="Yellowtail, cursive">Yellowtail</option>
+                        <option value="Courgette, cursive">Courgette</option>
+                        <option value="Damion, cursive">Damion</option>
+                        <option value="Marck Script, cursive">Marck Script</option>
+                        <option value="Mr Dafoe, cursive">Mr Dafoe</option>
+                        <option value="Pinyon Script, cursive">Pinyon Script</option>
+                        <option value="Tangerine, cursive">Tangerine</option>
+                        <option value="Bad Script, cursive">Bad Script</option>
+                        <option value="Gochi Hand, cursive">Gochi Hand</option>
+                        <option value="Handlee, cursive">Handlee</option>
+                        <option value="Patrick Hand, cursive">Patrick Hand</option>
+                        <option value="Just Another Hand, cursive">Just Another Hand</option>
+                        <option value="Covered By Your Grace, cursive">Covered By Your Grace</option>
+                        <option value="Rock Salt, cursive">Rock Salt</option>
+                    </optgroup>
+                    <optgroup label="Display & Decorative">
+                        <option value="Bangers, cursive">Bangers</option>
+                        <option value="Chewy, cursive">Chewy</option>
+                        <option value="Fredoka One, cursive">Fredoka One</option>
+                        <option value="Luckiest Guy, cursive">Luckiest Guy</option>
+                        <option value="Russo One, sans-serif">Russo One</option>
+                        <option value="Press Start 2P, cursive">Press Start 2P</option>
+                        <option value="Creepster, cursive">Creepster</option>
+                        <option value="Special Elite, cursive">Special Elite</option>
+                        <option value="Monoton, cursive">Monoton</option>
+                        <option value="Audiowide, sans-serif">Audiowide</option>
+                        <option value="Orbitron, sans-serif">Orbitron</option>
+                        <option value="Black Ops One, cursive">Black Ops One</option>
+                        <option value="Carter One, cursive">Carter One</option>
+                        <option value="Passion One, cursive">Passion One</option>
+                        <option value="Patua One, cursive">Patua One</option>
+                        <option value="Ultra, serif">Ultra</option>
+                        <option value="Changa One, cursive">Changa One</option>
+                        <option value="Titan One, cursive">Titan One</option>
+                        <option value="Yeseva One, cursive">Yeseva One</option>
+                        <option value="Righteous, cursive">Righteous</option>
+                        <option value="Alfa Slab One, cursive">Alfa Slab One</option>
+                        <option value="Abril Fatface, cursive">Abril Fatface</option>
+                        <option value="Staatliches, cursive">Staatliches</option>
+                        <option value="Bungee, cursive">Bungee</option>
+                        <option value="Unica One, cursive">Unica One</option>
+                        <option value="Boogaloo, cursive">Boogaloo</option>
+                        <option value="Spicy Rice, cursive">Spicy Rice</option>
+                        <option value="Ranchers, cursive">Ranchers</option>
+                        <option value="Comic Sans MS, cursive">Comic Sans MS</option>
+                        <option value="Papyrus, fantasy">Papyrus</option>
+                    </optgroup>
                 </select>
                 <input type="number" id="input-font-size" min="6" max="150" value="10" title="Tamanho da Fonte (px)">
                 <input type="color" id="input-font-color" class="color-input" value="#000000" title="Cor da Fonte">
@@ -1052,15 +1260,14 @@
             if (etiquetaAtiva) {
                 etiquetaAtiva.classList.add('active');
             }
-            desselecionarItem();
+            // A lógica de desselecionar item agora é tratada pelo listener 'tap'
         }
 
         function gerarItemId() { return `item-${++itemCounter}`; }
         function gerarLabelId() { return `label-${++labelCounter}`; }
 
         function selecionarItem(itemElement) {
-            if (itemSelecionado === itemElement) return; // Não faz nada se o mesmo item for clicado
-            desselecionarItem(); // Desseleciona anterior
+            // A lógica de desseleção foi movida para o listener 'tap'
             itemSelecionado = itemElement;
             
             if (itemSelecionado) {
@@ -1966,16 +2173,37 @@
 
             if (isDrawing) return;
 
-            // Se clicou em uma etiqueta, defina-a como ativa
+            // 1. Definir a etiqueta ativa (sempre ocorre se houver clique na área)
             if (etiquetaClicada) {
                 definirEtiquetaAtiva(etiquetaClicada);
             }
 
-            // Se o clique não foi em um item, deselecione
-            if (!itemClicado) {
-                desselecionarItem();
+            // 2. Gerenciar a seleção do item
+            // Se o item clicado for diferente do item já selecionado
+            if (itemClicado !== itemSelecionado) {
+                // Desseleciona o item anterior (se houver)
+                if (itemSelecionado) {
+                    desselecionarItem();
+                }
+                // Seleciona o novo item (se houver)
+                if (itemClicado) {
+                    selecionarItem(itemClicado);
+                }
+            }
+            // Se o clique foi fora de qualquer item (itemClicado é null) e um item estava selecionado
+            else if (!itemClicado && itemSelecionado) {
+                 desselecionarItem();
             }
 
+            // 3. Gerenciar o foco para itens de texto
+            if (itemClicado && (itemClicado.classList.contains('item-texto') || itemClicado.classList.contains('item-simbolo'))) {
+                itemClicado.focus();
+            } else {
+                // Remove o foco de qualquer elemento editável se clicar fora
+                if (document.activeElement && document.activeElement.isContentEditable) {
+                    document.activeElement.blur();
+                }
+            }
         });
 
         // --- Listener para Mudança de Tamanho/Layout ---
