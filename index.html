@@ -1042,7 +1042,7 @@
 
         // --- Funções Auxiliares (Definir Ativa, IDs, Seleção) ---
 
-        function definirEtiquetaAtiva(etiqueta) {
+        function definirEtiquetaAtiva(etiqueta, manterItemSelecionado = false) {
             if (etiqueta === etiquetaAtiva) return; // Não faz nada se já estiver ativa
             if (isDrawing) pararModoDesenho(false); // Cancela desenho ao trocar
             if (etiquetaAtiva) {
@@ -1052,7 +1052,9 @@
             if (etiquetaAtiva) {
                 etiquetaAtiva.classList.add('active');
             }
-            desselecionarItem();
+            if (!manterItemSelecionado) {
+                desselecionarItem();
+            }
         }
 
         function gerarItemId() { return `item-${++itemCounter}`; }
@@ -1966,16 +1968,27 @@
 
             if (isDrawing) return;
 
-            // Se clicou em uma etiqueta, defina-a como ativa
+            // Ativa a etiqueta correspondente
             if (etiquetaClicada) {
-                definirEtiquetaAtiva(etiquetaClicada);
+                // O segundo argumento (!!itemClicado) é true se um item foi clicado,
+                // o que previne `desselecionarItem()` de ser chamado dentro de `definirEtiquetaAtiva`.
+                definirEtiquetaAtiva(etiquetaClicada, !!itemClicado);
             }
 
-            // Se o clique não foi em um item, deselecione
-            if (!itemClicado) {
-                desselecionarItem();
+            // Gerencia a seleção do item
+            if (itemClicado) {
+                selecionarItem(itemClicado);
+                // Se for um item de texto, foca nele para edição
+                if (itemClicado.classList.contains('item-texto') || itemClicado.classList.contains('item-simbolo')) {
+                    itemClicado.focus();
+                }
+            } else {
+                // Se o clique foi fora de um item, a seleção já foi limpa por `definirEtiquetaAtiva`.
+                // Apenas garantimos que o foco saia de qualquer campo de texto.
+                if (document.activeElement && document.activeElement.isContentEditable) {
+                    document.activeElement.blur();
+                }
             }
-
         });
 
         // --- Listener para Mudança de Tamanho/Layout ---
