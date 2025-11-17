@@ -6,6 +6,9 @@
     <title>Editor de Etiquetas Avançado</title>
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Open+Sans&family=Montserrat&family=Lato&family=Poppins&family=Inter&family=Source+Sans+Pro&family=Noto+Sans&family=Ubuntu&family=Raleway&family=PT+Sans&family=Oswald&family=Merriweather+Sans&family=Nunito&family=Work+Sans&family=Fira+Sans&family=Quicksand&family=Barlow&family=Rubik&family=Mukta&family=Hind&family=Karla&family=Mulish&family=Manrope&family=Public+Sans&family=DM+Sans&family=Cabin&family=Oxygen&family=Arimo&family=Titillium+Web&family=Assistant&family=Prompt&family=Tajawal&family=Cairo&family=Signika&family=Kanit&family=Josefin+Sans&family=Libre+Franklin&family=Chakra+Petch&family=Exo+2&family=Rajdhani&family=Teko&family=Anton&family=Fjalla+One&family=Bebas+Neue&family=Archivo&family=Catamaran&family=Asap&family=Cuprum&family=Barlow+Condensed&family=Ruda&family=Maven+Pro&family=Varela+Round&family=Questrial&family=Cantarell&family=Playfair+Display&family=Merriweather&family=Lora&family=PT+Serif&family=Roboto+Slab&family=Slabo+27px&family=Source+Serif+Pro&family=Crimson+Text&family=Libre+Baskerville&family=Arvo&family=EB+Garamond&family=Bitter&family=Vollkorn&family=Tinos&family=Josefin+Slab&family=BioRhyme&family=Zilla+Slab&family=Rokkitt&family=Crete+Round&family=Caudex&family=Frank+Ruhl+Libre&family=Domine&family=Bree+Serif&family=Aleo&family=Faustina&family=Cormorant+Garamond&family=Cinzel&family=Spectral&family=Noto+Serif&family=Cardo&family=Old+Standard+TT&family=Prata&family=Neuton&family=Glegoo&family=Alice&family=Amiri&family=Abhaya+Libre&family=Bodoni+Moda&family=Fira+Code&family=JetBrains+Mono&family=Source+Code+Pro&family=Inconsolata&family=Roboto+Mono&family=Ubuntu+Mono&family=Space+Mono&family=IBM+Plex+Mono&family=Anonymous+Pro&family=Cousine&family=PT+Mono&family=Cutive+Mono&family=Overpass+Mono&family=Share+Tech+Mono&family=VT323&family=Nova+Mono&family=Oxygen+Mono&family=Lobster&family=Pacifico&family=Dancing+Script&family=Great+Vibes&family=Satisfy&family=Cookie&family=Kaushan+Script&family=Sacramento&family=Allura&family=Parisienne&family=Indie+Flower&family=Amatic+SC&family=Shadows+Into+Light&family=Caveat&family=Permanent+Marker&family=Gloria+Hallelujah&family=Yellowtail&family=Courgette&family=Damion&family=Marck+Script&family=Mr+Dafoe&family=Pinyon+Script&family=Tangerine&family=Bad+Script&family=Gochi+Hand&family=Handlee&family=Patrick+Hand&family=Just+Another+Hand&family=Covered+By+Your+Grace&family=Rock+Salt&family=Bangers&family=Chewy&family=Fredoka+One&family=Luckiest+Guy&family=Russo+One&family=Press+Start+2P&family=Creepster&family=Special+Elite&family=Monoton&family=Audiowide&family=Orbitron&family=Black+Ops+One&family=Carter+One&family=Passion+One&family=Patua+One&family=Ultra&family=Changa+One&family=Titan+One&family=Yeseva+One&family=Righteous&family=Alfa+Slab+One&family=Abril+Fatface&family=Staatliches&family=Bungee&family=Unica+One&family=Boogaloo&family=Spicy+Rice&family=Ranchers&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
     <style>
@@ -175,6 +178,7 @@
             z-index: 99;
             gap: 15px;
             overflow-x: auto; /* Permite rolagem se não couber */
+            overflow-y: visible; /* Garante que o dropdown não seja cortado */
         }
         
         /* Mostra a barra quando o JS define display: flex */
@@ -316,6 +320,103 @@
         }
         .secondary-toolbar button.active .material-icons {
             color: #1a73e8;
+        }
+
+        /* --- Estilos para o Dropdown de Fonte Personalizado --- */
+        .custom-dropdown {
+            position: relative;
+            width: 180px; /* Largura similar a um select padrão */
+            background-color: #f8f9fa;
+            border: 1px solid #DADCE0;
+            border-radius: 4px;
+            height: 36px;
+            box-sizing: border-box;
+            cursor: pointer;
+            font-size: 0.9em;
+            color: #3c4043;
+            transition: border-color 0.2s;
+        }
+        .custom-dropdown:hover {
+            border-color: #c6cacf;
+        }
+        .custom-dropdown.open {
+            border-radius: 4px 4px 0 0;
+            border-color: #1a73e8;
+        }
+
+        .dropdown-selected {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+            height: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #selected-font-name {
+            /* O JS vai ajustar o font-family aqui */
+            font-size: 1.1em;
+        }
+
+        .dropdown-selected .material-icons {
+            color: #5f6368;
+            transition: transform 0.2s ease;
+        }
+
+        .custom-dropdown.open .dropdown-selected .material-icons {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-options {
+            display: none; /* Escondido por padrão */
+            position: absolute;
+            top: 35px; /* Alinha com a borda inferior do pai */
+            left: -1px; /* Compensa a borda do pai */
+            right: -1px; /* Compensa a borda do pai */
+            background-color: #FFFFFF;
+            border: 1px solid #1a73e8; /* Borda visível quando aberto */
+            border-top: 1px solid #DADCE0;
+            border-radius: 0 0 4px 4px;
+            z-index: 102; /* Acima de tudo na barra de ferramentas */
+            max-height: 300px;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .custom-dropdown.open .dropdown-options {
+            display: block; /* Mostra quando a classe 'open' é adicionada */
+        }
+
+        .dropdown-category {
+            padding: 8px 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            color: #5f6368;
+            background-color: #f1f3f4;
+            border-top: 1px solid #DADCE0;
+            border-bottom: 1px solid #DADCE0;
+            text-transform: uppercase;
+            position: sticky; /* Mantém o título da categoria visível */
+            top: 0;
+        }
+        .dropdown-category:first-child {
+            border-top: none;
+        }
+
+
+        .dropdown-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color 0.2s;
+            font-size: 1.1em; /* Tamanho base para as prévias */
+            min-height: 20px;
+        }
+
+        .dropdown-option:hover {
+            background-color: #e8eaed;
         }
 
 
@@ -843,13 +944,15 @@
         
         <div id="text-toolbar-options" class="secondary-toolbar">
             <div class="button-group">
-                <select id="select-font-family" title="Tipo de Fonte">
-                    <option value="Arial, sans-serif">Arial</option>
-                    <option value="'Times New Roman', Times, serif">Times New Roman</option>
-                    <option value="'Courier New', Courier, monospace">Courier New</option>
-                    <option value="Verdana, Geneva, sans-serif">Verdana</option>
-                    <option value="Georgia, serif">Georgia</option>
-                </select>
+                <div class="custom-dropdown" id="font-family-dropdown" title="Tipo de Fonte">
+                    <div class="dropdown-selected">
+                        <span id="selected-font-name">Arial</span>
+                        <span class="material-icons">arrow_drop_down</span>
+                    </div>
+                    <div class="dropdown-options" id="font-options-container">
+                        <!-- Options will be populated by JavaScript -->
+                    </div>
+                </div>
                 <input type="number" id="input-font-size" min="6" max="150" value="10" title="Tamanho da Fonte (px)">
                 <input type="color" id="input-font-color" class="color-input" value="#000000" title="Cor da Fonte">
             </div>
@@ -1001,7 +1104,9 @@
 
         // --- Referências DOM (Barras Secundárias) ---
         const textToolbarOptions = document.getElementById('text-toolbar-options');
-        const selectFontFamily = document.getElementById('select-font-family');
+        const fontFamilyDropdown = document.getElementById('font-family-dropdown');
+        const selectedFontName = document.getElementById('selected-font-name');
+        const fontOptionsContainer = document.getElementById('font-options-container');
         const inputFontSize = document.getElementById('input-font-size');
         const inputFontColor = document.getElementById('input-font-color');
         const btnTextBold = document.getElementById('btn-text-bold');
@@ -1052,15 +1157,14 @@
             if (etiquetaAtiva) {
                 etiquetaAtiva.classList.add('active');
             }
-            desselecionarItem();
+            // A lógica de desselecionar item agora é tratada pelo listener 'tap'
         }
 
         function gerarItemId() { return `item-${++itemCounter}`; }
         function gerarLabelId() { return `label-${++labelCounter}`; }
 
         function selecionarItem(itemElement) {
-            if (itemSelecionado === itemElement) return; // Não faz nada se o mesmo item for clicado
-            desselecionarItem(); // Desseleciona anterior
+            // A lógica de desseleção foi movida para o listener 'tap'
             itemSelecionado = itemElement;
             
             if (itemSelecionado) {
@@ -1543,14 +1647,277 @@
                 });
         }
 
+        // --- Lógica do Dropdown de Fonte Personalizado ---
+
+        const fontes = {
+            "Sans Serif": [
+                { name: "Arial", value: "Arial, sans-serif" },
+                { name: "Helvetica", value: "Helvetica, sans-serif" },
+                { name: "Roboto", value: "Roboto, sans-serif" },
+                { name: "Open Sans", value: "Open Sans, sans-serif" },
+                { name: "Montserrat", value: "Montserrat, sans-serif" },
+                { name: "Lato", value: "Lato, sans-serif" },
+                { name: "Poppins", value: "Poppins, sans-serif" },
+                { name: "Inter", value: "Inter, sans-serif" },
+                { name: "Source Sans Pro", value: "Source Sans Pro, sans-serif" },
+                { name: "Noto Sans", value: "Noto Sans, sans-serif" },
+                { name: "Ubuntu", value: "Ubuntu, sans-serif" },
+                { name: "Raleway", value: "Raleway, sans-serif" },
+                { name: "PT Sans", value: "PT Sans, sans-serif" },
+                { name: "Oswald", value: "Oswald, sans-serif" },
+                { name: "Merriweather Sans", value: "Merriweather Sans, sans-serif" },
+                { name: "Nunito", value: "Nunito, sans-serif" },
+                { name: "Work Sans", value: "Work Sans, sans-serif" },
+                { name: "Fira Sans", value: "Fira Sans, sans-serif" },
+                { name: "Quicksand", value: "Quicksand, sans-serif" },
+                { name: "Barlow", value: "Barlow, sans-serif" },
+                { name: "Rubik", value: "Rubik, sans-serif" },
+                { name: "Mukta", value: "Mukta, sans-serif" },
+                { name: "Hind", value: "Hind, sans-serif" },
+                { name: "Karla", value: "Karla, sans-serif" },
+                { name: "Mulish", value: "Mulish, sans-serif" },
+                { name: "Manrope", value: "Manrope, sans-serif" },
+                { name: "Public Sans", value: "Public Sans, sans-serif" },
+                { name: "DM Sans", value: "DM Sans, sans-serif" },
+                { name: "Cabin", value: "Cabin, sans-serif" },
+                { name: "Oxygen", value: "Oxygen, sans-serif" },
+                { name: "Arimo", value: "Arimo, sans-serif" },
+                { name: "Droid Sans", value: "Droid Sans, sans-serif" },
+                { name: "Titillium Web", value: "Titillium Web, sans-serif" },
+                { name: "Assistant", value: "Assistant, sans-serif" },
+                { name: "Prompt", value: "Prompt, sans-serif" },
+                { name: "Tajawal", value: "Tajawal, sans-serif" },
+                { name: "Cairo", value: "Cairo, sans-serif" },
+                { name: "Signika", value: "Signika, sans-serif" },
+                { name: "Kanit", value: "Kanit, sans-serif" },
+                { name: "Josefin Sans", value: "Josefin Sans, sans-serif" },
+                { name: "Libre Franklin", value: "Libre Franklin, sans-serif" },
+                { name: "Chakra Petch", value: "Chakra Petch, sans-serif" },
+                { name: "Exo 2", value: "Exo 2, sans-serif" },
+                { name: "Rajdhani", value: "Rajdhani, sans-serif" },
+                { name: "Teko", value: "Teko, sans-serif" },
+                { name: "Anton", value: "Anton, sans-serif" },
+                { name: "Fjalla One", value: "Fjalla One, sans-serif" },
+                { name: "Bebas Neue", value: "Bebas Neue, sans-serif" },
+                { name: "Archivo", value: "Archivo, sans-serif" },
+                { name: "Catamaran", value: "Catamaran, sans-serif" },
+                { name: "Asap", value: "Asap, sans-serif" },
+                { name: "Cuprum", value: "Cuprum, sans-serif" },
+                { name: "Barlow Condensed", value: "Barlow Condensed, sans-serif" },
+                { name: "Ruda", value: "Ruda, sans-serif" },
+                { name: "Maven Pro", value: "Maven Pro, sans-serif" },
+                { name: "Varela Round", value: "Varela Round, sans-serif" },
+                { name: "Questrial", value: "Questrial, sans-serif" },
+                { name: "Cantarell", value: "Cantarell, sans-serif" },
+                { name: "Futura", value: "Futura, sans-serif" },
+                { name: "Gill Sans", value: "Gill Sans, sans-serif" }
+            ],
+            "Serif": [
+                { name: "Times New Roman", value: "Times New Roman, serif" },
+                { name: "Georgia", value: "Georgia, serif" },
+                { name: "Garamond", value: "Garamond, serif" },
+                { name: "Baskerville", value: "Baskerville, serif" },
+                { name: "Playfair Display", value: "Playfair Display, serif" },
+                { name: "Merriweather", value: "Merriweather, serif" },
+                { name: "Lora", value: "Lora, serif" },
+                { name: "PT Serif", value: "PT Serif, serif" },
+                { name: "Roboto Slab", value: "Roboto Slab, serif" },
+                { name: "Slabo 27px", value: "Slabo 27px, serif" },
+                { name: "Source Serif Pro", value: "Source Serif Pro, serif" },
+                { name: "Crimson Text", value: "Crimson Text, serif" },
+                { name: "Libre Baskerville", value: "Libre Baskerville, serif" },
+                { name: "Arvo", value: "Arvo, serif" },
+                { name: "EB Garamond", value: "EB Garamond, serif" },
+                { name: "Bitter", value: "Bitter, serif" },
+                { name: "Vollkorn", value: "Vollkorn, serif" },
+                { name: "Tinos", value: "Tinos, serif" },
+                { name: "Josefin Slab", value: "Josefin Slab, serif" },
+                { name: "BioRhyme", value: "BioRhyme, serif" },
+                { name: "Zilla Slab", value: "Zilla Slab, serif" },
+                { name: "Rokkitt", value: "Rokkitt, serif" },
+                { name: "Crete Round", value: "Crete Round, serif" },
+                { name: "Caudex", value: "Caudex, serif" },
+                { name: "Frank Ruhl Libre", value: "Frank Ruhl Libre, serif" },
+                { name: "Domine", value: "Domine, serif" },
+                { name: "Bree Serif", value: "Bree Serif, serif" },
+                { name: "Aleo", value: "Aleo, serif" },
+                { name: "Faustina", value: "Faustina, serif" },
+                { name: "Cormorant Garamond", value: "Cormorant Garamond, serif" },
+                { name: "Cinzel", value: "Cinzel, serif" },
+                { name: "Spectral", value: "Spectral, serif" },
+                { name: "Noto Serif", value: "Noto Serif, serif" },
+                { name: "Cardo", value: "Cardo, serif" },
+                { name: "Old Standard TT", value: "Old Standard TT, serif" },
+                { name: "Prata", value: "Prata, serif" },
+                { name: "Neuton", value: "Neuton, serif" },
+                { name: "Glegoo", value: "Glegoo, serif" },
+                { name: "Alice", value: "Alice, serif" },
+                { name: "Amiri", value: "Amiri, serif" },
+                { name: "Abhaya Libre", value: "Abhaya Libre, serif" },
+                { name: "Bodoni Moda", value: "Bodoni Moda, serif" },
+                { name: "Caslon", value: "Caslon, serif" },
+                { name: "Didot", value: "Didot, serif" },
+                { name: "Cambria", value: "Cambria, serif" },
+                { name: "Constantia", value: "Constantia, serif" },
+                { name: "Palatino Linotype", value: "Palatino Linotype, serif" },
+                { name: "Bookman Old Style", value: "Bookman Old Style, serif" },
+                { name: "Century Schoolbook", value: "Century Schoolbook, serif" },
+                { name: "Rockwell", value: "Rockwell, serif" }
+            ],
+            "Monospace": [
+                { name: "Courier New", value: "Courier New, monospace" },
+                { name: "Consolas", value: "Consolas, monospace" },
+                { name: "Monaco", value: "Monaco, monospace" },
+                { name: "Fira Code", value: "Fira Code, monospace" },
+                { name: "JetBrains Mono", value: "JetBrains Mono, monospace" },
+                { name: "Source Code Pro", value: "Source Code Pro, monospace" },
+                { name: "Inconsolata", value: "Inconsolata, monospace" },
+                { name: "Roboto Mono", value: "Roboto Mono, monospace" },
+                { name: "Ubuntu Mono", value: "Ubuntu Mono, monospace" },
+                { name: "Space Mono", value: "Space Mono, monospace" },
+                { name: "IBM Plex Mono", value: "IBM Plex Mono, monospace" },
+                { name: "Anonymous Pro", value: "Anonymous Pro, monospace" },
+                { name: "Hack", value: "Hack, monospace" },
+                { name: "Menlo", value: "Menlo, monospace" },
+                { name: "Lucida Console", value: "Lucida Console, monospace" },
+                { name: "Andale Mono", value: "Andale Mono, monospace" },
+                { name: "Cousine", value: "Cousine, monospace" },
+                { name: "PT Mono", value: "PT Mono, monospace" },
+                { name: "Cutive Mono", value: "Cutive Mono, monospace" },
+                { name: "Overpass Mono", value: "Overpass Mono, monospace" },
+                { name: "Share Tech Mono", value: "Share Tech Mono, monospace" },
+                { name: "VT323", value: "VT323, monospace" },
+                { name: "Nova Mono", value: "Nova Mono, monospace" },
+                { name: "Oxygen Mono", value: "Oxygen Mono, monospace" },
+                { name: "Droid Sans Mono", value: "Droid Sans Mono, monospace" },
+                { name: "DejaVu Sans Mono", value: "DejaVu Sans Mono, monospace" },
+                { name: "Liberation Mono", value: "Liberation Mono, monospace" },
+                { name: "Terminus", value: "Terminus, monospace" },
+                { name: "Input Mono", value: "Input Mono, monospace" },
+                { name: "Proggy", value: "Proggy, monospace" }
+            ],
+            "Script & Handwriting": [
+                { name: "Lobster", value: "Lobster, cursive" },
+                { name: "Pacifico", value: "Pacifico, cursive" },
+                { name: "Dancing Script", value: "Dancing Script, cursive" },
+                { name: "Great Vibes", value: "Great Vibes, cursive" },
+                { name: "Satisfy", value: "Satisfy, cursive" },
+                { name: "Cookie", value: "Cookie, cursive" },
+                { name: "Kaushan Script", value: "Kaushan Script, cursive" },
+                { name: "Sacramento", value: "Sacramento, cursive" },
+                { name: "Allura", value: "Allura, cursive" },
+                { name: "Parisienne", value: "Parisienne, cursive" },
+                { name: "Indie Flower", value: "Indie Flower, cursive" },
+                { name: "Amatic SC", value: "Amatic SC, cursive" },
+                { name: "Shadows Into Light", value: "Shadows Into Light, cursive" },
+                { name: "Caveat", value: "Caveat, cursive" },
+                { name: "Permanent Marker", value: "Permanent Marker, cursive" },
+                { name: "Gloria Hallelujah", value: "Gloria Hallelujah, cursive" },
+                { name: "Yellowtail", value: "Yellowtail, cursive" },
+                { name: "Courgette", value: "Courgette, cursive" },
+                { name: "Damion", value: "Damion, cursive" },
+                { name: "Marck Script", value: "Marck Script, cursive" },
+                { name: "Mr Dafoe", value: "Mr Dafoe, cursive" },
+                { name: "Pinyon Script", value: "Pinyon Script, cursive" },
+                { name: "Tangerine", value: "Tangerine, cursive" },
+                { name: "Bad Script", value: "Bad Script, cursive" },
+                { name: "Gochi Hand", value: "Gochi Hand, cursive" },
+                { name: "Handlee", value: "Handlee, cursive" },
+                { name: "Patrick Hand", value: "Patrick Hand, cursive" },
+                { name: "Just Another Hand", value: "Just Another Hand, cursive" },
+                { name: "Covered By Your Grace", value: "Covered By Your Grace, cursive" },
+                { name: "Rock Salt", value: "Rock Salt, cursive" }
+            ],
+            "Display & Decorative": [
+                { name: "Bangers", value: "Bangers, cursive" },
+                { name: "Chewy", value: "Chewy, cursive" },
+                { name: "Fredoka One", value: "Fredoka One, cursive" },
+                { name: "Luckiest Guy", value: "Luckiest Guy, cursive" },
+                { name: "Russo One", value: "Russo One, sans-serif" },
+                { name: "Press Start 2P", value: "Press Start 2P, cursive" },
+                { name: "Creepster", value: "Creepster, cursive" },
+                { name: "Special Elite", value: "Special Elite, cursive" },
+                { name: "Monoton", value: "Monoton, cursive" },
+                { name: "Audiowide", value: "Audiowide, sans-serif" },
+                { name: "Orbitron", value: "Orbitron, sans-serif" },
+                { name: "Black Ops One", value: "Black Ops One, cursive" },
+                { name: "Carter One", value: "Carter One, cursive" },
+                { name: "Passion One", value: "Passion One, cursive" },
+                { name: "Patua One", value: "Patua One, cursive" },
+                { name: "Ultra", value: "Ultra, serif" },
+                { name: "Changa One", value: "Changa One, cursive" },
+                { name: "Titan One", value: "Titan One, cursive" },
+                { name: "Yeseva One", value: "Yeseva One, cursive" },
+                { name: "Righteous", value: "Righteous, cursive" },
+                { name: "Alfa Slab One", value: "Alfa Slab One, cursive" },
+                { name: "Abril Fatface", value: "Abril Fatface, cursive" },
+                { name: "Staatliches", value: "Staatliches, cursive" },
+                { name: "Bungee", value: "Bungee, cursive" },
+                { name: "Unica One", value: "Unica One, cursive" },
+                { name: "Boogaloo", value: "Boogaloo, cursive" },
+                { name: "Spicy Rice", value: "Spicy Rice, cursive" },
+                { name: "Ranchers", value: "Ranchers, cursive" },
+                { name: "Comic Sans MS", value: "Comic Sans MS, cursive" },
+                { name: "Papyrus", value: "Papyrus, fantasy" }
+            ]
+        };
+
+        function popularDropdownFonte() {
+            fontOptionsContainer.innerHTML = ''; // Limpa opções existentes
+            for (const categoria in fontes) {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'dropdown-category';
+                categoryDiv.textContent = categoria;
+                fontOptionsContainer.appendChild(categoryDiv);
+
+                fontes[categoria].forEach(fonte => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'dropdown-option';
+                    optionDiv.textContent = fonte.name;
+                    optionDiv.style.fontFamily = fonte.value;
+                    optionDiv.dataset.value = fonte.value;
+                    optionDiv.dataset.name = fonte.name;
+
+                    optionDiv.addEventListener('click', (e) => {
+                        e.stopPropagation(); // Impede que o clique feche o dropdown imediatamente
+                        selecionarFonte(fonte.name, fonte.value);
+                        fontFamilyDropdown.classList.remove('open');
+                    });
+
+                    fontOptionsContainer.appendChild(optionDiv);
+                });
+            }
+        }
+
+        function selecionarFonte(name, value) {
+            selectedFontName.textContent = name;
+            selectedFontName.style.fontFamily = value;
+            if (itemSelecionado) {
+                itemSelecionado.style.fontFamily = value;
+            }
+        }
+
+        fontFamilyDropdown.addEventListener('click', () => {
+            fontFamilyDropdown.classList.toggle('open');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!fontFamilyDropdown.contains(e.target)) {
+                fontFamilyDropdown.classList.remove('open');
+            }
+        });
+
         // --- Funções da Barra de Ferramentas de Texto ---
 
         function updateTextToolState() {
             if (!itemSelecionado) return;
             const style = window.getComputedStyle(itemSelecionado);
-            let fontFamily = style.fontFamily.split(',')[0].replace(/['"]/g, '').trim();
-            let foundFont = Array.from(selectFontFamily.options).find(opt => opt.value.toLowerCase().includes(fontFamily.toLowerCase()));
-            selectFontFamily.value = foundFont ? foundFont.value : 'Arial, sans-serif';
+
+            // Atualiza o dropdown de fonte personalizado
+            const currentFontFamily = style.fontFamily;
+            let currentFontName = currentFontFamily.split(',')[0].replace(/['"]/g, '').trim();
+            selecionarFonte(currentFontName, currentFontFamily);
+
             inputFontSize.value = parseInt(style.fontSize) || 10;
             inputFontColor.value = rgbToHex(style.color);
             selectTextTransform.value = style.textTransform || 'none';
@@ -1966,16 +2333,37 @@
 
             if (isDrawing) return;
 
-            // Se clicou em uma etiqueta, defina-a como ativa
+            // 1. Definir a etiqueta ativa (sempre ocorre se houver clique na área)
             if (etiquetaClicada) {
                 definirEtiquetaAtiva(etiquetaClicada);
             }
 
-            // Se o clique não foi em um item, deselecione
-            if (!itemClicado) {
-                desselecionarItem();
+            // 2. Gerenciar a seleção do item
+            // Se o item clicado for diferente do item já selecionado
+            if (itemClicado !== itemSelecionado) {
+                // Desseleciona o item anterior (se houver)
+                if (itemSelecionado) {
+                    desselecionarItem();
+                }
+                // Seleciona o novo item (se houver)
+                if (itemClicado) {
+                    selecionarItem(itemClicado);
+                }
+            }
+            // Se o clique foi fora de qualquer item (itemClicado é null) e um item estava selecionado
+            else if (!itemClicado && itemSelecionado) {
+                 desselecionarItem();
             }
 
+            // 3. Gerenciar o foco para itens de texto
+            if (itemClicado && (itemClicado.classList.contains('item-texto') || itemClicado.classList.contains('item-simbolo'))) {
+                itemClicado.focus();
+            } else {
+                // Remove o foco de qualquer elemento editável se clicar fora
+                if (document.activeElement && document.activeElement.isContentEditable) {
+                    document.activeElement.blur();
+                }
+            }
         });
 
         // --- Listener para Mudança de Tamanho/Layout ---
@@ -2003,7 +2391,6 @@
         
         
         // --- Event Listeners da Barra de Texto ---
-        selectFontFamily.addEventListener('change', () => { if (itemSelecionado) itemSelecionado.style.fontFamily = selectFontFamily.value; });
         inputFontSize.addEventListener('input', () => { if (itemSelecionado) itemSelecionado.style.fontSize = inputFontSize.value + 'px'; });
         inputFontColor.addEventListener('input', () => { if (itemSelecionado) itemSelecionado.style.color = inputFontColor.value; });
         selectTextTransform.addEventListener('change', () => { if (itemSelecionado) itemSelecionado.style.textTransform = selectTextTransform.value; });
@@ -2359,6 +2746,7 @@
         document.querySelectorAll('.item-arrastavel').forEach(inicializarInteracao); // Initialize existing items (if any)
         btnRemoverItem.style.display = 'none'; // Hide remove button initially
         popularModalSimbolos(); // Populate the symbol modal
+        popularDropdownFonte(); // Popula o novo dropdown de fontes
         selectAddShape.selectedIndex = 0; // Ensure "Forma" placeholder is selected
 
         // --- Listener para Deletar com Teclado (NOVO) ---
