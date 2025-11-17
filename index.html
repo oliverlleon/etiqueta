@@ -1052,15 +1052,14 @@
             if (etiquetaAtiva) {
                 etiquetaAtiva.classList.add('active');
             }
-            desselecionarItem();
+            // A lógica de desselecionar item agora é tratada pelo listener 'tap'
         }
 
         function gerarItemId() { return `item-${++itemCounter}`; }
         function gerarLabelId() { return `label-${++labelCounter}`; }
 
         function selecionarItem(itemElement) {
-            if (itemSelecionado === itemElement) return; // Não faz nada se o mesmo item for clicado
-            desselecionarItem(); // Desseleciona anterior
+            // A lógica de desseleção foi movida para o listener 'tap'
             itemSelecionado = itemElement;
             
             if (itemSelecionado) {
@@ -1966,16 +1965,37 @@
 
             if (isDrawing) return;
 
-            // Se clicou em uma etiqueta, defina-a como ativa
+            // 1. Definir a etiqueta ativa (sempre ocorre se houver clique na área)
             if (etiquetaClicada) {
                 definirEtiquetaAtiva(etiquetaClicada);
             }
 
-            // Se o clique não foi em um item, deselecione
-            if (!itemClicado) {
-                desselecionarItem();
+            // 2. Gerenciar a seleção do item
+            // Se o item clicado for diferente do item já selecionado
+            if (itemClicado !== itemSelecionado) {
+                // Desseleciona o item anterior (se houver)
+                if (itemSelecionado) {
+                    desselecionarItem();
+                }
+                // Seleciona o novo item (se houver)
+                if (itemClicado) {
+                    selecionarItem(itemClicado);
+                }
+            }
+            // Se o clique foi fora de qualquer item (itemClicado é null) e um item estava selecionado
+            else if (!itemClicado && itemSelecionado) {
+                 desselecionarItem();
             }
 
+            // 3. Gerenciar o foco para itens de texto
+            if (itemClicado && (itemClicado.classList.contains('item-texto') || itemClicado.classList.contains('item-simbolo'))) {
+                itemClicado.focus();
+            } else {
+                // Remove o foco de qualquer elemento editável se clicar fora
+                if (document.activeElement && document.activeElement.isContentEditable) {
+                    document.activeElement.blur();
+                }
+            }
         });
 
         // --- Listener para Mudança de Tamanho/Layout ---
