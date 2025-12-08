@@ -1139,7 +1139,7 @@
 
         // --- Funções Auxiliares (Definir Ativa, IDs, Seleção) ---
 
-        function definirEtiquetaAtiva(etiqueta) {
+        function definirEtiquetaAtiva(etiqueta, manterItemSelecionado = false) {
             if (etiqueta === etiquetaAtiva) return; // Não faz nada se já estiver ativa
             if (isDrawing) pararModoDesenho(false); // Cancela desenho ao trocar
             if (etiquetaAtiva) {
@@ -2351,7 +2351,9 @@
 
             // 1. Definir a etiqueta ativa (sempre ocorre se houver clique na área)
             if (etiquetaClicada) {
-                definirEtiquetaAtiva(etiquetaClicada);
+                // O segundo argumento (!!itemClicado) é true se um item foi clicado,
+                // o que previne `desselecionarItem()` de ser chamado dentro de `definirEtiquetaAtiva`.
+                definirEtiquetaAtiva(etiquetaClicada, !!itemClicado);
             }
 
             // 2. Gerenciar a seleção do item
