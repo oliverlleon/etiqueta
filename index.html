@@ -419,8 +419,57 @@
             vertical-align: middle;
         }
 
+        /* --- Estilos da Régua --- */
+        .ruler-container {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .ruler-container.active { display: block; }
+        .ruler-h {
+            position: absolute;
+            top: -25px;
+            left: 0;
+            height: 25px;
+            width: 100%;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #ccc;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        .ruler-v {
+            position: absolute;
+            top: 0;
+            left: -25px;
+            width: 25px;
+            height: 100%;
+            background-color: #f8f9fa;
+            border-right: 1px solid #ccc;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        .ruler-tick {
+            position: absolute;
+            background-color: #555;
+        }
+        .ruler-h .ruler-tick { bottom: 0; width: 1px; }
+        .ruler-v .ruler-tick { right: 0; height: 1px; }
+        .ruler-label {
+            position: absolute;
+            font-size: 10px;
+            color: #333;
+        }
+        .ruler-h .ruler-label { top: 2px; transform: translateX(-50%); }
+        .ruler-v .ruler-label { left: 2px; transform: translateY(-50%) rotate(-90deg); width: 15px; text-align: center; }
+
         /* --- Página de Impressão e Etiquetas --- */
         #pagina-de-impressao {
+            position: relative; /* Necessário para a régua */
             max-width: var(--label-width);
             margin: 30px auto;
             display: flex;
@@ -907,6 +956,9 @@
                     <button id="btn-zoom-reset" title="Restaurar Zoom">
                         <span class="material-icons">zoom_in_map</span>
                     </button>
+                    <button id="btn-toggle-regua" title="Ativar Régua (cm)">
+                        <span class="material-icons">straighten</span>
+                    </button>
                 </div>
                 <div class="button-group">
                     <span class="label">Selecionar Etiqueta:</span>
@@ -1119,6 +1171,7 @@
         const inputDrawThickness = document.getElementById('input-draw-thickness');
 
         // --- Variáveis de Estado ---
+        let rulersActive = false; // Estado da régua
         let etiquetaAtiva = document.querySelector('.etiqueta-editavel.active');
         let itemSelecionado = null;
         let labelCounter = 1;
@@ -1263,6 +1316,8 @@
             } else {
                  screenStyleDynamic.innerHTML = ''; // Limpa se for coluna única
             }
+
+            if (rulersActive) updateRulers(); // Atualiza régua se ativa
 
             // Atualiza o select de preset para "personalizado" se os valores não baterem
             if ( (width_mm == 100 && height_mm == 50 && colunas == 1) ) {
@@ -2758,6 +2813,91 @@
             document.addEventListener('keydown', handleKeydown);
         }
 
+
+        // --- Lógica da Régua ---
+        const btnToggleRegua = document.getElementById('btn-toggle-regua');
+
+        function toggleRulers() {
+            rulersActive = !rulersActive;
+            btnToggleRegua.classList.toggle('active', rulersActive);
+            updateRulers();
+        }
+
+        function updateRulers() {
+            const existingRulers = paginaDeImpressao.querySelector('.ruler-container');
+            if (existingRulers) existingRulers.remove();
+
+            if (!rulersActive) return;
+
+            const container = document.createElement('div');
+            container.className = 'ruler-container active';
+
+            // Create Horizontal Ruler
+            const hRuler = document.createElement('div');
+            hRuler.className = 'ruler-h';
+
+            // Create Vertical Ruler
+            const vRuler = document.createElement('div');
+            vRuler.className = 'ruler-v';
+
+            // Calculate dimensions based on inputs (assuming inputs are always up to date with layout)
+            let widthMm = parseFloat(inputCustomWidth.value) || 100;
+            let heightMm = parseFloat(inputCustomHeight.value) || 50;
+            let cols = parseInt(inputCustomCols.value) || 1;
+
+            let totalWidthMm = widthMm;
+            if (cols > 1) {
+                totalWidthMm = (widthMm * cols) + (5 * (cols - 1)); // 5mm gap
+            }
+
+            // Generate Ticks Horizontal
+            for (let i = 0; i <= totalWidthMm; i++) {
+                const tick = document.createElement('div');
+                tick.className = 'ruler-tick';
+                tick.style.left = `${i}mm`;
+
+                if (i % 10 === 0) { // CM
+                    tick.style.height = '100%';
+                    const label = document.createElement('div');
+                    label.className = 'ruler-label';
+                    label.innerText = (i / 10);
+                    label.style.left = `${i}mm`;
+                    hRuler.appendChild(label);
+                } else if (i % 5 === 0) { // Half CM
+                    tick.style.height = '12px';
+                } else { // MM
+                    tick.style.height = '6px';
+                }
+                hRuler.appendChild(tick);
+            }
+
+            // Generate Ticks Vertical
+            for (let i = 0; i <= heightMm; i++) {
+                const tick = document.createElement('div');
+                tick.className = 'ruler-tick';
+                tick.style.top = `${i}mm`;
+
+                if (i % 10 === 0) {
+                    tick.style.width = '100%';
+                    const label = document.createElement('div');
+                    label.className = 'ruler-label';
+                    label.innerText = (i / 10);
+                    label.style.top = `${i}mm`;
+                    vRuler.appendChild(label);
+                } else if (i % 5 === 0) {
+                    tick.style.width = '12px';
+                } else {
+                    tick.style.width = '6px';
+                }
+                vRuler.appendChild(tick);
+            }
+
+            container.appendChild(hRuler);
+            container.appendChild(vRuler);
+            paginaDeImpressao.appendChild(container);
+        }
+
+        btnToggleRegua.addEventListener('click', toggleRulers);
 
         // --- Inicialização ---
         definirLayoutETamanho(selectLayoutPreset.value); // Apply initial layout based on dropdown
